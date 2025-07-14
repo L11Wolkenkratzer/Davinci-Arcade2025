@@ -1,0 +1,89 @@
+/* App.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+body {
+    margin: 0;
+    height: 100vh;
+    background: #0d0d0d;
+    overflow: hidden;
+    font-family: 'Press Start 2P', cursive;
+    color: #0ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+            linear-gradient(rgba(0, 255, 255, 0.15) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 255, 0.15) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: gridMove 25s linear infinite;
+    filter: drop-shadow(0 0 4px #0ff);
+    z-index: 0;
+}
+
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+            radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.3), transparent 60%),
+            radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.3), transparent 60%);
+    animation: pulseGlow 6s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 15px #0ff);
+    z-index: 0;
+}
+
+@keyframes gridMove {
+    0% {
+        background-position: 0 0, 0 0;
+    }
+    100% {
+        background-position: 40px 40px, 40px 40px;
+    }
+}
+
+@keyframes pulseGlow {
+    0% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+
+.simple-text {
+    font-size: 1.8rem;
+    text-shadow:
+            0 0 10px #0ff,
+            0 0 20px #0ff;
+    user-select: none;
+    z-index: 10;
+}
+
+.ArcadeTitle{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Text ganz oben */
+    height: 93vh; /* Höhe des Containers */
+
+}
+
+.SettingsImage{
+    position: absolute;
+    top: 0.5rem;
+    left: 2rem;
+    width: 80px; /* kannst du anpassen */
+    height: auto;
+    filter: brightness(0) invert(1) !important;
+}
