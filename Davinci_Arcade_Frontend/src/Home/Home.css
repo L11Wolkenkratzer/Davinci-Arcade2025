@@ -1,76 +1,6 @@
-/* App.css */
-
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-body {
-    margin: 0;
-    height: 100vh;
-    background: #0d0d0d;
-    overflow: hidden;
-    font-family: 'Press Start 2P', cursive;
-    color: #0ff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background:
-            linear-gradient(rgba(0, 255, 255, 0.15) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 255, 255, 0.15) 1px, transparent 1px);
-    background-size: 40px 40px;
-    animation: gridMove 25s linear infinite;
-    filter: drop-shadow(0 0 4px #0ff);
-    z-index: 0;
-}
-
-
-body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background:
-            radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.3), transparent 60%),
-            radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.3), transparent 60%);
-    animation: pulseGlow 6s ease-in-out infinite alternate;
-    filter: drop-shadow(0 0 15px #0ff);
-    z-index: 0;
-}
-
-@keyframes gridMove {
-    0% {
-        background-position: 0 0, 0 0;
-    }
-    100% {
-        background-position: 40px 40px, 40px 40px;
-    }
-}
-
-@keyframes pulseGlow {
-    0% {
-        opacity: 0.5;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
-
-.simple-text {
-    font-size: 1.8rem;
-    text-shadow:
-            0 0 10px #0ff,
-            0 0 20px #0ff;
-    user-select: none;
-    z-index: 10;
-}@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
+/* Base Styles */
 body {
     margin: 0;
     height: 100vh;
@@ -110,379 +40,58 @@ body::after {
     z-index: 0;
 }
 
+/* Animations */
 @keyframes gridMove {
-    0% {
-        background-position: 0 0, 0 0;
-    }
-    100% {
-        background-position: 40px 40px, 40px 40px;
-    }
+    0% { background-position: 0 0, 0 0; }
+    100% { background-position: 40px 40px, 40px 40px; }
 }
 
 @keyframes pulseGlow {
-    0% {
-        opacity: 0.5;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
-.simple-text {
-    font-size: 1.8rem;
-    text-shadow:
-            0 0 10px #0ff,
-            0 0 20px #0ff;
-    user-select: none;
-    z-index: 10;
-}
-
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-.arcade-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    pointer-events: none;
-}
-
-.arcade-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 60px 160px;
-    height: 200px;
-    position: relative;
-    pointer-events: auto;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 60px;
-    flex: 1;
-    margin-left: 120px;
-}
-
-.settings-icon {
-    width: 168px;
-    height: 168px;
-    filter: brightness(0) invert(1) drop-shadow(0 0 15px #fff);
-    transition: all 0.3s ease;
-}
-
-.settings-icon:hover {
-    filter: brightness(0) invert(1) drop-shadow(0 0 22px #fff) brightness(1.2);
-    transform: scale(1.1);
-}
-
-.user-circle {
-    width: 84px;
-    height: 84px;
-    border: 6px solid #0ff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    font-weight: bold;
-    color: #0ff;
-    text-shadow: 0 0 15px #0ff;
-    box-shadow:
-            0 0 18px rgba(0, 255, 255, 0.5),
-            inset 0 0 18px rgba(0, 255, 255, 0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.user-circle:hover {
-    box-shadow:
-            0 0 28px rgba(0, 255, 255, 0.8),
-            inset 0 0 28px rgba(0, 255, 255, 0.2);
-    transform: scale(1.1);
-}
-
-.user-text {
-    font-size: 32px;
-    color: #0ff;
-    text-shadow: 0 0 15px #0ff;
-    margin-top: 20px;
-    letter-spacing: 3px;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.user-text:hover {
-    text-shadow: 0 0 22px #0ff;
-    transform: translateY(-4px);
-}
-
-.header-center {
-    flex: 2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.arcade-title {
-    font-size: 4.2rem;
-    color: #8B0000;
-    text-shadow:
-            0 0 12px #19c3d1,
-            0 0 28px #19c3d1,
-            0 0 42px #19c3d1;
-    margin: 0;
-    letter-spacing: 6px;
-    animation: titlePulse 4s ease-in-out infinite alternate;
-    text-align: center;
-    user-select: none;
+    0% { opacity: 0.5; }
+    100% { opacity: 1; }
 }
 
 @keyframes titlePulse {
-    0% {
-        text-shadow:
-                0 0 12px #19c3d1,
-                0 0 28px #19c3d1,
-                0 0 42px #8B0000;
-    }
-    100% {
-        text-shadow:
-                0 0 20px #19c3d1,
-                0 0 35px #19c3d1,
-                0 0 48px #8B0000,
-                0 0 60px #19c3d1;
-    }
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 70px;
-    flex: 1;
-    justify-content: flex-end;
-    margin-right: 120px;
-}
-
-.info-circle {
-    width: 84px;
-    height: 84px;
-    border: 6px solid #0ff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    font-weight: bold;
-    color: #0ff;
-    text-shadow: 0 0 15px #0ff;
-    box-shadow:
-            0 0 18px rgba(0, 255, 255, 0.5),
-            inset 0 0 18px rgba(0, 255, 255, 0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.info-circle:hover {
-    box-shadow:
-            0 0 28px rgba(0, 255, 255, 0.8),
-            inset 0 0 28px rgba(0, 255, 255, 0.2);
-    transform: scale(1.1);
-}
-
-.clock {
-    font-size: 44px;
-    color: #0ff;
-    text-shadow:
-            0 0 15px #0ff,
-            0 0 30px #0ff;
-    letter-spacing: 3px;
-    margin: 0;
-    animation: clockGlow 3s ease-in-out infinite alternate;
+    0% { text-shadow: 0 0 12px #19c3d1, 0 0 28px #19c3d1, 0 0 42px #8B0000; }
+    100% { text-shadow: 0 0 20px #19c3d1, 0 0 35px #19c3d1, 0 0 48px #8B0000, 0 0 60px #19c3d1; }
 }
 
 @keyframes clockGlow {
-    0% {
-        text-shadow:
-                0 0 15px #0ff,
-                0 0 30px #0ff;
-    }
-    100% {
-        text-shadow:
-                0 0 22px #0ff,
-                0 0 38px #0ff,
-                0 0 52px #0ff;
-    }
+    0% { text-shadow: 0 0 15px #0ff, 0 0 30px #0ff; }
+    100% { text-shadow: 0 0 22px #0ff, 0 0 38px #0ff, 0 0 52px #0ff; }
 }
 
-@media (max-width: 1024px) {
-    .arcade-header {
-        padding: 50px 120px;
-        height: 170px;
-    }
-
-    .header-left {
-        margin-left: 80px;
-    }
-
-    .header-right {
-        margin-right: 80px;
-    }
-
-    .arcade-title {
-        font-size: 3rem;
-        letter-spacing: 4.5px;
-        color: #8B0000;
-        text-shadow:
-                0 0 8px #8B0000,
-                0 0 18px #8B0000;
-    }
-
-    .settings-icon, .user-circle, .info-circle {
-        width: 72px;
-        height: 72px;
-    }
-
-    .clock {
-        font-size: 36px;
-        text-shadow:
-                0 0 12px #0ff,
-                0 0 24px #0ff;
-    }
-
-    .user-text {
-        font-size: 28px;
-        text-shadow: 0 0 12px #0ff;
-    }
-}
-
-@media (max-width: 768px) {
-    .arcade-header {
-        padding: 40px 80px;
-        height: 140px;
-    }
-
-    .header-left {
-        margin-left: 40px;
-    }
-
-    .header-right {
-        margin-right: 40px;
-    }
-
-    .arcade-title {
-        font-size: 2.4rem;
-        letter-spacing: 3px;
-        color: #8B0000;
-        text-shadow:
-                0 0 6px #8B0000,
-                0 0 15px #8B0000;
-    }
-
-    .settings-icon, .user-circle, .info-circle {
-        width: 60px;
-        height: 60px;
-    }
-
-    .clock {
-        font-size: 32px;
-        text-shadow:
-                0 0 10px #0ff,
-                0 0 20px #0ff;
-    }
-
-    .user-text {
-        font-size: 24px;
-        text-shadow: 0 0 10px #0ff;
-    }
-
-    .header-left, .header-right {
-        gap: 40px;
-    }
-}
-
+/* Common Styles */
 .simple-text {
     font-size: 3.6rem;
-    text-shadow:
-            0 0 15px #0ff,
-            0 0 30px #0ff;
+    text-shadow: 0 0 15px #0ff, 0 0 30px #0ff;
     user-select: none;
     z-index: 10;
 }
 
-/*----------------------------------------------------------------*/
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-body {
-    margin: 0;
-    height: 100vh;
-    background: #0d0d0d;
-    overflow: hidden;
-    font-family: 'Press Start 2P', cursive;
-    color: #0ff;
+.user-circle, .info-circle {
+    width: 84px;
+    height: 84px;
+    border: 6px solid #0ff;
+    border-radius: 50%;
     display: flex;
-    justify-content: center;
     align-items: center;
-    position: relative;
+    justify-content: center;
+    font-size: 40px;
+    font-weight: bold;
+    color: #0ff;
+    text-shadow: 0 0 15px #0ff;
+    box-shadow: 0 0 18px rgba(0, 255, 255, 0.5), inset 0 0 18px rgba(0, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background:
-            linear-gradient(rgba(0, 255, 255, 0.15) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 255, 255, 0.15) 1px, transparent 1px);
-    background-size: 40px 40px;
-    animation: gridMove 25s linear infinite;
-    filter: drop-shadow(0 0 4px #0ff);
-    z-index: 0;
+.user-circle:hover, .info-circle:hover {
+    box-shadow: 0 0 28px rgba(0, 255, 255, 0.8), inset 0 0 28px rgba(0, 255, 255, 0.2);
+    transform: scale(1.1);
 }
 
-body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background:
-            radial-gradient(circle at 20% 80%, rgba(0, 255, 255, 0.3), transparent 60%),
-            radial-gradient(circle at 80% 20%, rgba(255, 0, 255, 0.3), transparent 60%);
-    animation: pulseGlow 6s ease-in-out infinite alternate;
-    filter: drop-shadow(0 0 15px #0ff);
-    z-index: 0;
-}
-
-@keyframes gridMove {
-    0% {
-        background-position: 0 0, 0 0;
-    }
-    100% {
-        background-position: 40px 40px, 40px 40px;
-    }
-}
-
-@keyframes pulseGlow {
-    0% {
-        opacity: 0.5;
-    }
-    100% {
-        opacity: 1;
-    }
-}
-
-.simple-text {
-    font-size: 1.8rem;
-    text-shadow:
-            0 0 10px #0ff,
-            0 0 20px #0ff;
-    user-select: none;
-    z-index: 10;
-}
-
+/* Layout Components */
 .arcade-container {
     position: fixed;
     top: 0;
@@ -513,6 +122,22 @@ body::after {
     margin-left: 120px;
 }
 
+.header-center {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 70px;
+    flex: 1;
+    justify-content: flex-end;
+    margin-right: 120px;
+}
+
 .settings-icon {
     width: 168px;
     height: 168px;
@@ -522,32 +147,6 @@ body::after {
 
 .settings-icon:hover {
     filter: brightness(0) invert(1) drop-shadow(0 0 22px #fff) brightness(1.2);
-    transform: scale(1.1);
-}
-
-.user-circle {
-    width: 84px;
-    height: 84px;
-    border: 6px solid #0ff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    font-weight: bold;
-    color: #0ff;
-    text-shadow: 0 0 15px #0ff;
-    box-shadow:
-            0 0 18px rgba(0, 255, 255, 0.5),
-            inset 0 0 18px rgba(0, 255, 255, 0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.user-circle:hover {
-    box-shadow:
-            0 0 28px rgba(0, 255, 255, 0.8),
-            inset 0 0 28px rgba(0, 255, 255, 0.2);
     transform: scale(1.1);
 }
 
@@ -566,20 +165,10 @@ body::after {
     transform: translateY(-4px);
 }
 
-.header-center {
-    flex: 2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
 .arcade-title {
     font-size: 4.2rem;
     color: #8B0000;
-    text-shadow:
-            0 0 12px #19c3d1,
-            0 0 28px #19c3d1,
-            0 0 42px #19c3d1;
+    text-shadow: 0 0 12px #19c3d1, 0 0 28px #19c3d1, 0 0 42px #19c3d1;
     margin: 0;
     letter-spacing: 6px;
     animation: titlePulse 4s ease-in-out infinite alternate;
@@ -587,83 +176,16 @@ body::after {
     user-select: none;
 }
 
-@keyframes titlePulse {
-    0% {
-        text-shadow:
-                0 0 12px #19c3d1,
-                0 0 28px #19c3d1,
-                0 0 42px #8B0000;
-    }
-    100% {
-        text-shadow:
-                0 0 20px #19c3d1,
-                0 0 35px #19c3d1,
-                0 0 48px #8B0000,
-                0 0 60px #19c3d1;
-    }
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-    gap: 70px;
-    flex: 1;
-    justify-content: flex-end;
-    margin-right: 120px;
-}
-
-.info-circle {
-    width: 84px;
-    height: 84px;
-    border: 6px solid #0ff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 40px;
-    font-weight: bold;
-    color: #0ff;
-    text-shadow: 0 0 15px #0ff;
-    box-shadow:
-            0 0 18px rgba(0, 255, 255, 0.5),
-            inset 0 0 18px rgba(0, 255, 255, 0.1);
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.info-circle:hover {
-    box-shadow:
-            0 0 28px rgba(0, 255, 255, 0.8),
-            inset 0 0 28px rgba(0, 255, 255, 0.2);
-    transform: scale(1.1);
-}
-
 .clock {
     font-size: 44px;
     color: #0ff;
-    text-shadow:
-            0 0 15px #0ff,
-            0 0 30px #0ff;
+    text-shadow: 0 0 15px #0ff, 0 0 30px #0ff;
     letter-spacing: 3px;
     margin: 0;
     animation: clockGlow 3s ease-in-out infinite alternate;
 }
 
-@keyframes clockGlow {
-    0% {
-        text-shadow:
-                0 0 15px #0ff,
-                0 0 30px #0ff;
-    }
-    100% {
-        text-shadow:
-                0 0 22px #0ff,
-                0 0 38px #0ff,
-                0 0 52px #0ff;
-    }
-}
-
-/* Game Selection - Horizontal Line ohne Scrollbar */
+/* Game Components */
 .games-container-static {
     display: flex;
     flex-direction: column;
@@ -672,12 +194,15 @@ body::after {
     padding: 2rem;
     pointer-events: auto;
     width: 100%;
+}
+
+.games-container-static, .games-grid-static {
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
 
-.games-container-static::-webkit-scrollbar {
+.games-container-static::-webkit-scrollbar, .games-grid-static::-webkit-scrollbar {
     display: none;
 }
 
@@ -689,13 +214,6 @@ body::after {
     justify-content: center;
     padding: 2rem;
     min-width: fit-content;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-.games-grid-static::-webkit-scrollbar {
-    display: none;
 }
 
 .game-card-static {
@@ -719,10 +237,7 @@ body::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(145deg,
-    rgba(0, 255, 255, 0.1),
-    transparent 40%,
-    var(--game-color, #0ff) 100%);
+    background: linear-gradient(145deg, rgba(0, 255, 255, 0.1), transparent 40%, var(--game-color, #0ff) 100%);
     opacity: 0;
     transition: opacity 0.4s ease;
 }
@@ -734,9 +249,7 @@ body::after {
 .game-card-static.selected {
     transform: scale(1.1);
     border-color: #0ff;
-    box-shadow:
-            0 0 40px rgba(0, 255, 255, 0.6),
-            inset 0 0 40px rgba(0, 255, 255, 0.1);
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.6), inset 0 0 40px rgba(0, 255, 255, 0.1);
     z-index: 10;
 }
 
@@ -769,9 +282,7 @@ body::after {
 
 .game-card-static.selected .game-title-static {
     font-size: 1.5rem;
-    text-shadow:
-            0 0 18px #0ff,
-            0 0 35px var(--game-color, #0ff);
+    text-shadow: 0 0 18px #0ff, 0 0 35px var(--game-color, #0ff);
 }
 
 .controls-info-static {
@@ -779,9 +290,9 @@ body::after {
     gap: 4rem;
     margin-top: 3rem;
     font-family: 'Press Start 2P', cursive;
-    font-size: 0.9rem;
-    color: #666;
-    text-shadow: 0 0 8px #0ff;
+    font-size: 1.1rem;
+    color: #ffffff;
+    text-shadow: 0 0 8px #ffffff;
 }
 
 .controls-info-static span {
@@ -800,21 +311,13 @@ body::after {
         height: 170px;
     }
 
-    .header-left {
-        margin-left: 80px;
-    }
-
-    .header-right {
-        margin-right: 80px;
-    }
+    .header-left { margin-left: 80px; }
+    .header-right { margin-right: 80px; }
 
     .arcade-title {
         font-size: 3rem;
         letter-spacing: 4.5px;
-        color: #8B0000;
-        text-shadow:
-                0 0 8px #8B0000,
-                0 0 18px #8B0000;
+        text-shadow: 0 0 8px #8B0000, 0 0 18px #8B0000;
     }
 
     .settings-icon, .user-circle, .info-circle {
@@ -824,9 +327,7 @@ body::after {
 
     .clock {
         font-size: 36px;
-        text-shadow:
-                0 0 12px #0ff,
-                0 0 24px #0ff;
+        text-shadow: 0 0 12px #0ff, 0 0 24px #0ff;
     }
 
     .user-text {
@@ -844,13 +345,8 @@ body::after {
         height: 380px;
     }
 
-    .game-icon-static {
-        font-size: 4.5rem;
-    }
-
-    .game-card-static.selected .game-icon-static {
-        font-size: 5.5rem;
-    }
+    .game-icon-static { font-size: 4.5rem; }
+    .game-card-static.selected .game-icon-static { font-size: 5.5rem; }
 }
 
 @media (max-width: 768px) {
@@ -859,21 +355,14 @@ body::after {
         height: 140px;
     }
 
-    .header-left {
-        margin-left: 40px;
-    }
-
-    .header-right {
-        margin-right: 40px;
-    }
+    .header-left { margin-left: 40px; }
+    .header-right { margin-right: 40px; }
+    .header-left, .header-right { gap: 40px; }
 
     .arcade-title {
         font-size: 2.4rem;
         letter-spacing: 3px;
-        color: #8B0000;
-        text-shadow:
-                0 0 6px #8B0000,
-                0 0 15px #8B0000;
+        text-shadow: 0 0 6px #8B0000, 0 0 15px #8B0000;
     }
 
     .settings-icon, .user-circle, .info-circle {
@@ -883,9 +372,7 @@ body::after {
 
     .clock {
         font-size: 32px;
-        text-shadow:
-                0 0 10px #0ff,
-                0 0 20px #0ff;
+        text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
     }
 
     .user-text {
@@ -893,10 +380,7 @@ body::after {
         text-shadow: 0 0 10px #0ff;
     }
 
-    .games-container-static {
-        padding: 1rem;
-    }
-
+    .games-container-static { padding: 1rem; }
     .games-grid-static {
         gap: 1rem;
         padding: 0.5rem;
@@ -907,17 +391,10 @@ body::after {
         height: 280px;
     }
 
-    .game-icon-static {
-        font-size: 3rem;
-    }
+    .game-icon-static { font-size: 3rem; }
+    .game-card-static.selected .game-icon-static { font-size: 3.5rem; }
 
-    .game-card-static.selected .game-icon-static {
-        font-size: 3.5rem;
-    }
-
-    .game-title-static {
-        font-size: 0.9rem;
-    }
+    .game-title-static { font-size: 0.9rem; }
 
     .controls-info-static {
         flex-direction: column;
@@ -927,11 +404,48 @@ body::after {
     }
 }
 
-.simple-text {
-    font-size: 3.6rem;
-    text-shadow:
-            0 0 15px #0ff,
-            0 0 30px #0ff;
-    user-select: none;
-    z-index: 10;
+.settings-button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-button:focus {
+    outline: 2px solid #0ff;
+    outline-offset: 4px;
+}
+
+.user-circle,
+.info-circle {
+    background: transparent;
+    border: 6px solid #0ff;
+}
+
+.user-circle:focus,
+.info-circle:focus {
+    outline: 2px solid #fff;
+    outline-offset: 4px;
+}
+
+.user-text {
+    background: transparent;
+    border: none;
+    padding: 0;
+
+}
+
+.user-text:focus {
+    outline: 2px solid #0ff;
+    outline-offset: 4px;
+}
+
+
+button.user-circle,
+button.info-circle,
+button.user-text {
+    font-family: 'Press Start 2P', cursive;
 }

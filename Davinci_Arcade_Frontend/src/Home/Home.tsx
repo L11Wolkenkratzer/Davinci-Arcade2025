@@ -6,7 +6,7 @@ function Home() {
     const [time, setTime] = useState("");
     const [selectedGameIndex, setSelectedGameIndex] = useState(0);
 
-    // Dummy Game Data - ersetze mit deinen echten Spielen
+    // Dummy Game Data - ersetze später mit den echten Spielen
     const games = [
         { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b" },
         { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
@@ -15,20 +15,6 @@ function Home() {
         { id: 5, title: "ZELDA", icon: "⚔️", color: "#feca57" },
         { id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3" }
     ];
-
-    // Uhr Logic
-    useEffect(() => {
-        const updateTime = () => {
-            const now = new Date();
-            setTime(now.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-            }));
-        };
-        updateTime();
-        const intervalId = setInterval(updateTime, 1000);
-        return () => clearInterval(intervalId);
-    }, []);
 
     // Keyboard Navigation
     useEffect(() => {
@@ -68,20 +54,74 @@ function Home() {
         setSelectedGameIndex(index);
     };
 
+    // Event Handler für die neuen Buttons
+    const handleSettingsClick = () => {
+        console.log("Settings clicked!");
+        // Hier kannst du später die Settings-Logik hinzufügen
+    };
+
+    const handleUserClick = () => {
+        console.log("User clicked!");
+        // Hier kannst du später die User-Logik hinzufügen
+    };
+
+    const handleInfoClick = () => {
+        console.log("Info clicked!");
+        // Hier kannst du später die Info-Logik hinzufügen
+    };
+
+    // -----------------Uhr Logic------------------------------
+    useEffect(() => {
+        const updateTime = () => {
+            const now = new Date();
+            setTime(now.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+            }));
+        };
+        updateTime();
+        const intervalId = setInterval(updateTime, 1000);
+        return () => clearInterval(intervalId);
+    }, []);
+
     return (
         <div>
             <div className="arcade-container">
                 <header className="arcade-header">
                     <div className="header-left">
-                        <img className="settings-icon" src={settingsImage} alt="Einstellungen" />
-                        <div className="user-circle">.</div>
-                        <div className="user-text">USER</div>
+                        <button
+                            className="settings-button"
+                            onClick={handleSettingsClick}
+                            aria-label="Einstellungen öffnen"
+                        >
+                            <img className="settings-icon" src={settingsImage} alt="Einstellungen" />
+                        </button>
+                        <button
+                            className="user-circle"
+                            onClick={handleUserClick}
+                            aria-label="Benutzer-Menü öffnen"
+                        >
+                            .
+                        </button>
+                        <button
+                            className="user-text"
+                            onClick={handleUserClick}
+                            aria-label="Benutzer-Profil öffnen"
+                        >
+                            USER
+                        </button>
                     </div>
                     <div className="header-center">
                         <h1 className="arcade-title">DAVINCI ARCADE</h1>
                     </div>
                     <div className="header-right">
-                        <div className="info-circle">i</div>
+                        <button
+                            className="info-circle"
+                            onClick={handleInfoClick}
+                            aria-label="Informationen anzeigen"
+                        >
+                            i
+                        </button>
                         <p className="clock">{time}</p>
                     </div>
                 </header>
