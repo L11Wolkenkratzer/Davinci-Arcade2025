@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useCallback} from "react";
 import "./Home.css";
 import settingsImage from "../assets/settingsImage.png";
 import SettingsModal from "./SettingsModal";
@@ -14,6 +14,7 @@ interface Game {
 
 type NavigationMode = 'games' | 'header';
 type HeaderButton = 'settings' | 'user' | 'info';
+
 const Home: React.FC = () => {
     const [time, setTime] = useState<string>("");
     const [selectedGameIndex, setSelectedGameIndex] = useState<number>(0);
@@ -22,29 +23,111 @@ const Home: React.FC = () => {
     const [showSettings, setShowSettings] = useState<boolean>(false);
     const [showUser, setShowUser] = useState<boolean>(false);
     const [showInfo, setShowInfo] = useState<boolean>(false);
-    const games: Game[] = [{id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b"}, {
-        id: 2,
-        title: "PACMAN",
-        icon: "👻",
-        color: "#4ecdc4"
-    }, {id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1"}, {
-        id: 4,
-        title: "SONIC",
-        icon: "💨",
-        color: "#96ceb4"
-    }, {id: 5, title: "ZELDA", icon: "⚔️", color: "#feca57"}, {id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3"}];
+    const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+    const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
+
+    const games: Game[] = [
+        {id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b"}, 
+        {id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4"}, 
+        {id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1"}, 
+        {id: 4, title: "SONIC", icon: "💨", color: "#96ceb4"}, 
+        {id: 5, title: "ZELDA", icon: "⚔️", color: "#feca57"}, 
+        {id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3"}
+    ];
+
     const headerButtons: HeaderButton[] = ['settings', 'user', 'info'];
+
+    // Responsive card dimensions
+    const getCardDimensions = useCallback(() => {
+        const width = containerWidth;
+        if (width <= 1920) {
+            return { cardWidth: 280, cardHeight: 350, gap: 40 };
+        } else {
+            return { cardWidth: 420, cardHeight: 530, gap: 60 };
+        }
+    }, [containerWidth]);
+
+    // Calculate card position and scale
+const getCardTransform = useCallback((index: number, selectedIndex: number, totalCards: number) => {
+    const { cardWidth, gap } = getCardDimensions();
+    const cardSpacing = cardWidth + gap;
+    
+    let relativePosition = index - selectedIndex;
+    
+    // Handle infinite scroll positioning
+    if (relativePosition > totalCards / 2) {
+        relativePosition -= totalCards;
+    } else if (relativePosition < -totalCards / 2) {
+        relativePosition += totalCards;
+    }
+    
+    // Center the cards properly
+    const translateX = relativePosition * cardSpacing;
+    const absPosition = Math.abs(relativePosition);
+    
+    // Scale and opacity based on distance from center
+    let scale, opacity, zIndex;
+    if (absPosition === 0) {
+        scale = 1;
+        opacity = 1;
+        zIndex = 10;
+    } else if (absPosition === 1) {
+        scale = 0.8;
+        opacity = 0.7;
+        zIndex = 5;
+    } else if (absPosition === 2) {
+        scale = 0.6;
+        opacity = 0.4;
+        zIndex = 2;
+    } else {
+        scale = 0.4;
+        opacity = 0.2;
+        zIndex = 1;
+    }
+
+    return {
+        transform: `translateX(${translateX}px) scale(${scale})`,
+        opacity,
+        zIndex
+    };
+}, [containerWidth, getCardDimensions]);
+
+
+    // Handle window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setContainerWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Time update
     useEffect(() => {
         const updateTime = (): void => {
             const now = new Date();
-            setTime(now.toLocaleTimeString([], {hour: '2-digit' as const, minute: '2-digit' as const,}));
+            setTime(now.toLocaleTimeString([], {hour: '2-digit' as const, minute: '2-digit' as const}));
         };
         updateTime();
         const intervalId: NodeJS.Timeout = setInterval(updateTime, 1000);
-        return (): void => {
-            clearInterval(intervalId);
-        };
+        return (): void => clearInterval(intervalId);
     }, []);
+
+    // Navigation with smooth transition
+    const navigateToGame = useCallback((newIndex: number) => {
+        if (isTransitioning) return;
+        
+        setIsTransitioning(true);
+        setSelectedGameIndex(newIndex);
+        
+        // Reset transition lock after animation completes
+        setTimeout(() => {
+            setIsTransitioning(false);
+        }, 400);
+    }, [isTransitioning]);
+
+    // Keyboard controls
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent): void => {
             if (event.key === 'Escape') {
@@ -54,20 +137,19 @@ const Home: React.FC = () => {
                 setNavigationMode('games');
                 return;
             }
+
             if (!showSettings && !showUser && !showInfo) {
                 if (navigationMode === 'games') {
                     switch(event.key) {
                         case 'ArrowLeft':
                             event.preventDefault();
-                            setSelectedGameIndex(prev =>
-                                prev > 0 ? prev - 1 : games.length - 1
-                            );
+                            const prevIndex = selectedGameIndex > 0 ? selectedGameIndex - 1 : games.length - 1;
+                            navigateToGame(prevIndex);
                             break;
                         case 'ArrowRight':
                             event.preventDefault();
-                            setSelectedGameIndex(prev =>
-                                prev < games.length - 1 ? prev + 1 : 0
-                            );
+                            const nextIndex = selectedGameIndex < games.length - 1 ? selectedGameIndex + 1 : 0;
+                            navigateToGame(nextIndex);
                             break;
                         case 'ArrowUp':
                             event.preventDefault();
@@ -112,18 +194,20 @@ const Home: React.FC = () => {
                 }
             }
         };
+
         window.addEventListener('keydown', handleKeyPress);
-        return (): void => {
-            window.removeEventListener('keydown', handleKeyPress);
-        };
-    }, [selectedGameIndex, selectedHeaderButton, navigationMode, games.length, showSettings, showUser, showInfo]);
+        return (): void => window.removeEventListener('keydown', handleKeyPress);
+    }, [selectedGameIndex, selectedHeaderButton, navigationMode, games.length, showSettings, showUser, showInfo, navigateToGame]);
+
     const handleGameSelect = (game: Game): void => {
         console.log(`Selected game: ${game.title}`);
     };
+
     const handleGameClick = (index: number): void => {
-        setSelectedGameIndex(index);
+        navigateToGame(index);
         setNavigationMode('games');
     };
+
     const handleHeaderButtonActivate = (button: HeaderButton): void => {
         switch(button) {
             case 'settings':
@@ -137,38 +221,45 @@ const Home: React.FC = () => {
                 break;
         }
     };
+
     const handleSettingsClick = (): void => {
         setSelectedHeaderButton('settings');
         setNavigationMode('header');
         setShowSettings(true);
     };
+
     const handleUserClick = (): void => {
         setSelectedHeaderButton('user');
         setNavigationMode('header');
         setShowUser(true);
     };
+
     const handleInfoClick = (): void => {
         setSelectedHeaderButton('info');
         setNavigationMode('header');
         setShowInfo(true);
     };
+
     const closeAllModals = (): void => {
         setShowSettings(false);
         setShowUser(false);
         setShowInfo(false);
         setNavigationMode('games');
     };
+
     const getButtonClass = (buttonType: HeaderButton): string => {
         const baseClass = buttonType === 'settings' ? 'settings-button' :
             buttonType === 'user' ? 'user-circle' : 'info-circle';
         const selectedClass = navigationMode === 'header' && selectedHeaderButton === buttonType ? ' keyboard-selected' : '';
         return baseClass + selectedClass;
     };
+
     const getUserTextClass = (): string => {
         const baseClass = 'user-text';
         const selectedClass = navigationMode === 'header' && selectedHeaderButton === 'user' ? ' keyboard-selected' : '';
         return baseClass + selectedClass;
     };
+
     return (
         <div>
             <div className="arcade-container">
@@ -210,33 +301,52 @@ const Home: React.FC = () => {
                         <p className="clock">{time}</p>
                     </div>
                 </header>
+
                 <div className="navigation-indicator">
                     <span className={navigationMode === 'games' ? 'active' : ''}>GAMES</span>
                     <span className={navigationMode === 'header' ? 'active' : ''}>MENÜ</span>
                 </div>
-                <div className="games-container-static">
-                    <div className="games-grid-static">
-                        {games.map((game: Game, index: number) => (
-                            <div
-                                key={game.id}
-                                className={`game-card-static ${index === selectedGameIndex && navigationMode === 'games' ? 'selected' : ''}`}
-                                onClick={() => handleGameClick(index)}
-                                style={{
-                                    '--game-color': game.color
-                                } as React.CSSProperties}
-                            >
-                                <div className="game-icon-static">{game.icon}</div>
-                                <div className="game-title-static">{game.title}</div>
+
+                <div className="games-carousel-container">
+                    <div className="games-carousel-viewport">
+                        <div className="games-carousel-track">
+                            {games.map((game: Game, index: number) => {
+                                const transform = getCardTransform(index, selectedGameIndex, games.length);
+                                return (
+                                    <div
+                                        key={game.id}
+                                        className={`game-card-carousel ${index === selectedGameIndex ? 'selected' : ''}`}
+                                        onClick={() => handleGameClick(index)}
+                                        style={{
+                                            '--game-color': game.color,
+                                            transform: transform.transform,
+                                            opacity: transform.opacity,
+                                            zIndex: transform.zIndex
+                                        } as React.CSSProperties}
+                                    >
+                                        <div className="game-icon-carousel">{game.icon}</div>
+                                        <div className="game-title-carousel">{game.title}</div>
+                                        <div className="game-glow" style={{'--game-color': game.color} as React.CSSProperties}></div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    
+                    
+                        <div className="selected-game-info" style={{ marginBottom: "4em", display: "flex", flexDirection: "column", alignItems: "center"}}>
+                            <h2 className="selected-game-title" style={{'--game-color': games[selectedGameIndex].color} as React.CSSProperties}>
+                                {games[selectedGameIndex].title}
+                            </h2>
+                            <div className="game-description">
+                                Drücke ENTER zum Spielen
                             </div>
-                        ))}
-                    </div>
-                    <div className="controls-info-static">
-                        <span>← → Navigieren</span>
-                        <span>↑ ↓ Bereich wechseln</span>
-                        <span>ENTER: Auswählen</span>
-                        <span>ESC: Schließen</span>
-                    </div>
+                        </div>
+                    
+
+                    
                 </div>
+
                 <footer className="arcade-footer">
                     <div className="footer-content">
                         <div className="footer-names">
@@ -250,16 +360,12 @@ const Home: React.FC = () => {
                     </div>
                 </footer>
             </div>
-            {showSettings && (
-                <SettingsModal onClose={closeAllModals} />
-            )}
-            {showUser && (
-                <UserModal onClose={closeAllModals} />
-            )}
-            {showInfo && (
-                <InfoModal onClose={closeAllModals} />
-            )}
+
+            {showSettings && <SettingsModal onClose={closeAllModals} />}
+            {showUser && <UserModal onClose={closeAllModals} />}
+            {showInfo && <InfoModal onClose={closeAllModals} />}
         </div>
     );
 };
+
 export default Home;
