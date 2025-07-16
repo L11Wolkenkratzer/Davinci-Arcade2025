@@ -15,7 +15,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ onClose }) => {
 
     const appInfo: AppInfo = {
         version: "v1.0",
-        description: "Erstellt für LC-Power Monitor"
+        description: "Erstellt von Gian, Livio & Philip.Unser Davinci Projekt 2025."
     };
 
     const focusableElements = ['close-button'];
@@ -59,7 +59,8 @@ const InfoModal: React.FC<InfoModalProps> = ({ onClose }) => {
                 </div>
                 <div className="modal-body">
                     <div className="info-content">
-                        <p>DAVINCI ARCADE {appInfo.version}</p>
+                        <p>DAVINCI ARCADE </p>
+                        <p>{appInfo.version}</p>
                         <p>{appInfo.description}</p>
                     </div>
                 </div>
