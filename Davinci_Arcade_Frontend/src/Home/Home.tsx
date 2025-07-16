@@ -1,58 +1,103 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";         // ⬅︎ NEU
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import "./Home.css";
 import settingsImage from "../assets/settingsImage.png";
 import SettingsModal from "./SettingsModal";
 import UserModal from "./UserModal";
 import InfoModal from "./InfoModal";
+import sonicVideo from "../assets/videos/sonic-preview2.mp4";
 
 interface Game {
     id: number;
     title: string;
     icon: string;
     color: string;
+    video?: string;
 }
 
 type NavigationMode = "games" | "header";
 type HeaderButton = "settings" | "user" | "info";
 
+// GAMES ARRAY AUSSERHALB DER KOMPONENTE DEFINIEREN
+const games: Game[] = [
+    {id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b"},
+    {id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4"},
+    {id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1"},
+    {id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo},
+    {id: 5, title: "SPACESHIPS", icon: "⚔️", color: "#feca57"},
+    {id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3"}
+];
+
 const Home: React.FC = () => {
-    /* ------------------------------------------------------------------ */
-    /* State                                                              */
-    /* ------------------------------------------------------------------ */
     const [time, setTime] = useState<string>("");
     const [selectedGameIndex, setSelectedGameIndex] = useState<number>(0);
     const [navigationMode, setNavigationMode] = useState<NavigationMode>("games");
-    const [selectedHeaderButton, setSelectedHeaderButton] =
-        useState<HeaderButton>("settings");
+    const [selectedHeaderButton, setSelectedHeaderButton] = useState<HeaderButton>("settings");
     const [showSettings, setShowSettings] = useState<boolean>(false);
     const [showUser, setShowUser] = useState<boolean>(false);
     const [showInfo, setShowInfo] = useState<boolean>(false);
     const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-    const [containerWidth, setContainerWidth] = useState<number>(
-        window.innerWidth
-    );
+    const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
 
-    const navigate = useNavigate();                         // ⬅︎ NEU
+    const [videoVisible, setVideoVisible] = useState<boolean>(false);
+    const [videoEnded, setVideoEnded] = useState<boolean>(false);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    /* ------------------------------------------------------------------ */
-    /* Daten                                                              */
-    /* ------------------------------------------------------------------ */
-    const games: Game[] = [
-        { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b" },
-        { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
-        { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
-        { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4" },
-        { id: 5, title: "ZELDA", icon: "⚔️", color: "#feca57" },
-        { id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3" },
-    ];
+    const navigate = useNavigate();
 
     const headerButtons: HeaderButton[] = ["settings", "user", "info"];
 
-    /* ------------------------------------------------------------------ */
-    /* Hilfsfunktionen                                                    */
-    /* ------------------------------------------------------------------ */
-    // Responsive card dimensions
+    // DIREKTER useEffect OHNE useCallback
+    useEffect(() => {
+        console.log("Game index changed to:", selectedGameIndex, "Game:", games[selectedGameIndex].title);
+
+        // Timer sofort stoppen
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+            console.log("Timer cleared");
+        }
+
+        // Video sofort verstecken und zurücksetzen
+        setVideoVisible(false);
+        setVideoEnded(false);
+        console.log("Video hidden");
+
+        // Prüfen ob aktuelles Spiel ein Video hat
+        const currentGame = games[selectedGameIndex];
+        if (currentGame && currentGame.video) {
+            console.log("Game has video, starting timer...");
+
+            timerRef.current = setTimeout(() => {
+                console.log("TIMER TRIGGERED - Showing video for", currentGame.title);
+                setVideoVisible(true);
+                setVideoEnded(false);
+            }, 2000);
+        } else {
+            console.log("Game has no video");
+        }
+    }, [selectedGameIndex]); // NUR selectedGameIndex
+
+    // Video Replay-Funktion
+    const replayVideo = useCallback(() => {
+        if (videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play();
+            setVideoEnded(false);
+            console.log("Video replay started");
+        }
+    }, []);
+
+    // Cleanup
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+        };
+    }, []);
+
     const getCardDimensions = useCallback(() => {
         const width = containerWidth;
         if (width <= 1920) {
@@ -62,7 +107,6 @@ const Home: React.FC = () => {
         }
     }, [containerWidth]);
 
-    // Calculate card position and scale
     const getCardTransform = useCallback(
         (index: number, selectedIndex: number, totalCards: number) => {
             const { cardWidth, gap } = getCardDimensions();
@@ -70,7 +114,6 @@ const Home: React.FC = () => {
 
             let relativePosition = index - selectedIndex;
 
-            // Infinite scroll positioning
             if (relativePosition > totalCards / 2) {
                 relativePosition -= totalCards;
             } else if (relativePosition < -totalCards / 2) {
@@ -112,6 +155,7 @@ const Home: React.FC = () => {
         (newIndex: number) => {
             if (isTransitioning) return;
 
+            console.log("NAVIGATION: Moving to game", newIndex);
             setIsTransitioning(true);
             setSelectedGameIndex(newIndex);
 
@@ -120,9 +164,6 @@ const Home: React.FC = () => {
         [isTransitioning]
     );
 
-    /* ------------------------------------------------------------------ */
-    /* Effekt-Hooks                                                       */
-    /* ------------------------------------------------------------------ */
     // Window resize
     useEffect(() => {
         const handleResize = () => setContainerWidth(window.innerWidth);
@@ -147,119 +188,118 @@ const Home: React.FC = () => {
     }, []);
 
     // Keyboard controls
-    useEffect(
-        () => {
-            const handleKeyPress = (event: KeyboardEvent): void => {
-                if (event.key === "Escape") {
-                    setShowSettings(false);
-                    setShowUser(false);
-                    setShowInfo(false);
-                    setNavigationMode("games");
-                    return;
-                }
+    useEffect(() => {
+        const handleKeyPress = (event: KeyboardEvent): void => {
+            if (event.key === "Escape") {
+                setShowSettings(false);
+                setShowUser(false);
+                setShowInfo(false);
+                setNavigationMode("games");
+                return;
+            }
 
-                if (!showSettings && !showUser && !showInfo) {
-                    if (navigationMode === "games") {
-                        switch (event.key) {
-                            case "ArrowLeft":
-                                event.preventDefault();
-                                navigateToGame(
-                                    selectedGameIndex > 0
-                                        ? selectedGameIndex - 1
-                                        : games.length - 1
-                                );
-                                break;
-                            case "ArrowRight":
-                                event.preventDefault();
-                                navigateToGame(
-                                    selectedGameIndex < games.length - 1
-                                        ? selectedGameIndex + 1
-                                        : 0
-                                );
-                                break;
-                            case "ArrowUp":
-                                event.preventDefault();
-                                setNavigationMode("header");
-                                break;
-                            case "Enter":
-                                event.preventDefault();
-                                handleGameSelect(games[selectedGameIndex]); // ⬅︎ nutzt navigate
-                                break;
-                            default:
-                                break;
-                        }
-                    } else if (navigationMode === "header") {
-                        switch (event.key) {
-                            case "ArrowLeft":
-                                event.preventDefault();
-                                setSelectedHeaderButton((prev) => {
-                                    const current = headerButtons.indexOf(prev);
-                                    return headerButtons[
-                                        current > 0 ? current - 1 : headerButtons.length - 1
-                                        ];
-                                });
-                                break;
-                            case "ArrowRight":
-                                event.preventDefault();
-                                setSelectedHeaderButton((prev) => {
-                                    const current = headerButtons.indexOf(prev);
-                                    return headerButtons[
-                                        current < headerButtons.length - 1 ? current + 1 : 0
-                                        ];
-                                });
-                                break;
-                            case "ArrowDown":
-                                event.preventDefault();
-                                setNavigationMode("games");
-                                break;
-                            case "Enter":
-                                event.preventDefault();
-                                handleHeaderButtonActivate(selectedHeaderButton);
-                                break;
-                            default:
-                                break;
-                        }
+            if (!showSettings && !showUser && !showInfo) {
+                if (navigationMode === "games") {
+                    switch (event.key) {
+                        case "ArrowLeft":
+                            event.preventDefault();
+                            navigateToGame(
+                                selectedGameIndex > 0
+                                    ? selectedGameIndex - 1
+                                    : games.length - 1
+                            );
+                            break;
+                        case "ArrowRight":
+                            event.preventDefault();
+                            navigateToGame(
+                                selectedGameIndex < games.length - 1
+                                    ? selectedGameIndex + 1
+                                    : 0
+                            );
+                            break;
+                        case "ArrowUp":
+                            event.preventDefault();
+                            setNavigationMode("header");
+                            break;
+                        case "Enter":
+                            event.preventDefault();
+                            handleGameSelect(games[selectedGameIndex]);
+                            break;
+                        case " ": // Leertaste für Video-Replay
+                            event.preventDefault();
+                            if (videoVisible && videoEnded && selectedGameIndex === 3) {
+                                replayVideo();
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                } else if (navigationMode === "header") {
+                    switch (event.key) {
+                        case "ArrowLeft":
+                            event.preventDefault();
+                            setSelectedHeaderButton((prev) => {
+                                const current = headerButtons.indexOf(prev);
+                                return headerButtons[
+                                    current > 0 ? current - 1 : headerButtons.length - 1
+                                    ];
+                            });
+                            break;
+                        case "ArrowRight":
+                            event.preventDefault();
+                            setSelectedHeaderButton((prev) => {
+                                const current = headerButtons.indexOf(prev);
+                                return headerButtons[
+                                    current < headerButtons.length - 1 ? current + 1 : 0
+                                    ];
+                            });
+                            break;
+                        case "ArrowDown":
+                            event.preventDefault();
+                            setNavigationMode("games");
+                            break;
+                        case "Enter":
+                            event.preventDefault();
+                            handleHeaderButtonActivate(selectedHeaderButton);
+                            break;
+                        default:
+                            break;
                     }
                 }
-            };
+            }
+        };
 
-            window.addEventListener("keydown", handleKeyPress);
-            return () => window.removeEventListener("keydown", handleKeyPress);
-        },
-        [
-            selectedGameIndex,
-            selectedHeaderButton,
-            navigationMode,
-            games.length,
-            showSettings,
-            showUser,
-            showInfo,
-            navigateToGame,
-        ]
-    );
+        window.addEventListener("keydown", handleKeyPress);
+        return () => window.removeEventListener("keydown", handleKeyPress);
+    }, [
+        selectedGameIndex,
+        selectedHeaderButton,
+        navigationMode,
+        showSettings,
+        showUser,
+        showInfo,
+        navigateToGame,
+        videoVisible,
+        videoEnded,
+        replayVideo,
+    ]);
 
-    /* ------------------------------------------------------------------ */
-    /* Aktionen                                                           */
-    /* ------------------------------------------------------------------ */
     const handleGameSelect = (game: Game): void => {
         switch (game.title) {
             case "PACMAN":
-                navigate("/pacman");          // ⬅︎ Route-Wechsel
+                navigate("/pacman");
                 break;
-            /* case "TETRIS":
-              navigate("/tetris");
-              break; */
+            case   "SPACESHIPS":
+                navigate("/spaceships")
+                break;
             default:
                 console.log(`Noch keine Route für ${game.title}`);
         }
     };
 
     const handleGameClick = (index: number): void => {
-        // Zuerst Karussell bewegen
         navigateToGame(index);
         setNavigationMode("games");
-
-        // Wenn auf bereits selektierte Karte geklickt ➜ Spiel starten
         if (index === selectedGameIndex) handleGameSelect(games[index]);
     };
 
@@ -325,15 +365,9 @@ const Home: React.FC = () => {
         return baseClass + selectedClass;
     };
 
-    /* ------------------------------------------------------------------ */
-    /* Render                                                             */
-    /* ------------------------------------------------------------------ */
     return (
         <div>
             <div className="arcade-container">
-                {/* ---------------------------------------------------------- */}
-                {/* Header                                                    */}
-                {/* ---------------------------------------------------------- */}
                 <header className="arcade-header">
                     <div className="header-left">
                         <button
@@ -377,81 +411,119 @@ const Home: React.FC = () => {
                     </div>
                 </header>
 
-                {/* Navigation-Indicator */}
                 <div className="navigation-indicator">
                     <span className={navigationMode === "games" ? "active" : ""}>GAMES</span>
                     <span className={navigationMode === "header" ? "active" : ""}>MENÜ</span>
                 </div>
 
-                {/* ---------------------------------------------------------- */}
-                {/* Games-Karussell                                           */}
-                {/* ---------------------------------------------------------- */}
                 <div className="games-carousel-container">
                     <div className="games-carousel-viewport">
                         <div className="games-carousel-track">
-                            {games.map((game, index) => {
-                                const transform = getCardTransform(
-                                    index,
-                                    selectedGameIndex,
-                                    games.length
-                                );
+                            {games.map((game: Game, index: number) => {
+                                const transform = getCardTransform(index, selectedGameIndex, games.length);
+                                const isSelected = index === selectedGameIndex;
+                                const shouldShowVideo = isSelected && videoVisible && game.video;
+
                                 return (
                                     <div
                                         key={game.id}
-                                        className={`game-card-carousel ${
-                                            index === selectedGameIndex ? "selected" : ""
-                                        }`}
+                                        className={`game-card-carousel ${isSelected ? 'selected' : ''}`}
                                         onClick={() => handleGameClick(index)}
-                                        style={
-                                            {
-                                                "--game-color": game.color,
-                                                transform: transform.transform,
-                                                opacity: transform.opacity,
-                                                zIndex: transform.zIndex,
-                                            } as React.CSSProperties
-                                        }
+                                        style={{
+                                            '--game-color': game.color,
+                                            transform: transform.transform,
+                                            opacity: transform.opacity,
+                                            zIndex: transform.zIndex
+                                        } as React.CSSProperties}
                                     >
-                                        <div className="game-icon-carousel">{game.icon}</div>
-                                        <div className="game-title-carousel">{game.title}</div>
-                                        <div
-                                            className="game-glow"
-                                            style={
-                                                { "--game-color": game.color } as React.CSSProperties
-                                            }
-                                        ></div>
+                                        <div className="game-content">
+                                            {shouldShowVideo ? (
+                                                <div style={{
+                                                    width: '90%',
+                                                    height: '60%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    marginBottom: '1rem',
+                                                    backgroundColor: 'rgba(0,255,255,0.1)',
+                                                    borderRadius: '15px',
+                                                    border: '2px solid #0ff',
+                                                    position: 'relative'
+                                                }}>
+                                                    <video
+                                                        ref={videoRef}
+                                                        src={game.video}
+                                                        autoPlay
+                                                        muted
+                                                        playsInline
+                                                        controls={false}
+                                                        style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            objectFit: 'cover',
+                                                            borderRadius: '13px'
+                                                        }}
+                                                        onPlay={() => console.log("Video is playing!")}
+                                                        onPause={() => console.log("Video paused")}
+                                                        onEnded={() => {
+                                                            console.log("Video ended");
+                                                            setVideoEnded(true);
+                                                        }}
+                                                        onError={(e) => console.error("Video error:", e)}
+                                                        onLoadedData={() => console.log("Video loaded")}
+                                                    />
+
+                                                    {/* Replay-Overlay */}
+                                                    {videoEnded && (
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            top: '50%',
+                                                            left: '50%',
+                                                            transform: 'translate(-50%, -50%)',
+                                                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                                            color: '#0ff',
+                                                            padding: '10px 20px',
+                                                            borderRadius: '10px',
+                                                            fontSize: '14px',
+                                                            fontFamily: 'Press Start 2P',
+                                                            textAlign: 'center',
+                                                            border: '1px solid #0ff',
+                                                            cursor: 'pointer'
+                                                        }}
+                                                             onClick={replayVideo}
+                                                        >
+                                                            ↻ REPLAY<br/>
+                                                            <span style={{fontSize: '10px'}}>LEERTASTE</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="game-icon-carousel">{game.icon}</div>
+                                            )}
+
+                                            <div className="game-title-carousel">{game.title}</div>
+                                            <div className="game-glow" style={{'--game-color': game.color} as React.CSSProperties}></div>
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
 
-                    {/* Titel + Beschreibung */}
-                    <div
-                        className="selected-game-info"
-                        style={{
-                            marginBottom: "4em",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                        }}
-                    >
+                    <div className="selected-game-info" style={{ marginBottom: "4em", display: "flex", flexDirection: "column", alignItems: "center" }}>
                         <h2
                             className="selected-game-title"
-                            style={
-                                {
-                                    "--game-color": games[selectedGameIndex].color, fontSize:'2rem', marginTop:"-2.3rem"
-                                } as React.CSSProperties
-                            }
+                            style={{ "--game-color": games[selectedGameIndex].color, fontSize:'2rem', marginTop:"-2.3rem" } as React.CSSProperties}
                         >
                             {games[selectedGameIndex].title}
                         </h2>
-                        <div className="game-description">Drücke ENTER zum Spielen</div>
+                        <div className="game-description">
+                            Drücke ENTER zum Spielen
+
+                        </div>
                     </div>
                 </div>
 
-                {/* ---------------------------------------------------------- */}
-                {/* Footer                                                    */}
-                {/* ---------------------------------------------------------- */}
                 <footer className="arcade-footer">
                     <div className="footer-content">
                         <div className="footer-names">
@@ -466,9 +538,6 @@ const Home: React.FC = () => {
                 </footer>
             </div>
 
-            {/* ---------------------------------------------------------- */}
-            {/* Modals                                                     */}
-            {/* ---------------------------------------------------------- */}
             {showSettings && <SettingsModal onClose={closeAllModals} />}
             {showUser && <UserModal onClose={closeAllModals} />}
             {showInfo && <InfoModal onClose={closeAllModals} />}
