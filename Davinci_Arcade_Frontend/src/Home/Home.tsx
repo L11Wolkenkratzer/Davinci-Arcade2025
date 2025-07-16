@@ -57,8 +57,6 @@ const Home: React.FC = () => {
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
 
-    const navigate = useNavigate();
-
     const headerButtons: HeaderButton[] = ["settings", "user", "info"];
 
     // DIREKTER useEffect OHNE useCallback
