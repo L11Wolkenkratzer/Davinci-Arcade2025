@@ -1,0 +1,746 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.spaceship-game {
+    font-family: 'Press Start 2P', cursive;
+    background: #000;
+    color: #0ff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Animated star field background */
+.spaceship-game::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+            radial-gradient(2px 2px at 20% 30%, #fff, transparent),
+            radial-gradient(2px 2px at 40% 70%, #fff, transparent),
+            radial-gradient(1px 1px at 60% 10%, #fff, transparent),
+            radial-gradient(1px 1px at 80% 50%, #fff, transparent),
+            radial-gradient(2px 2px at 10% 90%, #fff, transparent),
+            radial-gradient(1px 1px at 90% 20%, #fff, transparent);
+    background-size: 200px 200px, 300px 300px, 150px 150px, 250px 250px, 180px 180px, 220px 220px;
+    animation: starMove 20s linear infinite;
+    opacity: 0.3;
+    z-index: -1;
+}
+
+@keyframes starMove {
+    0% { transform: translateX(0) translateY(0); }
+    100% { transform: translateX(-200px) translateY(-200px); }
+}
+
+.game-container {
+    width: 100%;
+    max-width: 1200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+/* Game Lobby Styles */
+.game-lobby {
+    text-align: center;
+    width: 100%;
+    padding: 2rem;
+}
+
+.game-title {
+    font-size: 4rem;
+    color: #ff6b6b;
+    text-shadow: 0 0 30px #ff6b6b;
+    margin-bottom: 2rem;
+    animation: titlePulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes titlePulse {
+    0% { text-shadow: 0 0 30px #ff6b6b; }
+    100% { text-shadow: 0 0 50px #ff6b6b, 0 0 80px #ff6b6b; }
+}
+
+.lobby-header {
+    margin-bottom: 3rem;
+}
+
+.ship-preview {
+    margin: 2rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.ship-icon {
+    font-size: 4rem;
+    filter: drop-shadow(0 0 20px #0ff);
+}
+
+.ship-name {
+    font-size: 1.2rem;
+    color: #0ff;
+    text-shadow: 0 0 15px #0ff;
+}
+
+.coins-display {
+    font-size: 1.5rem;
+    margin-top: 1rem;
+}
+
+.coins-label {
+    color: #ffd700;
+    text-shadow: 0 0 15px #ffd700;
+}
+
+.coins-amount {
+    color: #fff;
+    margin-left: 1rem;
+    text-shadow: 0 0 15px #fff;
+}
+
+.menu-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.menu-item {
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    border: 2px solid #333;
+    color: #0ff;
+    padding: 1rem 2rem;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    text-shadow: 0 0 10px #0ff;
+}
+
+.menu-item:hover,
+.menu-item.selected {
+    border-color: #0ff;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.lobby-footer {
+    margin-top: 2rem;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Game Play Styles */
+.game-start-screen {
+    text-align: center;
+    padding: 3rem;
+}
+
+.game-start-screen h2 {
+    font-size: 2.5rem;
+    color: #0ff;
+    text-shadow: 0 0 20px #0ff;
+    margin-bottom: 2rem;
+}
+
+.start-button {
+    background: linear-gradient(145deg, #ff6b6b, #ff4757);
+    border: none;
+    color: #fff;
+    padding: 1.5rem 3rem;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 10px;
+    text-shadow: 0 0 10px #fff;
+    transition: all 0.3s ease;
+    margin-bottom: 2rem;
+}
+
+.start-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+}
+
+.game-play {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.game-hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 100;
+}
+
+.hud-item {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 0.5rem 1rem;
+    border: 1px solid #0ff;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    color: #0ff;
+    text-shadow: 0 0 10px #0ff;
+}
+
+.game-area {
+    position: relative;
+    border: 2px solid #0ff;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #000428, #004e92);
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
+}
+
+.stars-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation: starTwinkle 2s linear infinite;
+}
+
+@keyframes starTwinkle {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+.ship {
+    position: absolute;
+    font-size: 3rem;
+    z-index: 10;
+    filter: drop-shadow(0 0 15px currentColor);
+    transition: color 0.3s ease;
+}
+
+.bullet {
+    position: absolute;
+    width: 10px;
+    height: 5px;
+    background: #0ff;
+    border-radius: 3px;
+    z-index: 5;
+    box-shadow: 0 0 10px #0ff;
+}
+
+.asteroid {
+    position: absolute;
+    font-size: 1.5rem;
+    z-index: 3;
+    filter: drop-shadow(0 0 10px #666);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.game-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 0.5rem 1rem;
+    border: 1px solid #0ff;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    color: #0ff;
+}
+
+/* Shop Styles */
+.shop {
+    width: 100%;
+    max-width: 1000px;
+    padding: 2rem;
+}
+
+.shop-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.shop-header h1 {
+    font-size: 2.5rem;
+    color: #ffd700;
+    text-shadow: 0 0 20px #ffd700;
+    margin-bottom: 1rem;
+}
+
+.shop-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.tab {
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    border: 2px solid #333;
+    color: #0ff;
+    padding: 1rem 2rem;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.tab.active,
+.tab:hover {
+    border-color: #0ff;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.shop-content {
+    min-height: 400px;
+}
+
+.empty-shop {
+    text-align: center;
+    color: #666;
+    font-size: 1.2rem;
+    margin-top: 3rem;
+}
+
+.shop-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.shop-item {
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    border: 2px solid #333;
+    border-radius: 10px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.shop-item.selected,
+.shop-item:hover {
+    border-color: #0ff;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.ship-item {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.ship-item .ship-icon {
+    font-size: 3rem;
+    filter: drop-shadow(0 0 15px #0ff);
+}
+
+.ship-info {
+    flex: 1;
+}
+
+.ship-info h3 {
+    color: #0ff;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.ship-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.ship-stats span {
+    font-size: 0.8rem;
+    color: #ccc;
+}
+
+.upgrade-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.upgrade-info h3 {
+    color: #0ff;
+    margin-bottom: 0.5rem;
+}
+
+.upgrade-info p {
+    color: #ccc;
+    font-size: 0.8rem;
+}
+
+.price {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.price .affordable {
+    color: #4ecdc4;
+    text-shadow: 0 0 10px #4ecdc4;
+}
+
+.price .expensive {
+    color: #ff6b6b;
+    text-shadow: 0 0 10px #ff6b6b;
+}
+
+.shop-controls {
+    text-align: center;
+    margin-top: 2rem;
+    color: #666;
+    font-size: 0.7rem;
+}
+
+/* Ship Manager Styles */
+.ship-manager {
+    width: 100%;
+    max-width: 1000px;
+    padding: 2rem;
+}
+
+.manager-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.manager-header h1 {
+    font-size: 2.5rem;
+    color: #4ecdc4;
+    text-shadow: 0 0 20px #4ecdc4;
+    margin-bottom: 1rem;
+}
+
+.manager-header p {
+    color: #0ff;
+    font-size: 1rem;
+}
+
+.ship-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ship-manager .ship-item {
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    border: 2px solid #333;
+    border-radius: 10px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    position: relative;
+}
+
+.ship-manager .ship-item.selected,
+.ship-manager .ship-item:hover {
+    border-color: #0ff;
+    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.ship-manager .ship-item.equipped {
+    border-color: #4ecdc4;
+    background: linear-gradient(145deg, #1a3a3a, #0a2a2a);
+    box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+}
+
+.ship-details {
+    flex: 1;
+}
+
+.ship-details h3 {
+    color: #0ff;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.ship-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.8rem;
+}
+
+.stat > span:first-child {
+    width: 80px;
+    color: #ccc;
+}
+
+.stat-bar {
+    flex: 1;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.stat-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.stat-fill.health { background: #ff6b6b; }
+.stat-fill.speed { background: #4ecdc4; }
+.stat-fill.fire-rate { background: #ffd700; }
+.stat-fill.damage { background: #ff9ff3; }
+
+.stat > span:last-child {
+    width: 40px;
+    text-align: right;
+    color: #fff;
+}
+
+.equipped-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #4ecdc4;
+    color: #000;
+    padding: 0.3rem 0.8rem;
+    border-radius: 5px;
+    font-size: 0.6rem;
+    font-weight: bold;
+}
+
+.manager-controls {
+    text-align: center;
+    margin-top: 2rem;
+    color: #666;
+    font-size: 0.7rem;
+}
+
+/* Highscore Styles */
+.highscore {
+    width: 100%;
+    max-width: 800px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.highscore-header h1 {
+    font-size: 2.5rem;
+    color: #ffd700;
+    text-shadow: 0 0 20px #ffd700;
+    margin-bottom: 2rem;
+}
+
+.highscore-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.highscore-entry {
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    border: 2px solid #333;
+    border-radius: 10px;
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 100px;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.highscore-entry:hover {
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.rank {
+    font-size: 1.2rem;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.name {
+    color: #0ff;
+    text-align: left;
+}
+
+.score {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.date {
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.highscore-controls {
+    color: #666;
+    font-size: 0.7rem;
+}
+
+/* Info Styles */
+.info {
+    width: 100%;
+    max-width: 800px;
+    padding: 2rem;
+}
+
+.info-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.info-header h1 {
+    font-size: 2.5rem;
+    color: #96ceb4;
+    text-shadow: 0 0 20px #96ceb4;
+}
+
+.info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.info-section h2 {
+    color: #0ff;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 10px #0ff;
+}
+
+.info-section p,
+.info-section li {
+    color: #ccc;
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+
+.info-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.info-section li {
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+    position: relative;
+}
+
+.info-section li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: #0ff;
+}
+
+.controls-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.key {
+    background: #333;
+    color: #0ff;
+    padding: 0.3rem 0.8rem;
+    border-radius: 5px;
+    font-size: 0.7rem;
+    min-width: 120px;
+    text-align: center;
+    border: 1px solid #0ff;
+}
+
+.description {
+    color: #ccc;
+    font-size: 0.8rem;
+}
+
+.info-controls {
+    text-align: center;
+    margin-top: 2rem;
+    color: #666;
+    font-size: 0.7rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .game-title {
+        font-size: 2.5rem;
+    }
+
+    .menu-item {
+        font-size: 0.8rem;
+        padding: 0.8rem 1.5rem;
+    }
+
+    .ship-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .ship-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .highscore-entry {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .stat {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .stat > span:first-child {
+        width: auto;
+        text-align: center;
+    }
+}
