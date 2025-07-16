@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+
 import "./Home.css";
 import settingsImage from "../assets/settingsImage.png";
 import SettingsModal from "./SettingsModal";
@@ -18,6 +20,7 @@ interface Game {
 type NavigationMode = "games" | "header";
 type HeaderButton = "settings" | "user" | "info";
 
+
 // GAMES ARRAY AUSSERHALB DER KOMPONENTE DEFINIEREN
 const games: Game[] = [
     {id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b"},
@@ -29,15 +32,25 @@ const games: Game[] = [
 ];
 
 const Home: React.FC = () => {
+    /* ------------------------------------------------------------------ */
+    /* State                                                              */
+    /* ------------------------------------------------------------------ */
     const [time, setTime] = useState<string>("");
     const [selectedGameIndex, setSelectedGameIndex] = useState<number>(0);
     const [navigationMode, setNavigationMode] = useState<NavigationMode>("games");
+
     const [selectedHeaderButton, setSelectedHeaderButton] = useState<HeaderButton>("settings");
+
     const [showSettings, setShowSettings] = useState<boolean>(false);
     const [showUser, setShowUser] = useState<boolean>(false);
     const [showInfo, setShowInfo] = useState<boolean>(false);
     const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-    const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
+    const [containerWidth, setContainerWidth] = useState<number>(
+        window.innerWidth
+    );
+
+    const navigate = useNavigate();                         // ⬅︎ NEU
+
 
     const [videoVisible, setVideoVisible] = useState<boolean>(false);
     const [videoEnded, setVideoEnded] = useState<boolean>(false);
@@ -98,6 +111,26 @@ const Home: React.FC = () => {
         };
     }, []);
 
+
+    /* ------------------------------------------------------------------ */
+    /* Daten                                                              */
+    /* ------------------------------------------------------------------ */
+    const games: Game[] = [
+        { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b" },
+        { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
+        { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
+        { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4" },
+        { id: 5, title: "ZELDA", icon: "⚔️", color: "#feca57" },
+        { id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3" },
+    ];
+
+    const headerButtons: HeaderButton[] = ["settings", "user", "info"];
+
+    /* ------------------------------------------------------------------ */
+    /* Hilfsfunktionen                                                    */
+    /* ------------------------------------------------------------------ */
+    // Responsive card dimensions
+
     const getCardDimensions = useCallback(() => {
         const width = containerWidth;
         if (width <= 1920) {
@@ -107,10 +140,14 @@ const Home: React.FC = () => {
         }
     }, [containerWidth]);
 
+
+    // Calculate card position and scale
+
     const getCardTransform = useCallback(
         (index: number, selectedIndex: number, totalCards: number) => {
             const { cardWidth, gap } = getCardDimensions();
             const cardSpacing = cardWidth + gap;
+
 
             let relativePosition = index - selectedIndex;
 
@@ -156,6 +193,7 @@ const Home: React.FC = () => {
             if (isTransitioning) return;
 
             console.log("NAVIGATION: Moving to game", newIndex);
+
             setIsTransitioning(true);
             setSelectedGameIndex(newIndex);
 
@@ -163,6 +201,11 @@ const Home: React.FC = () => {
         },
         [isTransitioning]
     );
+
+
+    /* ------------------------------------------------------------------ */
+    /* Effekt-Hooks                                                       */
+    /* ------------------------------------------------------------------ */
 
     // Window resize
     useEffect(() => {
@@ -188,6 +231,7 @@ const Home: React.FC = () => {
     }, []);
 
     // Keyboard controls
+
     useEffect(() => {
         const handleKeyPress = (event: KeyboardEvent): void => {
             if (event.key === "Escape") {
@@ -284,22 +328,33 @@ const Home: React.FC = () => {
         replayVideo,
     ]);
 
+
+    /* ------------------------------------------------------------------ */
+    /* Aktionen                                                           */
+    /* ------------------------------------------------------------------ */
     const handleGameSelect = (game: Game): void => {
         switch (game.title) {
             case "PACMAN":
+
                 navigate("/pacman");
                 break;
             case   "SPACESHIPS":
                 navigate("/spaceships")
                 break;
+
             default:
                 console.log(`Noch keine Route für ${game.title}`);
         }
     };
 
     const handleGameClick = (index: number): void => {
+        // Zuerst Karussell bewegen
         navigateToGame(index);
         setNavigationMode("games");
+
+
+        // Wenn auf bereits selektierte Karte geklickt ➜ Spiel starten
+
         if (index === selectedGameIndex) handleGameSelect(games[index]);
     };
 
@@ -365,9 +420,15 @@ const Home: React.FC = () => {
         return baseClass + selectedClass;
     };
 
+    /* ------------------------------------------------------------------ */
+    /* Render                                                             */
+    /* ------------------------------------------------------------------ */
     return (
         <div>
             <div className="arcade-container">
+                {/* ---------------------------------------------------------- */}
+                {/* Header                                                    */}
+                {/* ---------------------------------------------------------- */}
                 <header className="arcade-header">
                     <div className="header-left">
                         <button
@@ -411,14 +472,19 @@ const Home: React.FC = () => {
                     </div>
                 </header>
 
+                {/* Navigation-Indicator */}
                 <div className="navigation-indicator">
                     <span className={navigationMode === "games" ? "active" : ""}>GAMES</span>
                     <span className={navigationMode === "header" ? "active" : ""}>MENÜ</span>
                 </div>
 
+                {/* ---------------------------------------------------------- */}
+                {/* Games-Karussell                                           */}
+                {/* ---------------------------------------------------------- */}
                 <div className="games-carousel-container">
                     <div className="games-carousel-viewport">
                         <div className="games-carousel-track">
+
                             {games.map((game: Game, index: number) => {
                                 const transform = getCardTransform(index, selectedGameIndex, games.length);
                                 const isSelected = index === selectedGameIndex;
@@ -428,14 +494,18 @@ const Home: React.FC = () => {
                                     <div
                                         key={game.id}
                                         className={`game-card-carousel ${isSelected ? 'selected' : ''}`}
+
                                         onClick={() => handleGameClick(index)}
-                                        style={{
-                                            '--game-color': game.color,
-                                            transform: transform.transform,
-                                            opacity: transform.opacity,
-                                            zIndex: transform.zIndex
-                                        } as React.CSSProperties}
+                                        style={
+                                            {
+                                                "--game-color": game.color,
+                                                transform: transform.transform,
+                                                opacity: transform.opacity,
+                                                zIndex: transform.zIndex,
+                                            } as React.CSSProperties
+                                        }
                                     >
+
                                         <div className="game-content">
                                             {shouldShowVideo ? (
                                                 <div style={{
@@ -504,11 +574,13 @@ const Home: React.FC = () => {
                                             <div className="game-title-carousel">{game.title}</div>
                                             <div className="game-glow" style={{'--game-color': game.color} as React.CSSProperties}></div>
                                         </div>
+
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
+
 
                     <div className="selected-game-info" style={{ marginBottom: "4em", display: "flex", flexDirection: "column", alignItems: "center" }}>
                         <h2
@@ -521,9 +593,13 @@ const Home: React.FC = () => {
                             Drücke ENTER zum Spielen
 
                         </div>
+
                     </div>
                 </div>
 
+                {/* ---------------------------------------------------------- */}
+                {/* Footer                                                    */}
+                {/* ---------------------------------------------------------- */}
                 <footer className="arcade-footer">
                     <div className="footer-content">
                         <div className="footer-names">
@@ -538,6 +614,9 @@ const Home: React.FC = () => {
                 </footer>
             </div>
 
+            {/* ---------------------------------------------------------- */}
+            {/* Modals                                                     */}
+            {/* ---------------------------------------------------------- */}
             {showSettings && <SettingsModal onClose={closeAllModals} />}
             {showUser && <UserModal onClose={closeAllModals} />}
             {showInfo && <InfoModal onClose={closeAllModals} />}

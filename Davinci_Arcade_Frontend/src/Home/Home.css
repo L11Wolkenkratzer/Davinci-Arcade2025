@@ -883,6 +883,7 @@ button:not(:hover):not(.keyboard-selected),
 
     .game-description {
         font-size: 1.2rem; /* 0.8rem * 1.5 */
+
     }
 
     .navigation-indicator { font-size: 0.9rem; } /* 0.6rem * 1.5 */
@@ -929,4 +930,5 @@ button:not(:hover):not(.keyboard-selected),
         border-radius: 10px;
         margin-bottom: 0.8rem;
     }
+
 }
