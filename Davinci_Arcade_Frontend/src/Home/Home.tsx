@@ -122,8 +122,6 @@ const Home: React.FC = () => {
         { id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3" },
     ];
 
-    const headerButtons: HeaderButton[] = ["settings", "user", "info"];
-
     /* ------------------------------------------------------------------ */
     /* Hilfsfunktionen                                                    */
     /* ------------------------------------------------------------------ */
