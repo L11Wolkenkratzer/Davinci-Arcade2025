@@ -7,7 +7,7 @@ import settingsImage from "../assets/settingsImage.png";
 import SettingsModal from "./SettingsModal";
 import UserModal from "./UserModal";
 import InfoModal from "./InfoModal";
-import sonicVideo from "../assets/videos/sonic-preview2.mp4";
+import sonicVideo from '/Videos/sonic-preview2.mp4';
 
 interface Game {
     id: number;
@@ -26,7 +26,7 @@ const games: Game[] = [
     {id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4"},
     {id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1"},
     {id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo},
-    {id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57"}, // Geändert von ⚔️ zu 🚀
+    {id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57"},
     {id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3"}
 ];
 
