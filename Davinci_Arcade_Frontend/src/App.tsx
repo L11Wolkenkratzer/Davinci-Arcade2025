@@ -10,7 +10,10 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/arcade" element={<Home />} />
                 <Route path="/pacman" element={<PacManGame />} />
-                <Route path="/spaceships" element={<SpaceshipGame />} />  {/* ⬅︎ NEU */}
+
+                <Route path="/spaceships" element={<SpaceshipGame />} />
+        
+
             </Routes>
         </BrowserRouter>
     );
