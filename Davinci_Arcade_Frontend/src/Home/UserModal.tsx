@@ -18,13 +18,16 @@ const UserModal: React.FC<UserModalProps> = ({
   const [focusedIndex, setFocusedIndex] = useState(0);
 
   const fields = [
+
     "CLOSE" as const,
+
     "NAME" as const,
     "HIGHSCORE" as const,
     "GAMES_PLAYED" as const,
     "LAST_PLAYED" as const,
     "LOGOUT" as const,
   ];
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -67,6 +70,7 @@ const UserModal: React.FC<UserModalProps> = ({
   ) => {
     if (e.target === e.currentTarget) onClose();
   };
+
 
   return (
     <div className="modal-overlay" onClick={handleOverlay}>

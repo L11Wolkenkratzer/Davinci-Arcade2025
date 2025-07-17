@@ -2,6 +2,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
   Dispatch,
   SetStateAction,
 } from "react";
@@ -11,8 +12,9 @@ import settingsImage from "../assets/settingsImage.png";
 import SettingsModal from "./SettingsModal";
 import UserModal from "./UserModal";
 import InfoModal from "./InfoModal";
+import sonicVideo from '/Videos/sonic-preview2.mp4';
 
-// Typs für euren Player aus App.tsx
+// Types für Player aus App.tsx
 export interface Player {
   _id: string;
   badgeId: string;
@@ -32,43 +34,91 @@ interface Game {
   title: string;
   icon: string;
   color: string;
+  video?: string;
 }
 
 type NavigationMode = "games" | "header";
 type HeaderButton = "settings" | "user" | "info";
 
 const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
-  const [time, setTime] = useState("");
-  const [selectedGameIndex, setSelectedGameIndex] = useState(0);
-  const [navigationMode, setNavigationMode] =
-    useState<NavigationMode>("games");
-  const [selectedHeaderButton, setSelectedHeaderButton] =
-    useState<HeaderButton>("settings");
-  const [showSettings, setShowSettings] = useState(false);
-  const [showUser, setShowUser] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(window.innerWidth);
+  /* ------------------------------------------------------------------ */
+  /* State                                                              */
+  /* ------------------------------------------------------------------ */
+  const [time, setTime] = useState<string>("");
+  const [selectedGameIndex, setSelectedGameIndex] = useState<number>(0);
+  const [navigationMode, setNavigationMode] = useState<NavigationMode>("games");
+  const [selectedHeaderButton, setSelectedHeaderButton] = useState<HeaderButton>("settings");
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showUser, setShowUser] = useState<boolean>(false);
+  const [showInfo, setShowInfo] = useState<boolean>(false);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+  const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
+  const [videoVisible, setVideoVisible] = useState<boolean>(false);
+  const [videoEnded, setVideoEnded] = useState<boolean>(false);
 
   const navigate = useNavigate();
-
-  // Beispiel-Games
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  
+  // Games Array mit Video-Support
   const games: Game[] = [
     { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b" },
     { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
     { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
-    { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4" },
-    { id: 5, title: "ZELDA", icon: "⚔️", color: "#feca57" },
+    { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo },
+    { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57" },
     { id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3" },
   ];
 
-  const headerButtons: HeaderButton[] = [
-    "settings",
-    "user",
-    "info",
-  ];
+  const headerButtons: HeaderButton[] = ["settings", "user", "info"];
 
-  // Responsives Layout
+  /* ------------------------------------------------------------------ */
+  /* Video Logic                                                        */
+  /* ------------------------------------------------------------------ */
+  useEffect(() => {
+    console.log("Game index changed to:", selectedGameIndex, "Game:", games[selectedGameIndex].title);
+
+    // Timer sofort stoppen
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Video sofort verstecken und zurücksetzen
+    setVideoVisible(false);
+    setVideoEnded(false);
+
+    // Prüfen ob aktuelles Spiel ein Video hat
+    const currentGame = games[selectedGameIndex];
+    if (currentGame && currentGame.video) {
+      timerRef.current = setTimeout(() => {
+        setVideoVisible(true);
+        setVideoEnded(false);
+      }, 2000);
+    }
+  }, [selectedGameIndex]);
+
+  // Video Replay-Funktion
+  const replayVideo = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play();
+      setVideoEnded(false);
+    }
+  }, []);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  /* ------------------------------------------------------------------ */
+  /* Hilfsfunktionen                                                    */
+  /* ------------------------------------------------------------------ */
   const getCardDimensions = useCallback(() => {
     if (containerWidth <= 1920) {
       return { cardWidth: 280, gap: 200 };
@@ -124,8 +174,10 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     [isTransitioning]
   );
 
-  // === Effekte ===
-
+  /* ------------------------------------------------------------------ */
+  /* Effekt-Hooks                                                       */
+  /* ------------------------------------------------------------------ */
+  
   // Zeit-Update
   useEffect(() => {
     const upd = () => {
@@ -162,104 +214,139 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
       .catch((err) => console.error("Player-Fetch error", err));
   }, [currentPlayer?.badgeId, setCurrentPlayer]);
 
-  const handleGameSelect = useCallback((title: string) => {
-    // Erzeuge einen Pfad wie /pacman, /tetris, ...
-    const route = `/${title.toLowerCase()}`;
-    navigate(route);
-  }, [navigate]);
-
-  const handleHeaderButtonActivate = useCallback((btn: HeaderButton) => {
-    if (btn === "settings") setShowSettings(true);
-    if (btn === "user") setShowUser(true);
-    if (btn === "info") setShowInfo(true);
-  }, []);
-
-  // Keyboard-Nav
+  // Keyboard-Navigation (Kombiniert aus beiden Branches)
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (showSettings || showUser || showInfo) return;
+    const handleKeyPress = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        setShowSettings(false);
+        setShowUser(false);
+        setShowInfo(false);
+        setNavigationMode("games");
+        return;
+      }
 
-      if (navigationMode === "games") {
-        if (e.key === "ArrowRight") {
-          e.preventDefault();
-          navigateToGame((selectedGameIndex + 1) % games.length);
-        }
-        if (e.key === "ArrowLeft") {
-          e.preventDefault();
-          navigateToGame((selectedGameIndex - 1 + games.length) % games.length);
-        }
-        if (e.key === "Enter") {
-          e.preventDefault();
-          handleGameSelect(games[selectedGameIndex].title);
-        }
-        if (e.key === "ArrowUp") {
-          setNavigationMode("header");
-        }
-      } else if (navigationMode === "header") {
-        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-          e.preventDefault();
-          const idx = headerButtons.indexOf(selectedHeaderButton);
-          const dir = e.key === "ArrowRight" ? 1 : -1;
-          setSelectedHeaderButton(
-            headerButtons[(idx + dir + headerButtons.length) % headerButtons.length]
-          );
-        }
-        if (e.key === "Enter") {
-          e.preventDefault();
-          handleHeaderButtonActivate(selectedHeaderButton);
-        }
-        if (e.key === "ArrowDown") {
-          setNavigationMode("games");
+      if (!showSettings && !showUser && !showInfo) {
+        if (navigationMode === "games") {
+          switch (event.key) {
+            case "ArrowLeft":
+              event.preventDefault();
+              navigateToGame((selectedGameIndex - 1 + games.length) % games.length);
+              break;
+            case "ArrowRight":
+              event.preventDefault();
+              navigateToGame((selectedGameIndex + 1) % games.length);
+              break;
+            case "ArrowUp":
+              event.preventDefault();
+              setNavigationMode("header");
+              break;
+            case "Enter":
+              event.preventDefault();
+              handleGameSelect(games[selectedGameIndex]);
+              break;
+            case " ":
+              event.preventDefault();
+              if (videoVisible && videoEnded && games[selectedGameIndex].video) {
+                replayVideo();
+              }
+              break;
+            default:
+              break;
+          }
+        } else if (navigationMode === "header") {
+          switch (event.key) {
+            case "ArrowLeft":
+              event.preventDefault();
+              const currentLeftIdx = headerButtons.indexOf(selectedHeaderButton);
+              setSelectedHeaderButton(
+                headerButtons[(currentLeftIdx - 1 + headerButtons.length) % headerButtons.length]
+              );
+              break;
+            case "ArrowRight":
+              event.preventDefault();
+              const currentRightIdx = headerButtons.indexOf(selectedHeaderButton);
+              setSelectedHeaderButton(
+                headerButtons[(currentRightIdx + 1) % headerButtons.length]
+              );
+              break;
+            case "ArrowDown":
+              event.preventDefault();
+              setNavigationMode("games");
+              break;
+            case "Enter":
+              event.preventDefault();
+              handleHeaderButtonActivate(selectedHeaderButton);
+              break;
+            default:
+              break;
+          }
         }
       }
     };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [
     selectedGameIndex,
-    navigationMode,
     selectedHeaderButton,
+    navigationMode,
     showSettings,
     showUser,
     showInfo,
-    games,
-    headerButtons,
     navigateToGame,
-    handleGameSelect,
-    handleHeaderButtonActivate
+    videoVisible,
+    videoEnded,
+    replayVideo,
   ]);
 
-  // === Actions ===
+  /* ------------------------------------------------------------------ */
+  /* Aktionen                                                           */
+  /* ------------------------------------------------------------------ */
+  const handleGameSelect = (game: Game): void => {
+    const route = `/${game.title.toLowerCase()}`;
+    navigate(route);
+  };
 
+  const handleGameClick = (index: number): void => {
+    navigateToGame(index);
+    setNavigationMode("games");
 
-  const closeAll = () => {
+    if (index === selectedGameIndex) {
+      handleGameSelect(games[index]);
+    }
+  };
+
+  const handleHeaderButtonActivate = (button: HeaderButton): void => {
+    switch (button) {
+      case "settings":
+        setShowSettings(true);
+        break;
+      case "user":
+        setShowUser(true);
+        break;
+      case "info":
+        setShowInfo(true);
+        break;
+    }
+  };
+
+  const closeAllModals = (): void => {
     setShowSettings(false);
     setShowUser(false);
     setShowInfo(false);
     setNavigationMode("games");
   };
 
-  const getBtnClass = (b: HeaderButton) => {
-    if (b === "settings") {
-      return `settings-button${
-        navigationMode === "header" && selectedHeaderButton === b
-          ? " keyboard-selected"
-          : ""
-      }`;
-    } else if (b === "user") {
-      return `user-text${
-        navigationMode === "header" && selectedHeaderButton === b
-          ? " keyboard-selected"
-          : ""
-      }`;
-    } else if (b === "info") {
-      return `info-circle${
-        navigationMode === "header" && selectedHeaderButton === b
-          ? " keyboard-selected"
-          : ""
-      }`;
-    }
-    return "";
+  const getBtnClass = (button: HeaderButton): string => {
+    const baseClass = button === "user" ? "user-text" : 
+                     button === "info" ? "info-circle" : 
+                     `${button}-button`;
+    
+    return `${baseClass}${
+      navigationMode === "header" && selectedHeaderButton === button
+        ? " keyboard-selected"
+        : ""
+    }`;
   };
 
   return (
@@ -271,6 +358,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
             <button
               className={getBtnClass("settings")}
               onClick={() => handleHeaderButtonActivate("settings")}
+              aria-label="Einstellungen öffnen"
             >
               <img
                 className="settings-icon"
@@ -281,6 +369,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
             <button
               className={getBtnClass("user")}
               onClick={() => handleHeaderButtonActivate("user")}
+              aria-label="Benutzer-Menü öffnen"
             >
               USER
             </button>
@@ -292,6 +381,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
             <button
               className={getBtnClass("info")}
               onClick={() => handleHeaderButtonActivate("info")}
+              aria-label="Informationen anzeigen"
             >
               i
             </button>
@@ -313,30 +403,88 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
         <div className="games-carousel-container">
           <div className="games-carousel-viewport">
             <div className="games-carousel-track">
-              {games.map((g, idx) => (
-                <div
-                  key={g.id}
-                  className={`game-card-carousel ${
-                    idx === selectedGameIndex ? "selected" : ""
-                  }`}
-                  onClick={() => {
-                    navigateToGame(idx);
-                    if (idx === selectedGameIndex)
-                      handleGameSelect(g.title);
-                  }}
-                  style={{
-                    "--game-color": g.color,
-                    ...(getCardTransform(idx) as any),
-                  }}
-                >
-                  <div className="game-icon-carousel">{g.icon}</div>
-                  <div className="game-title-carousel">{g.title}</div>
+              {games.map((game: Game, index: number) => {
+                const isSelected = index === selectedGameIndex;
+                const shouldShowVideo = isSelected && videoVisible && game.video;
+
+                return (
                   <div
-                    className="game-glow"
-                    style={{ "--game-color": g.color } as any}
-                  />
-                </div>
-              ))}
+                    key={game.id}
+                    className={`game-card-carousel ${
+                      isSelected ? "selected" : ""
+                    }`}
+                    onClick={() => handleGameClick(index)}
+                    style={{
+                      "--game-color": game.color,
+                      ...getCardTransform(index),
+                    }}
+                  >
+                    <div className="game-content">
+                      {shouldShowVideo ? (
+                        <div style={{
+                          width: '90%',
+                          height: '60%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: '1rem',
+                          backgroundColor: 'rgba(0,255,255,0.1)',
+                          borderRadius: '15px',
+                          border: '2px solid #0ff',
+                          position: 'relative'
+                        }}>
+                          <video
+                            ref={videoRef}
+                            src={game.video}
+                            autoPlay
+                            muted
+                            playsInline
+                            controls={false}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              borderRadius: '13px'
+                            }}
+                            onEnded={() => setVideoEnded(true)}
+                          />
+
+                          {videoEnded && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '50%',
+                              left: '50%',
+                              transform: 'translate(-50%, -50%)',
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              color: '#0ff',
+                              padding: '10px 20px',
+                              borderRadius: '10px',
+                              fontSize: '14px',
+                              fontFamily: 'Press Start 2P',
+                              textAlign: 'center',
+                              border: '1px solid #0ff',
+                              cursor: 'pointer'
+                            }}
+                            onClick={replayVideo}
+                            >
+                              ↻ REPLAY<br/>
+                              <span style={{fontSize: '10px'}}>LEERTASTE</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="game-icon-carousel">{game.icon}</div>
+                      )}
+
+                      <div className="game-title-carousel">{game.title}</div>
+                      <div
+                        className="game-glow"
+                        style={{ "--game-color": game.color } as React.CSSProperties}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
           <div
@@ -350,7 +498,11 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
           >
             <h2
               className="selected-game-title"
-              style={{ "--game-color": games[selectedGameIndex].color } as any}
+              style={{ 
+                "--game-color": games[selectedGameIndex].color,
+                fontSize: '2rem',
+                marginTop: "-2.3rem"
+              } as React.CSSProperties}
             >
               {games[selectedGameIndex].title}
             </h2>
@@ -378,19 +530,19 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
       {/* --- Modals --- */}
       {showSettings && currentPlayer && (
         <SettingsModal
-          onClose={closeAll}
+          onClose={closeAllModals}
           currentPlayer={currentPlayer}
           setCurrentPlayer={setCurrentPlayer}
         />
       )}
       {showUser && currentPlayer && (
         <UserModal
-          onClose={closeAll}
+          onClose={closeAllModals}
           currentPlayer={currentPlayer}
           setCurrentPlayer={setCurrentPlayer}
         />
       )}
-      {showInfo && <InfoModal onClose={closeAll} />}
+      {showInfo && <InfoModal onClose={closeAllModals} />}
     </div>
   );
 };
