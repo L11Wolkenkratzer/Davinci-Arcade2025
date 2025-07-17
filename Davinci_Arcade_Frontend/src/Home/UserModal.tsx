@@ -18,6 +18,7 @@ const UserModal: React.FC<UserModalProps> = ({
   const [focusedIndex, setFocusedIndex] = useState(0);
 
   const fields = [
+    "CLOSE" as const,
     "NAME" as const,
     "HIGHSCORE" as const,
     "GAMES_PLAYED" as const,
@@ -45,6 +46,8 @@ const UserModal: React.FC<UserModalProps> = ({
           e.preventDefault();
           if (fields[focusedIndex] === "LOGOUT") {
             logout();
+          } else if (fields[focusedIndex] === "CLOSE") {
+            onClose();
           }
           break;
       }
