@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../Home/Home.css';
+import type { Player } from '../App';
 
-export default function Login() {
+interface LoginProps {
+  setCurrentPlayer: React.Dispatch<React.SetStateAction<Player>>;
+}
+
+const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
     const [badgeInput, setBadgeInput] = useState('');
     const [isReadingBadge, setIsReadingBadge] = useState(false);
     const [showUsernameForm, setShowUsernameForm] = useState(false);
@@ -10,7 +15,7 @@ export default function Login() {
     const [message, setMessage] = useState('Badge an das Lesegerät halten...');
     const [isProcessing, setIsProcessing] = useState(false);
     
-    const inputTimeoutRef = useRef<number | null>(null);
+    const inputTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Separate useEffect für KeyPress Handler - läuft nur einmal
     useEffect(() => {
@@ -73,19 +78,20 @@ export default function Login() {
 
             if (data.success) {
                 // Spieler existiert - Login erfolgreich
-                localStorage.setItem('currentPlayer', JSON.stringify({
-                    id: data.player._id,
-                    name: data.player.name,
-                    badgeId: data.player.badgeId
-                }));
-                
+                const player: NonNullable<Player> = {
+                  _id: data.player._id,
+                  name: data.player.name,
+                  badgeId: data.player.badgeId,
+                  totalScore: data.player.totalScore,
+                  gamesPlayed: data.player.gamesPlayed,
+                  lastPlayed: typeof data.player.lastPlayed === 'string' ? data.player.lastPlayed : new Date(data.player.lastPlayed).toISOString()
+                };
+                localStorage.setItem('currentPlayer', JSON.stringify(player));
+                setCurrentPlayer(player);
                 setMessage(`Willkommen ${data.player.name}!`);
-                
-                // Weiterleitung nach kurzer Pause
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 1000);
-                
             } else if (data.requiresUsername) {
                 // Neuer Spieler - Username-Formular anzeigen
                 setCurrentBadgeId(badgeId);
@@ -136,18 +142,20 @@ export default function Login() {
             const data = await response.json();
 
             if (data.success) {
-                localStorage.setItem('currentPlayer', JSON.stringify({
-                    id: data.player._id,
-                    name: data.player.name,
-                    badgeId: data.player.badgeId
-                }));
-                
+                const player: NonNullable<Player> = {
+                  _id: data.player._id,
+                  name: data.player.name,
+                  badgeId: data.player.badgeId,
+                  totalScore: data.player.totalScore,
+                  gamesPlayed: data.player.gamesPlayed,
+                  lastPlayed: typeof data.player.lastPlayed === 'string' ? data.player.lastPlayed : new Date(data.player.lastPlayed).toISOString()
+                };
+                localStorage.setItem('currentPlayer', JSON.stringify(player));
+                setCurrentPlayer(player);
                 setMessage(`Willkommen ${data.player.name}!`);
-                
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 1000);
-                
             } else {
                 setMessage('Fehler bei der Registrierung. Bitte erneut versuchen.');
                 setIsProcessing(false);
@@ -216,7 +224,6 @@ export default function Login() {
             inputRef.current?.focus();
         }
     }, [focusedIndex, showUsernameForm]);
-
     return (
         <div className="arcade-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <h1 className="arcade-title" style={{ fontSize: '2.5rem', marginBottom: '2rem' }}>Arcade Login</h1>
@@ -292,3 +299,5 @@ export default function Login() {
         </div>
     );
 }
+
+export default Login;
