@@ -5,6 +5,12 @@ import settingsImage from "../assets/settingsImage.png";
 import SettingsModal from "./SettingsModal";
 import UserModal from "./UserModal";
 import InfoModal from "./InfoModal";
+import type { Player } from '../App';
+
+interface HomeProps {
+    currentPlayer: Player;
+    setCurrentPlayer: React.Dispatch<React.SetStateAction<Player>>;
+}
 
 interface Game {
     id: number;
@@ -16,7 +22,7 @@ interface Game {
 type NavigationMode = "games" | "header";
 type HeaderButton = "settings" | "user" | "info";
 
-const Home: React.FC = () => {
+const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     /* ------------------------------------------------------------------ */
     /* State                                                              */
     /* ------------------------------------------------------------------ */
@@ -73,7 +79,7 @@ const Home: React.FC = () => {
             // Infinite scroll positioning
             if (relativePosition > totalCards / 2) {
                 relativePosition -= totalCards;
-            } else if (relativePosition < -totalCards / 2) {
+            } else if (relativePosition < -totalCards / 2) {    
                 relativePosition += totalCards;
             }
 
@@ -470,7 +476,7 @@ const Home: React.FC = () => {
             {/* Modals                                                     */}
             {/* ---------------------------------------------------------- */}
             {showSettings && <SettingsModal onClose={closeAllModals} />}
-            {showUser && <UserModal onClose={closeAllModals} />}
+            {showUser && <UserModal onClose={closeAllModals} setCurrentPlayer={setCurrentPlayer} />}
             {showInfo && <InfoModal onClose={closeAllModals} />}
         </div>
     );

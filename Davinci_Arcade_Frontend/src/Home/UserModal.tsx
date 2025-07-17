@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import './Home.css';
+import type { Player } from '../App';
 
 interface UserModalProps {
     onClose: () => void;
+    setCurrentPlayer: React.Dispatch<React.SetStateAction<Player>>;
 }
 
 interface UserInfo {
@@ -10,7 +12,7 @@ interface UserInfo {
     highscore: number;
 }
 
-const UserModal: React.FC<UserModalProps> = ({ onClose }) => {
+const UserModal: React.FC<UserModalProps> = ({ onClose, setCurrentPlayer }) => {
     const [focusedIndex, setFocusedIndex] = useState<number>(0);
 
     const userInfo: UserInfo = {
@@ -39,7 +41,7 @@ const UserModal: React.FC<UserModalProps> = ({ onClose }) => {
                     if (focusedIndex === 0) { // Close button
                         onClose();
                     } else if (focusedIndex === 1) { // Logout button
-                        handleLogout();
+                        logout();
                     }
                     break;
             }
@@ -49,10 +51,10 @@ const UserModal: React.FC<UserModalProps> = ({ onClose }) => {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [focusedIndex, onClose]);
 
-    const handleLogout = (): void => {
-        console.log("Logout clicked");
-        // TODO: Logout Logic hier implementieren
-        onClose();
+    const logout = () => {
+        localStorage.removeItem('currentPlayer');
+        setCurrentPlayer(null);
+        window.location.href = '/login';
     };
 
     const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
@@ -86,7 +88,7 @@ const UserModal: React.FC<UserModalProps> = ({ onClose }) => {
 
                     <button
                         className={`logout-button ${focusedIndex === 1 ? 'keyboard-selected' : ''}`}
-                        onClick={handleLogout}
+                        onClick={logout}
                     >
                         Log Out
                     </button>
