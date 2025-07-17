@@ -174,20 +174,6 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     [isTransitioning]
   );
 
-  const getButtonClass = (button: HeaderButton) =>
-    `${button}-button${
-      navigationMode === "header" && selectedHeaderButton === button
-        ? " keyboard-selected"
-        : ""
-    }`;
-
-  const getUserTextClass = () =>
-    `user-text${
-      navigationMode === "header" && selectedHeaderButton === "user"
-        ? " keyboard-selected"
-        : ""
-    }`;
-
   /* ------------------------------------------------------------------ */
   /* Effekt-Hooks                                                       */
   /* ------------------------------------------------------------------ */
@@ -228,7 +214,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
       .catch((err) => console.error("Player-Fetch error", err));
   }, [currentPlayer?.badgeId, setCurrentPlayer]);
 
-  // Keyboard-Navigation
+  // Keyboard-Navigation (Kombiniert aus beiden Branches)
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent): void => {
       if (event.key === "Escape") {
@@ -244,19 +230,11 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
           switch (event.key) {
             case "ArrowLeft":
               event.preventDefault();
-              navigateToGame(
-                selectedGameIndex > 0
-                  ? selectedGameIndex - 1
-                  : games.length - 1
-              );
+              navigateToGame((selectedGameIndex - 1 + games.length) % games.length);
               break;
             case "ArrowRight":
               event.preventDefault();
-              navigateToGame(
-                selectedGameIndex < games.length - 1
-                  ? selectedGameIndex + 1
-                  : 0
-              );
+              navigateToGame((selectedGameIndex + 1) % games.length);
               break;
             case "ArrowUp":
               event.preventDefault();
@@ -268,7 +246,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
               break;
             case " ":
               event.preventDefault();
-              if (videoVisible && videoEnded && selectedGameIndex === 3) {
+              if (videoVisible && videoEnded && games[selectedGameIndex].video) {
                 replayVideo();
               }
               break;
@@ -279,21 +257,17 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
           switch (event.key) {
             case "ArrowLeft":
               event.preventDefault();
-              setSelectedHeaderButton((prev) => {
-                const current = headerButtons.indexOf(prev);
-                return headerButtons[
-                  current > 0 ? current - 1 : headerButtons.length - 1
-                ];
-              });
+              const currentLeftIdx = headerButtons.indexOf(selectedHeaderButton);
+              setSelectedHeaderButton(
+                headerButtons[(currentLeftIdx - 1 + headerButtons.length) % headerButtons.length]
+              );
               break;
             case "ArrowRight":
               event.preventDefault();
-              setSelectedHeaderButton((prev) => {
-                const current = headerButtons.indexOf(prev);
-                return headerButtons[
-                  current < headerButtons.length - 1 ? current + 1 : 0
-                ];
-              });
+              const currentRightIdx = headerButtons.indexOf(selectedHeaderButton);
+              setSelectedHeaderButton(
+                headerButtons[(currentRightIdx + 1) % headerButtons.length]
+              );
               break;
             case "ArrowDown":
               event.preventDefault();
@@ -329,16 +303,8 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   /* Aktionen                                                           */
   /* ------------------------------------------------------------------ */
   const handleGameSelect = (game: Game): void => {
-    switch (game.title) {
-      case "PACMAN":
-        navigate("/pacman");
-        break;
-      case "SPACESHIPS":
-        navigate("/spaceships");
-        break;
-      default:
-        console.log(`Noch keine Route für ${game.title}`);
-    }
+    const route = `/${game.title.toLowerCase()}`;
+    navigate(route);
   };
 
   const handleGameClick = (index: number): void => {
@@ -364,29 +330,23 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     }
   };
 
-  const handleSettingsClick = (): void => {
-    setSelectedHeaderButton("settings");
-    setNavigationMode("header");
-    setShowSettings(true);
-  };
-
-  const handleUserClick = (): void => {
-    setSelectedHeaderButton("user");
-    setNavigationMode("header");
-    setShowUser(true);
-  };
-
-  const handleInfoClick = (): void => {
-    setSelectedHeaderButton("info");
-    setNavigationMode("header");
-    setShowInfo(true);
-  };
-
   const closeAllModals = (): void => {
     setShowSettings(false);
     setShowUser(false);
     setShowInfo(false);
     setNavigationMode("games");
+  };
+
+  const getBtnClass = (button: HeaderButton): string => {
+    const baseClass = button === "user" ? "user-text" : 
+                     button === "info" ? "info-circle" : 
+                     `${button}-button`;
+    
+    return `${baseClass}${
+      navigationMode === "header" && selectedHeaderButton === button
+        ? " keyboard-selected"
+        : ""
+    }`;
   };
 
   return (
@@ -396,8 +356,8 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
         <header className="arcade-header">
           <div className="header-left">
             <button
-              className={getButtonClass("settings")}
-              onClick={handleSettingsClick}
+              className={getBtnClass("settings")}
+              onClick={() => handleHeaderButtonActivate("settings")}
               aria-label="Einstellungen öffnen"
             >
               <img
@@ -407,8 +367,8 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
               />
             </button>
             <button
-              className={getButtonClass("user")}
-              onClick={handleUserClick}
+              className={getBtnClass("user")}
+              onClick={() => handleHeaderButtonActivate("user")}
               aria-label="Benutzer-Menü öffnen"
             >
               USER
@@ -419,8 +379,8 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
           </div>
           <div className="header-right">
             <button
-              className={getButtonClass("info")}
-              onClick={handleInfoClick}
+              className={getBtnClass("info")}
+              onClick={() => handleHeaderButtonActivate("info")}
               aria-label="Informationen anzeigen"
             >
               i
@@ -568,7 +528,13 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
       </div>
 
       {/* --- Modals --- */}
-      {showSettings && <SettingsModal onClose={closeAllModals} />}
+      {showSettings && currentPlayer && (
+        <SettingsModal
+          onClose={closeAllModals}
+          currentPlayer={currentPlayer}
+          setCurrentPlayer={setCurrentPlayer}
+        />
+      )}
       {showUser && currentPlayer && (
         <UserModal
           onClose={closeAllModals}

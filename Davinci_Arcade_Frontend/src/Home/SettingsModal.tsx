@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Home.css';
 
+import type { Player } from "./Home";
+
 interface SettingsModalProps {
     onClose: () => void;
+    currentPlayer: Player;
+    setCurrentPlayer: React.Dispatch<React.SetStateAction<Player | null>>;
 }
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, setCurrentPlayer }) => {
     const [volume, setVolume] = useState<number>(50);
     const [brightness, setBrightness] = useState<number>(75);
-    const [username, setUsername] = useState<string>("Mustermann");
-    const [playedMinutes, setPlayedMinutes] = useState<string>("xxxx");
     const [focusedIndex, setFocusedIndex] = useState<number>(0);
 
     const modalRef = useRef<HTMLDivElement>(null);
@@ -61,6 +63,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
     }, [focusedIndex, onClose]);
 
     const handleSaveEdit = (): void => {
+        // Hier könnte man Einstellungen speichern, z.B. per API
         console.log("Settings saved clicked");
     };
 
@@ -130,12 +133,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
                     <div className="setting-item">
                         <label>User:</label>
-                        <span className="user-name">{username}</span>
+                        <span className="user-name">{currentPlayer.name}</span>
                     </div>
 
                     <div className="setting-item">
-                        <label>Gespielte Minuten:</label>
-                        <span className="played-time">{playedMinutes}</span>
+                        <label>Highscore:</label>
+                        <span className="user-highscore">{currentPlayer.totalScore}</span>
+                    </div>
+
+                    <div className="setting-item">
+                        <label>Gespielte Spiele:</label>
+                        <span className="games-played">{currentPlayer.gamesPlayed}</span>
+                    </div>
+
+                    <div className="setting-item">
+                        <label>Letztes Spiel:</label>
+                        <span className="last-played">{new Date(currentPlayer.lastPlayed).toLocaleString()}</span>
                     </div>
 
                     <button

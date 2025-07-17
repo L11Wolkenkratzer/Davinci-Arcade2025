@@ -2,7 +2,11 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Home from './Home/Home.tsx'
 import Login from './Login/Login.tsx'
+
+import Tetris from './Tetris/Tetris.tsx';
+
 import SpaceshipGame from './Game_SPACESHIPS/SpaceshipsGame.tsx';  // ⬅︎ NEU
+
 
 // Universeller Player-Typ, passend zum Backend
 export type Player = {
@@ -62,7 +66,10 @@ function App() {
             )
           }
         />
+
+
         <Route path="/spaceships" element={<SpaceshipGame />} />
+
         <Route
           path="/pacman"
           element={
@@ -73,6 +80,10 @@ function App() {
             )
           }
         />
+
+        <Route path="/tetris" element={currentPlayer ? <Tetris /> : <Login setCurrentPlayer={setCurrentPlayer} />} />
+
+
         <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
       </Routes>
     </BrowserRouter>
