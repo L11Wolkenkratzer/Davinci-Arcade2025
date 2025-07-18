@@ -23,7 +23,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
     const modalRef = useRef<HTMLDivElement>(null);
     const focusableElements = ['close-button', 'volume-slider', 'brightness-slider', 'edit-user-button'];
 
-
     // Save settings helper
     const saveSettings = () => {
         localStorage.setItem('settings_volume', volume.toString());
@@ -31,10 +30,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
         console.log("Settings saved clicked");
     };
 
+    // ⚠️ KORRIGIERT: Event-Propagation stoppen
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Events immer stoppen, damit sie nicht nach Home durchsickern
+            e.stopPropagation();
+            
             switch (e.key) {
                 case 'Escape':
+                    e.preventDefault();
                     onClose();
                     break;
                 case 'ArrowDown':
@@ -73,10 +77,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
+        // Event mit capture=true registrieren für höhere Priorität
+        document.addEventListener('keydown', handleKeyDown, true);
+        return () => document.removeEventListener('keydown', handleKeyDown, true);
     }, [focusedIndex, onClose, volume, brightness]);
-
 
     const handleSaveEdit = (): void => {
         saveSettings();
@@ -93,7 +97,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
         setBrightness(value);
     };
 
-
     const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
         if (e.target === e.currentTarget) {
             onClose();
@@ -103,8 +106,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
     const handleModalClick = (e: React.MouseEvent<HTMLDivElement>): void => {
         e.stopPropagation();
     };
-
-
 
     return (
         <div className="modal-overlay" onClick={handleOverlayClick}>

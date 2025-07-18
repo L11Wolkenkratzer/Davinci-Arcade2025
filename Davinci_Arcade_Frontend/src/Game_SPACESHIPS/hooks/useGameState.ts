@@ -90,7 +90,7 @@ const initialUpgrades: Upgrade[] = [
 export const useGameState = () => {
     const [gameState, setGameState] = useState<GameState>({
         score: 0,
-        coins: 0,
+        coins: 1000,
         level: 1,
         gameRunning: false,
         gameOver: false,

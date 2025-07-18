@@ -6,27 +6,20 @@ import type {Upgrade} from '../types/gametypes.ts';
 
 interface ShopProps {
     ships: Ship[];
-    upgrades: Upgrade[];
     coins: number;
     onBuyShip: (shipId: string) => boolean;
-    onBuyUpgrade: (upgradeId: string) => boolean;
     onBack: () => void;
 }
 
 const Shop: React.FC<ShopProps> = ({
-                                       ships,
-                                       upgrades,
-                                       coins,
-                                       onBuyShip,
-                                       onBuyUpgrade,
-                                       onBack
-                                   }) => {
-    const [selectedTab, setSelectedTab] = useState<'ships' | 'upgrades'>('ships');
+    ships,
+    coins,
+    onBuyShip,
+    onBack
+}) => {
     const [selectedIndex, setSelectedIndex] = useState(0);
-
     const availableShips = ships.filter(ship => !ship.owned);
-    const availableUpgrades = upgrades.filter(upgrade => !upgrade.owned);
-    const currentItems = selectedTab === 'ships' ? availableShips : availableUpgrades;
+    const currentItems = availableShips;
 
     const handleKeyPress = useCallback((event: KeyboardEvent) => {
         switch (event.key) {
@@ -52,27 +45,13 @@ const Shop: React.FC<ShopProps> = ({
                 }
                 break;
             }
-            case 'ArrowLeft':
-                event.preventDefault();
-                setSelectedTab('ships');
-                setSelectedIndex(0);
-                break;
-            case 'ArrowRight':
-                event.preventDefault();
-                setSelectedTab('upgrades');
-                setSelectedIndex(0);
-                break;
             case 'Enter':
                 event.preventDefault();
                 if (selectedIndex === -1) {
                     onBack();
                 } else if (currentItems[selectedIndex]) {
                     const item = currentItems[selectedIndex];
-                    if (selectedTab === 'ships') {
-                        onBuyShip(item.id);
-                    } else {
-                        onBuyUpgrade(item.id);
-                    }
+                    onBuyShip(item.id);
                 }
                 break;
             case 'Escape':
@@ -80,7 +59,7 @@ const Shop: React.FC<ShopProps> = ({
                 onBack();
                 break;
         }
-    }, [selectedTab, selectedIndex, currentItems, onBuyShip, onBuyUpgrade, onBack]);
+    }, [selectedIndex, currentItems, onBuyShip, onBack]);
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyPress);
@@ -104,7 +83,7 @@ const Shop: React.FC<ShopProps> = ({
                 behavior: 'smooth',
             });
         }
-    }, [selectedIndex, selectedTab]);
+    }, [selectedIndex]);
 
     return (
         <>
@@ -118,23 +97,17 @@ const Shop: React.FC<ShopProps> = ({
 
                 <div className="shop-tabs">
                     <button
-                        className={`tab ${selectedTab === 'ships' ? 'active' : ''}`}
-                        onClick={() => { setSelectedTab('ships'); setSelectedIndex(0); }}
+                        className={`tab active`}
+                        style={{ pointerEvents: 'none', opacity: 0.7 }}
                     >
                         SHIPS
-                    </button>
-                    <button
-                        className={`tab ${selectedTab === 'upgrades' ? 'active' : ''}`}
-                        onClick={() => { setSelectedTab('upgrades'); setSelectedIndex(0); }}
-                    >
-                        UPGRADES
                     </button>
                 </div>
 
                 <div className="shop-content">
                     {currentItems.length === 0 ? (
                         <div className="empty-shop">
-                            <p>ALL ITEMS PURCHASED!</p>
+                            <p>ALL SHIPS PURCHASED!</p>
                         </div>
                     ) : (
                         <div className="shop-items" ref={shopListRef} style={{ maxHeight: 350, overflowY: 'auto', scrollbarWidth: 'none' }}>
@@ -145,44 +118,26 @@ const Shop: React.FC<ShopProps> = ({
                                     className={`shop-item ${index === selectedIndex ? 'selected' : ''}`}
                                     onClick={() => {
                                         setSelectedIndex(index);
-                                        if (selectedTab === 'ships') {
-                                            onBuyShip(item.id);
-                                        } else {
-                                            onBuyUpgrade(item.id);
-                                        }
+                                        onBuyShip(item.id);
                                     }}
                                 >
-                                    {selectedTab === 'ships' ? (
-                                        <div className="ship-item">
-                                            <img src={(item as Ship).icon} alt={item.name} className="ship-icon shop-ship-icon" />
-                                            <div className="ship-info">
-                                                <h3>{item.name}</h3>
-                                                <div className="ship-stats">
-                                                    <span>Health: {(item as Ship).maxHealth}</span>
-                                                    <span>Speed: {(item as Ship).speed}</span>
-                                                    <span>Fire Rate: {(item as Ship).fireRate}</span>
-                                                    <span>Damage: {(item as Ship).damage}</span>
-                                                </div>
-                                            </div>
-                                            <div className="price">
-                                                <span className={coins >= item.cost ? 'affordable' : 'expensive'}>
-                                                    {item.cost} COINS
-                                                </span>
+                                    <div className="ship-item">
+                                        <img src={item.icon} alt={item.name} className="ship-icon shop-ship-icon" />
+                                        <div className="ship-info">
+                                            <h3>{item.name}</h3>
+                                            <div className="ship-stats">
+                                                <span>Health: {item.maxHealth}</span>
+                                                <span>Speed: {item.speed}</span>
+                                                <span>Fire Rate: {item.fireRate}</span>
+                                                <span>Damage: {item.damage}</span>
                                             </div>
                                         </div>
-                                    ) : (
-                                        <div className="upgrade-item">
-                                            <div className="upgrade-info">
-                                                <h3>{item.name}</h3>
-                                                <p>{(item as Upgrade).description}</p>
-                                            </div>
-                                            <div className="price">
-                                                <span className={coins >= item.cost ? 'affordable' : 'expensive'}>
-                                                    {item.cost} COINS
-                                                </span>
-                                            </div>
+                                        <div className="price">
+                                            <span className={coins >= item.cost ? 'affordable' : 'expensive'}>
+                                                {item.cost} COINS
+                                            </span>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
                             ))}
                         </div>

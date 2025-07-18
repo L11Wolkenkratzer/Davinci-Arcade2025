@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import "./snake.css";
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +16,258 @@ const getRandomFood = (): Coord => ({
   x: Math.floor(Math.random() * cols),
   y: Math.floor(Math.random() * rows),
 });
+
+// Erweiterte Schlangen-Rendering-Funktion
+const drawRealisticSnake = (ctx: CanvasRenderingContext2D, snake: Coord[], activeSkin: string) => {
+  const now = Date.now();
+  
+  snake.forEach((s, i) => {
+    const cx = s.x * scale + scale / 2;
+    const cy = s.y * scale + scale / 2;
+    const radius = scale * 0.48;
+    
+    ctx.save();
+    
+    if (i === 0) {
+      // === SCHLANGENKOPF - Ultra realistisch ===
+      
+      // Kopf-Basis mit Gradient
+      const headGradient = ctx.createRadialGradient(cx, cy - 5, 0, cx, cy, radius);
+      headGradient.addColorStop(0, '#4a7c59');
+      headGradient.addColorStop(0.6, '#2d5016');
+      headGradient.addColorStop(1, '#1a2e0a');
+      
+      ctx.fillStyle = headGradient;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Kopf-Schatten
+      ctx.shadowColor = '#000';
+      ctx.shadowBlur = 12;
+      ctx.shadowOffsetX = 3;
+      ctx.shadowOffsetY = 3;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      
+      // Schuppen-Muster auf dem Kopf
+      for (let angle = 0; angle < 360; angle += 45) {
+        const rad = (angle * Math.PI) / 180;
+        const scaleX = cx + Math.cos(rad) * (radius * 0.3);
+        const scaleY = cy + Math.sin(rad) * (radius * 0.3);
+        
+        ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
+        ctx.beginPath();
+        ctx.arc(scaleX, scaleY, 2, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      
+      // Augen - Ultra realistisch
+      const eyeOffset = scale * 0.15;
+      const eyeY = cy - scale * 0.1;
+      
+      // Linkes Auge
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.ellipse(cx - eyeOffset, eyeY, scale * 0.08, scale * 0.12, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Rechtes Auge
+      ctx.beginPath();
+      ctx.ellipse(cx + eyeOffset, eyeY, scale * 0.08, scale * 0.12, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Pupillen mit Glanz
+      ctx.fillStyle = '#ff4444';
+      ctx.beginPath();
+      ctx.arc(cx - eyeOffset, eyeY, scale * 0.05, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx + eyeOffset, eyeY, scale * 0.05, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Glanz in den Augen
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cx - eyeOffset + 2, eyeY - 2, scale * 0.02, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx + eyeOffset + 2, eyeY - 2, scale * 0.02, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Nasenlöcher
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.arc(cx - 3, cy + scale * 0.05, 1.5, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx + 3, cy + scale * 0.05, 1.5, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Animierte Zunge
+      const tongueWave = Math.sin(now * 0.008) * 3;
+      ctx.strokeStyle = '#e74c3c';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + scale * 0.25);
+      ctx.quadraticCurveTo(cx + tongueWave, cy + scale * 0.4, cx + tongueWave * 2, cy + scale * 0.6);
+      ctx.stroke();
+      
+      // Gegabelte Zunge
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx + tongueWave * 2, cy + scale * 0.6);
+      ctx.lineTo(cx + tongueWave * 2 - 4, cy + scale * 0.65);
+      ctx.moveTo(cx + tongueWave * 2, cy + scale * 0.6);
+      ctx.lineTo(cx + tongueWave * 2 + 4, cy + scale * 0.65);
+      ctx.stroke();
+      
+    } else {
+      // === KÖRPER-SEGMENTE - Ultra realistisch ===
+      
+      // Körper-Gradient basierend auf Position
+      const bodyGradient = ctx.createRadialGradient(cx, cy - 3, 0, cx, cy, radius);
+      
+      // Verschiedene Farben je nach aktivem Skin
+      let baseColor, midColor, darkColor;
+      switch (activeSkin) {
+        case 'yellow':
+          baseColor = '#ffd700';
+          midColor = '#ffb347';
+          darkColor = '#ff8c00';
+          break;
+        case 'red':
+          baseColor = '#ff6b6b';
+          midColor = '#ee5a52';
+          darkColor = '#e74c3c';
+          break;
+        case 'green':
+          baseColor = '#6ab04c';
+          midColor = '#4caf50';
+          darkColor = '#2e7d32';
+          break;
+        default:
+          baseColor = '#555';
+          midColor = '#333';
+          darkColor = '#111';
+      }
+      
+      bodyGradient.addColorStop(0, baseColor);
+      bodyGradient.addColorStop(0.5, midColor);
+      bodyGradient.addColorStop(1, darkColor);
+      
+      ctx.fillStyle = bodyGradient;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Körper-Schatten
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      
+      // Schuppen-Muster
+      const scaleCount = 6;
+      for (let j = 0; j < scaleCount; j++) {
+        const angle = (j * 60 + i * 30) * Math.PI / 180;
+        const scaleX = cx + Math.cos(angle) * (radius * 0.4);
+        const scaleY = cy + Math.sin(angle) * (radius * 0.4);
+        
+        ctx.fillStyle = `rgba(255, 255, 255, 0.2)`;
+        ctx.beginPath();
+        ctx.arc(scaleX, scaleY, 2, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      
+      // Bauch-Muster (helle Linie)
+      if (i % 2 === 0) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - radius * 0.2, cy);
+        ctx.lineTo(cx + radius * 0.2, cy);
+        ctx.stroke();
+      }
+      
+      // Glanz-Effekt
+      const gloss = ctx.createRadialGradient(cx - 5, cy - 5, 0, cx - 5, cy - 5, radius * 0.3);
+      gloss.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+      gloss.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = gloss;
+      ctx.beginPath();
+      ctx.arc(cx - 5, cy - 5, radius * 0.3, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    
+    ctx.restore();
+  });
+};
+
+// Erweiterte Apfel-Rendering-Funktion
+const drawRealisticApple = (ctx: CanvasRenderingContext2D, food: Coord[]) => {
+  food.forEach(f => {
+    const cx = f.x * scale + scale / 2;
+    const cy = f.y * scale + scale / 2;
+    const radius = scale * 0.4;
+    
+    ctx.save();
+    
+    // Apfel-Gradient
+    const appleGradient = ctx.createRadialGradient(cx - 5, cy - 5, 0, cx, cy, radius);
+    appleGradient.addColorStop(0, '#ff6b6b');
+    appleGradient.addColorStop(0.3, '#e74c3c');
+    appleGradient.addColorStop(1, '#c0392b');
+    
+    ctx.fillStyle = appleGradient;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Apfel-Schatten
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Stiel
+    ctx.strokeStyle = '#8B4513';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - radius);
+    ctx.lineTo(cx, cy - radius - 8);
+    ctx.stroke();
+    
+    // Blatt
+    ctx.fillStyle = '#228B22';
+    ctx.beginPath();
+    ctx.ellipse(cx + 5, cy - radius - 5, 4, 8, Math.PI / 4, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Glanz
+    const shine = ctx.createRadialGradient(cx - 8, cy - 8, 0, cx - 8, cy - 8, radius * 0.4);
+    shine.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+    shine.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = shine;
+    ctx.beginPath();
+    ctx.arc(cx - 8, cy - 8, radius * 0.4, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    ctx.restore();
+  });
+};
 
 const SnakeGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -151,16 +402,20 @@ const SnakeGame: React.FC = () => {
     setActiveAbility(c => (c === id ? "" : id));
   };
 
-
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
 
-    // Spielfeld-Hintergrund sattes Grün
-    ctx.fillStyle = "#4caf50";
+    // Spielfeld-Hintergrund mit Textur
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvasSize.height);
+    bgGradient.addColorStop(0, '#2d5016');
+    bgGradient.addColorStop(1, '#1a2e0a');
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
 
-    ctx.strokeStyle = "#b2ffb2";
+    // Gitter
+    ctx.strokeStyle = "rgba(178, 255, 178, 0.1)";
+    ctx.lineWidth = 1;
     for (let x = 0; x < canvasSize.width; x += scale) {
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -174,38 +429,12 @@ const SnakeGame: React.FC = () => {
       ctx.stroke();
     }
 
-    ctx.fillStyle = "#2196f3";
-    food.forEach(f => {
-      ctx.fillRect(f.x * scale, f.y * scale, scale, scale);
-    });
+    // Realistische Äpfel zeichnen
+    drawRealisticApple(ctx, food);
+    
+    // Realistische Schlange zeichnen
+    drawRealisticSnake(ctx, snake, activeSkin);
 
-    // Draw snake body
-    ctx.fillStyle = activeSkin;
-    snake.forEach((s, i) => {
-      if (i === 0) {
-        // Draw head with face
-        ctx.fillRect(s.x * scale, s.y * scale, scale, scale);
-        // Draw face (simple eyes and smile)
-        const cx = s.x * scale;
-        const cy = s.y * scale;
-        // Eyes
-        ctx.fillStyle = '#222';
-        ctx.beginPath();
-        ctx.arc(cx + scale * 0.32, cy + scale * 0.38, scale * 0.10, 0, 2 * Math.PI);
-        ctx.arc(cx + scale * 0.68, cy + scale * 0.38, scale * 0.10, 0, 2 * Math.PI);
-        ctx.fill();
-        // Smile
-        ctx.beginPath();
-        ctx.strokeStyle = '#222';
-        ctx.lineWidth = 2;
-        ctx.arc(cx + scale / 2, cy + scale * 0.62, scale * 0.18, 0.15 * Math.PI, 0.85 * Math.PI);
-        ctx.stroke();
-        ctx.lineWidth = 1;
-        ctx.fillStyle = activeSkin;
-      } else {
-        ctx.fillRect(s.x * scale, s.y * scale, scale, scale);
-      }
-    });
   }, [snake, food, activeSkin]);
 
   useEffect(() => {
@@ -302,11 +531,6 @@ const SnakeGame: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [paused, pauseSelected, started]);
 
-  // Removed unused renderButton and btn style for cleaner code
-
-
-  // Removed unused arrowState and related effect for cleaner code
-
   // Score calculation: initial snake is 3 segments, so score = snake.length - initialLength, but min 0
   const initialLength = 3;
   const score = Math.max(0, snake.length - initialLength);
@@ -319,8 +543,6 @@ const SnakeGame: React.FC = () => {
       {activeAbility && <span className="snake-ability">{activeAbility}</span>}
     </div>
   );
-
-  // Arrow overlay entfernt
 
   // Modern button
   const renderArcadeButton = (label: string, index: number, onClick: () => void, colorType: 'default' | 'exit' = 'default') => (
@@ -423,7 +645,6 @@ const SnakeGame: React.FC = () => {
             )}
           </>
         )}
-        {/* Arrow overlay entfernt */}
       </div>
     </div>
   );
