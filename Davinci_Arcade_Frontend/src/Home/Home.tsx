@@ -71,7 +71,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
     { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo },
     { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57" },
-    { id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3" },
+    { id: 6, title: "Snake", icon: "💀", color: "#2cea22" },
   ];
 
   const headerButtons: HeaderButton[] = ["settings", "user", "info"];
