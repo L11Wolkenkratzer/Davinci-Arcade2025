@@ -15,13 +15,17 @@ const InfoModal: React.FC<InfoModalProps> = ({ onClose }) => {
 
     const appInfo: AppInfo = {
         version: "v1.0",
-        description: "Erstellt von Gian, Livio & Philip.Unser Davinci Projekt 2025."
+        description: "Erstellt von Gian, Livio & Philip. Unser Davinci Projekt 2025."
     };
 
     const focusableElements = ['close-button'];
 
+    // ⚠️ KORRIGIERT: Event-Propagation stoppen
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            // Events immer stoppen, damit sie nicht nach Home durchsickern
+            e.stopPropagation();
+            
             switch (e.key) {
                 case 'Escape':
                 case 'Enter':
@@ -31,8 +35,9 @@ const InfoModal: React.FC<InfoModalProps> = ({ onClose }) => {
             }
         };
 
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
+        // Event mit capture=true registrieren für höhere Priorität
+        document.addEventListener('keydown', handleKeyDown, true);
+        return () => document.removeEventListener('keydown', handleKeyDown, true);
     }, [onClose]);
 
     const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
@@ -49,7 +54,7 @@ const InfoModal: React.FC<InfoModalProps> = ({ onClose }) => {
         <div className="modal-overlay" onClick={handleOverlayClick}>
             <div className="modal-content info-modal" onClick={handleModalClick}>
                 <div className="modal-header">
-                    <h2 className="modal-title"> Info</h2>
+                    <h2 className="modal-title">ℹ️ Info</h2>
                     <button
                         className={`close-button ${focusedIndex === 0 ? 'keyboard-selected' : ''}`}
                         onClick={onClose}
@@ -59,8 +64,8 @@ const InfoModal: React.FC<InfoModalProps> = ({ onClose }) => {
                 </div>
                 <div className="modal-body">
                     <div className="info-content">
-                        <p>DAVINCI ARCADE </p>
-                        <p>{appInfo.version}</p>
+                        <p><strong>DAVINCI ARCADE</strong></p>
+                        <p>Version: {appInfo.version}</p>
                         <p>{appInfo.description}</p>
                     </div>
                 </div>

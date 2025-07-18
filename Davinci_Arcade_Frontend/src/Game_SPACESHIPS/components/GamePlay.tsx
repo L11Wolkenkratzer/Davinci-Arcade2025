@@ -372,7 +372,7 @@ const GamePlay: React.FC<GamePlayProps> = ({ gameState, upgrades, onGameOver, on
                 gameRunning: true,
                 gameOver: false,
                 ship: { ...gameState.ship },
-                coins: 0, // Set initial coins to 0
+                coins: 100, // Set initial coins to 0
             }));
             setShipY(SHIP_START_Y);
             setShipX(SHIP_START_X + 20); // Move ship spawn 20px further right
@@ -448,8 +448,8 @@ const GamePlay: React.FC<GamePlayProps> = ({ gameState, upgrades, onGameOver, on
                         <span style={{ display: 'inline-flex', gap: '0.3rem', marginLeft: '0.3rem', flexWrap: 'wrap' }}>
                             {upgrades.filter((u: Upgrade) => u.owned).map((u: Upgrade) => (
                                 <span key={u.id} title={u.description} style={{
-                                    background: '#b388ff',
-                                    color: '#222',
+                                    background: '#222',
+                                    color: '#b388ff',
                                     borderRadius: '6px',
                                     fontSize: '0.8rem',
                                     fontFamily: 'inherit',
