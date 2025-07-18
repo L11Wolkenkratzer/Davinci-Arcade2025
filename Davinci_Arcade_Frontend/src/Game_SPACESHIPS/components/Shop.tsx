@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import type {Ship, Upgrade} from '../types/gametypes.ts';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+import type {Ship} from '../types/gametypes.ts';
+import type {Upgrade} from '../types/gametypes.ts';
+
 
 interface ShopProps {
     ships: Ship[];
@@ -27,14 +30,28 @@ const Shop: React.FC<ShopProps> = ({
 
     const handleKeyPress = useCallback((event: KeyboardEvent) => {
         switch (event.key) {
-            case 'ArrowUp':
+            case 'ArrowUp': {
                 event.preventDefault();
-                setSelectedIndex(prev => prev > 0 ? prev - 1 : Math.max(0, currentItems.length - 1));
+                if (selectedIndex === -1) {
+                    setSelectedIndex(currentItems.length - 1);
+                } else if (selectedIndex > 0) {
+                    setSelectedIndex(selectedIndex - 1);
+                } else if (selectedIndex === 0 && currentItems.length > 0) {
+                    setSelectedIndex(-1); // EXIT button
+                }
                 break;
-            case 'ArrowDown':
+            }
+            case 'ArrowDown': {
                 event.preventDefault();
-                setSelectedIndex(prev => prev < currentItems.length - 1 ? prev + 1 : 0);
+                if (selectedIndex === -1) {
+                    setSelectedIndex(0);
+                } else if (selectedIndex < currentItems.length - 1) {
+                    setSelectedIndex(selectedIndex + 1);
+                } else if (selectedIndex === currentItems.length - 1) {
+                    setSelectedIndex(-1); // EXIT button
+                }
                 break;
+            }
             case 'ArrowLeft':
                 event.preventDefault();
                 setSelectedTab('ships');
@@ -47,7 +64,9 @@ const Shop: React.FC<ShopProps> = ({
                 break;
             case 'Enter':
                 event.preventDefault();
-                if (currentItems[selectedIndex]) {
+                if (selectedIndex === -1) {
+                    onBack();
+                } else if (currentItems[selectedIndex]) {
                     const item = currentItems[selectedIndex];
                     if (selectedTab === 'ships') {
                         onBuyShip(item.id);
@@ -74,92 +93,127 @@ const Shop: React.FC<ShopProps> = ({
         }
     }, [selectedIndex, currentItems.length]);
 
+    // Refs für Scroll-Container und Items
+    const shopListRef = useRef<HTMLDivElement>(null);
+    const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+    useEffect(() => {
+        if (itemRefs.current[selectedIndex]) {
+            itemRefs.current[selectedIndex]?.scrollIntoView({
+                block: 'nearest',
+                behavior: 'smooth',
+            });
+        }
+    }, [selectedIndex, selectedTab]);
+
     return (
-        <div className="shop">
-            <div className="shop-header">
-                <h1>GALACTIC SHOP</h1>
-                <div className="coins-display">
-                    <span>COINS: {coins}</span>
-                </div>
-            </div>
-
-            <div className="shop-tabs">
-                <button
-                    className={`tab ${selectedTab === 'ships' ? 'active' : ''}`}
-                    onClick={() => { setSelectedTab('ships'); setSelectedIndex(0); }}
-                >
-                    SHIPS
-                </button>
-                <button
-                    className={`tab ${selectedTab === 'upgrades' ? 'active' : ''}`}
-                    onClick={() => { setSelectedTab('upgrades'); setSelectedIndex(0); }}
-                >
-                    UPGRADES
-                </button>
-            </div>
-
-            <div className="shop-content">
-                {currentItems.length === 0 ? (
-                    <div className="empty-shop">
-                        <p>ALL ITEMS PURCHASED!</p>
+        <>
+            <div className="shop">
+                <div className="shop-header">
+                    <h1>GALACTIC SHOP</h1>
+                    <div className="coins-display">
+                        <span>COINS: {coins}</span>
                     </div>
-                ) : (
-                    <div className="shop-items">
-                        {currentItems.map((item, index) => (
-                            <div
-                                key={item.id}
-                                className={`shop-item ${index === selectedIndex ? 'selected' : ''}`}
-                                onClick={() => {
-                                    setSelectedIndex(index);
-                                    if (selectedTab === 'ships') {
-                                        onBuyShip(item.id);
-                                    } else {
-                                        onBuyUpgrade(item.id);
-                                    }
-                                }}
-                            >
-                                {selectedTab === 'ships' ? (
-                                    <div className="ship-item">
-                                        <div className="ship-icon">{(item as Ship).icon}</div>
-                                        <div className="ship-info">
-                                            <h3>{item.name}</h3>
-                                            <div className="ship-stats">
-                                                <span>Health: {(item as Ship).maxHealth}</span>
-                                                <span>Speed: {(item as Ship).speed}</span>
-                                                <span>Fire Rate: {(item as Ship).fireRate}</span>
-                                                <span>Damage: {(item as Ship).damage}</span>
+                </div>
+
+                <div className="shop-tabs">
+                    <button
+                        className={`tab ${selectedTab === 'ships' ? 'active' : ''}`}
+                        onClick={() => { setSelectedTab('ships'); setSelectedIndex(0); }}
+                    >
+                        SHIPS
+                    </button>
+                    <button
+                        className={`tab ${selectedTab === 'upgrades' ? 'active' : ''}`}
+                        onClick={() => { setSelectedTab('upgrades'); setSelectedIndex(0); }}
+                    >
+                        UPGRADES
+                    </button>
+                </div>
+
+                <div className="shop-content">
+                    {currentItems.length === 0 ? (
+                        <div className="empty-shop">
+                            <p>ALL ITEMS PURCHASED!</p>
+                        </div>
+                    ) : (
+                        <div className="shop-items" ref={shopListRef} style={{ maxHeight: 350, overflowY: 'auto', scrollbarWidth: 'none' }}>
+                            {currentItems.map((item, index) => (
+                                <div
+                                    key={item.id}
+                                    ref={el => { itemRefs.current[index] = el; }}
+                                    className={`shop-item ${index === selectedIndex ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        setSelectedIndex(index);
+                                        if (selectedTab === 'ships') {
+                                            onBuyShip(item.id);
+                                        } else {
+                                            onBuyUpgrade(item.id);
+                                        }
+                                    }}
+                                >
+                                    {selectedTab === 'ships' ? (
+                                        <div className="ship-item">
+                                            <img src={(item as Ship).icon} alt={item.name} className="ship-icon shop-ship-icon" />
+                                            <div className="ship-info">
+                                                <h3>{item.name}</h3>
+                                                <div className="ship-stats">
+                                                    <span>Health: {(item as Ship).maxHealth}</span>
+                                                    <span>Speed: {(item as Ship).speed}</span>
+                                                    <span>Fire Rate: {(item as Ship).fireRate}</span>
+                                                    <span>Damage: {(item as Ship).damage}</span>
+                                                </div>
+                                            </div>
+                                            <div className="price">
+                                                <span className={coins >= item.cost ? 'affordable' : 'expensive'}>
+                                                    {item.cost} COINS
+                                                </span>
                                             </div>
                                         </div>
-                                        <div className="price">
-                                            <span className={coins >= item.cost ? 'affordable' : 'expensive'}>
-                                                {item.cost} COINS
-                                            </span>
+                                    ) : (
+                                        <div className="upgrade-item">
+                                            <div className="upgrade-info">
+                                                <h3>{item.name}</h3>
+                                                <p>{(item as Upgrade).description}</p>
+                                            </div>
+                                            <div className="price">
+                                                <span className={coins >= item.cost ? 'affordable' : 'expensive'}>
+                                                    {item.cost} COINS
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="upgrade-item">
-                                        <div className="upgrade-info">
-                                            <h3>{item.name}</h3>
-                                            <p>{(item as Upgrade).description}</p>
-                                        </div>
-                                        <div className="price">
-                                            <span className={coins >= item.cost ? 'affordable' : 'expensive'}>
-                                                {item.cost} COINS
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                )}
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
-
-            <div className="shop-controls">
-                <p>←→: Switch tabs | ↑↓: Select | ENTER: Buy | ESC: Back</p>
+            <div className="shop-controls" style={{ marginTop: '4rem' }}>
+                <button
+                    className={selectedIndex === -1 ? 'exit-button selected' : 'exit-button'}
+                    style={{
+                        padding: '1rem 2.5rem',
+                        fontFamily: 'Press Start 2P, cursive',
+                        fontSize: '1rem',
+                        borderRadius: '10px',
+                        border: '2px solid #b90a10ff',
+                        background: '#111',
+                        color: '#b90a10ff',
+                        cursor: 'pointer',
+                        outline: selectedIndex === -1 ? '2px solid #d85156ff' : 'none',
+                        margin: '0 auto',
+                        display: 'block',
+                        boxShadow: selectedIndex === -1 ? '0 0 20px #ca4449ff' : 'none',
+                        transition: 'all 0.2s',
+                    }}
+                    onClick={onBack}
+                    tabIndex={0}
+                >
+                    EXIT
+                </button>
             </div>
-        </div>
+        </>
     );
-};
-
+}
 export default Shop;

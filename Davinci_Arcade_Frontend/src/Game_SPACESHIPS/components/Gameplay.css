@@ -1,0 +1,37 @@
+/* Gameplay.css - Custom styles for the GamePlay component */
+
+.gameplay-root {
+  width: 100vw;
+  height: 100vh;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a13;
+}
+
+
+.gameplay-area {
+  width: 130vw;
+  max-width: 1900px;
+  height: 80vh;
+  min-height: 500px;
+  max-height: 900px;
+  background: #0a0a13;
+  position: relative;
+  margin: 0 auto;
+  border-radius: 18px;
+  box-shadow: 0 0 40px #222;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+
+/* Remove old media queries, always fill viewport */

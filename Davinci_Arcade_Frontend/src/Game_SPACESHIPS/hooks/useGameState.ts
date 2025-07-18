@@ -1,11 +1,16 @@
+// hooks/useGameState.ts
 import { useState, useCallback } from 'react';
 import type {GameState, Ship, Upgrade, HighscoreEntry} from '../types/gametypes.ts';
+import basicShip from '../images/spaceships/standart-fighter.png'
+import interceptor from '../images/spaceships/interceptor.png'
+import destroyer from '../images/spaceships/destroyer.png'
+import asteroid from '../images/spaceships/asteroid.png'
 
 const initialShips: Ship[] = [
     {
         id: 'basic',
         name: 'BASIC FIGHTER',
-        icon: '🚀',
+        icon: basicShip,
         health: 100,
         maxHealth: 100,
         speed: 5,
@@ -18,7 +23,7 @@ const initialShips: Ship[] = [
     {
         id: 'interceptor',
         name: 'INTERCEPTOR',
-        icon: '✈️',
+        icon: interceptor,
         health: 80,
         maxHealth: 80,
         speed: 8,
@@ -31,7 +36,7 @@ const initialShips: Ship[] = [
     {
         id: 'destroyer',
         name: 'DESTROYER',
-        icon: '🛸',
+        icon: destroyer,
         health: 150,
         maxHealth: 150,
         speed: 3,
@@ -85,7 +90,7 @@ const initialUpgrades: Upgrade[] = [
 export const useGameState = () => {
     const [gameState, setGameState] = useState<GameState>({
         score: 0,
-        coins: 1000,
+        coins: 0,
         level: 1,
         gameRunning: false,
         gameOver: false,
