@@ -1,3 +1,4 @@
+// types/gametypes.ts
 export interface Ship {
     id: string;
     name: string;
@@ -36,6 +37,7 @@ export interface Asteroid {
     size: number;
     velocity: number;
     health: number;
+    image: string; // Pfad zum Pixel-Art Bild
 }
 
 export interface GameState {

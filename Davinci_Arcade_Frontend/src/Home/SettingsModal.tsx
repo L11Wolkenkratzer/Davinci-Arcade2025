@@ -10,12 +10,26 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, setCurrentPlayer }) => {
-    const [volume, setVolume] = useState<number>(50);
-    const [brightness, setBrightness] = useState<number>(75);
+    const [volume, setVolume] = useState<number>(() => {
+        const stored = localStorage.getItem('settings_volume');
+        return stored ? parseInt(stored) : 50;
+    });
+    const [brightness, setBrightness] = useState<number>(() => {
+        const stored = localStorage.getItem('settings_brightness');
+        return stored ? parseInt(stored) : 75;
+    });
     const [focusedIndex, setFocusedIndex] = useState<number>(0);
 
     const modalRef = useRef<HTMLDivElement>(null);
     const focusableElements = ['close-button', 'volume-slider', 'brightness-slider', 'edit-user-button'];
+
+
+    // Save settings helper
+    const saveSettings = () => {
+        localStorage.setItem('settings_volume', volume.toString());
+        localStorage.setItem('settings_brightness', brightness.toString());
+        console.log("Settings saved clicked");
+    };
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,8 +65,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
                     e.preventDefault();
                     if (focusedIndex === 0) { // Close button
                         onClose();
-                    } else if (focusedIndex === 3) { // Edit user button
-                        handleSaveEdit();
+                    } else if (focusedIndex === 3) { // Save button
+                        saveSettings();
+                        onClose();
                     }
                     break;
             }
@@ -60,20 +75,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [focusedIndex, onClose]);
+    }, [focusedIndex, onClose, volume, brightness]);
+
 
     const handleSaveEdit = (): void => {
-        // Hier könnte man Einstellungen speichern, z.B. per API
-        console.log("Settings saved clicked");
+        saveSettings();
+        onClose();
     };
 
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        setVolume(parseInt(e.target.value));
+        const value = parseInt(e.target.value);
+        setVolume(value);
     };
 
     const handleBrightnessChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        setBrightness(parseInt(e.target.value));
+        const value = parseInt(e.target.value);
+        setBrightness(value);
     };
+
 
     const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
         if (e.target === e.currentTarget) {

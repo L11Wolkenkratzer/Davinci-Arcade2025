@@ -1,11 +1,14 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './Home/Home';
+import PacManGame from './Game1_PACMAN/PacManGame';
+import SpaceshipGame from './Game_SPACESHIPS/SpaceshipsGame.tsx';
+import Snake from './Game_Snake/snake.tsx';
+import Dino from  './Game_Dinojump/Dinojump.tsx';
 import { useEffect, useState } from 'react'
-import Home from './Home/Home.tsx'
 import Login from './Login/Login.tsx'
 
 import Tetris from './Tetris/Tetris.tsx';
 
-import SpaceshipGame from './Game_SPACESHIPS/SpaceshipsGame.tsx';  // ⬅︎ NEU
 
 
 // Universeller Player-Typ, passend zum Backend
@@ -80,6 +83,10 @@ function App() {
             )
           }
         />
+
+                <Route path="/pacman" element={<PacManGame />} />
+                <Route path="/snake" element={<Snake />} />
+                <Route path="/dino" element={<Dino />} />
 
         <Route path="/tetris" element={currentPlayer ? <Tetris /> : <Login setCurrentPlayer={setCurrentPlayer} />} />
 

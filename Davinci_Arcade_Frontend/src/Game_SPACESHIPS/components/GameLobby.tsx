@@ -1,3 +1,4 @@
+// components/GameLobby.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import type {Ship} from '../types/gametypes.ts';
 
@@ -56,36 +57,39 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     }, [handleKeyPress]);
 
     return (
-        <div className="game-lobby">
-            <div className="lobby-header">
-                <h1 className="game-title">SPACESHIPS</h1>
-                <div className="ship-preview">
-                    <div className="ship-icon">{currentShip.icon}</div>
-                    <div className="ship-name">{currentShip.name}</div>
+        <div className="game-container">
+            <div className="game-lobby">
+                <div className="lobby-header">
+                    <h1 className="game-title">SPACESHIPS</h1>
+                    <div className="ship-preview">
+                        <img src={currentShip.icon} alt={currentShip.name} className="ship-icon" />
+                        <div className="ship-name">{currentShip.name}</div>
+                    </div>
+                    <div className="coins-display">
+                        <span className="coins-label">COINS:</span>
+                        <span className="coins-amount">{coins}</span>
+                    </div>
                 </div>
-                <div className="coins-display">
-                    <span className="coins-label">COINS:</span>
-                    <span className="coins-amount">{coins}</span>
+
+                <div className="menu-container">
+                    {menuItems.map((item, index) => (
+                        <button
+                            key={index}
+                            className={`menu-item ${index === selectedIndex ? 'selected' : ''}`}
+                            onClick={item.action}
+                        >
+                            {item.label}
+                        </button>
+                    ))}
                 </div>
-            </div>
 
-            <div className="menu-container">
-                {menuItems.map((item, index) => (
-                    <button
-                        key={index}
-                        className={`menu-item ${index === selectedIndex ? 'selected' : ''}`}
-                        onClick={item.action}
-                    >
-                        {item.label}
-                    </button>
-                ))}
-            </div>
-
-            <div className="lobby-footer">
-                <p>Use ↑↓ arrows to navigate, ENTER to select</p>
+                <div className="lobby-footer">
+                    <p style={{ fontSize: '0.8rem', color: '#0ff', textAlign: 'center' }}>Use Joystick arrows to navigate, bottom Button to select</p>
+                </div>
             </div>
         </div>
     );
 };
 
 export default GameLobby;
+

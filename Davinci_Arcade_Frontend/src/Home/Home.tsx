@@ -7,6 +7,7 @@ import React, {
   SetStateAction,
 } from "react";
 import { useNavigate } from "react-router-dom";
+
 import "./Home.css";
 import settingsImage from "../assets/settingsImage.png";
 import SettingsModal from "./SettingsModal";
@@ -40,6 +41,7 @@ interface Game {
 type NavigationMode = "games" | "header";
 type HeaderButton = "settings" | "user" | "info";
 
+
 const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   /* ------------------------------------------------------------------ */
   /* State                                                              */
@@ -59,7 +61,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   const navigate = useNavigate();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  
+
   // Games Array mit Video-Support
   const games: Game[] = [
     { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b" },
@@ -177,7 +179,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   /* ------------------------------------------------------------------ */
   /* Effekt-Hooks                                                       */
   /* ------------------------------------------------------------------ */
-  
+
   // Zeit-Update
   useEffect(() => {
     const upd = () => {
@@ -338,10 +340,10 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   };
 
   const getBtnClass = (button: HeaderButton): string => {
-    const baseClass = button === "user" ? "user-text" : 
-                     button === "info" ? "info-circle" : 
+    const baseClass = button === "user" ? "user-text" :
+                     button === "info" ? "info-circle" :
                      `${button}-button`;
-    
+
     return `${baseClass}${
       navigationMode === "header" && selectedHeaderButton === button
         ? " keyboard-selected"
@@ -498,7 +500,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
           >
             <h2
               className="selected-game-title"
-              style={{ 
+              style={{
                 "--game-color": games[selectedGameIndex].color,
                 fontSize: '2rem',
                 marginTop: "-2.3rem"

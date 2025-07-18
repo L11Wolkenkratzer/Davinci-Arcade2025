@@ -53,7 +53,7 @@
             0 0 20px #ffff00,
             0 0 40px #ffff00,
             0 0 60px #ffaa00;
-    margin-bottom: 20px;
+    margin-top:100px;
     letter-spacing: 4px;
     animation: titleFlicker 2s ease-in-out infinite alternate;
 }
