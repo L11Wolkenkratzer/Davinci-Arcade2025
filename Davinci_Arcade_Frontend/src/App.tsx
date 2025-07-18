@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react'
 import Home from './Home/Home.tsx'
 import Login from './Login/Login.tsx'
 
+
 import Tetris from './Tetris/Tetris.tsx';
+import PacMan from './PacMan/PacMan.tsx';
 
 import SpaceshipGame from './Game_SPACESHIPS/SpaceshipsGame.tsx';  // ⬅︎ NEU
 
@@ -70,18 +72,21 @@ function App() {
 
         <Route path="/spaceships" element={<SpaceshipGame />} />
 
+
         <Route
           path="/pacman"
-          element={
-            currentPlayer ? (
-              <Home currentPlayer={currentPlayer} setCurrentPlayer={setCurrentPlayer} />
-            ) : (
-              <Login setCurrentPlayer={setCurrentPlayer} />
-            )
-          }
+          element={currentPlayer ? <PacMan /> : <Login setCurrentPlayer={setCurrentPlayer} />}
         />
 
-        <Route path="/tetris" element={currentPlayer ? <Tetris /> : <Login setCurrentPlayer={setCurrentPlayer} />} />
+        <Route 
+  path="/tetris" 
+  element={
+    currentPlayer ? 
+      <Tetris currentPlayer={currentPlayer} /> : 
+      <Login setCurrentPlayer={setCurrentPlayer} />
+  } 
+/>
+
 
 
         <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
