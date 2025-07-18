@@ -259,3 +259,107 @@
     min-width: 0;
   }
 }
+.tetris-player-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, #222, #111);
+  border: 2px solid var(--primary-cyan);
+  border-radius: 12px;
+  box-shadow: 0 0 16px #0ff2;
+}
+
+.tetris-highscores {
+  background: linear-gradient(145deg, #1a1a1a 80%, #0d0d0d 100%);
+  border: 4px solid var(--primary-cyan);
+  border-radius: 32px;
+  box-shadow: 0 0 64px #0ff4, 0 0 128px #fff1;
+  padding: 3rem 2.5rem 2.5rem 2.5rem;
+  min-width: 600px;
+  max-width: 98vw;
+  margin: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.tetris-highscore-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+  width: 100%;
+  max-width: 500px;
+}
+
+.tetris-highscore-entry {
+  display: grid;
+  grid-template-columns: 60px 1fr 100px 60px;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(145deg, #222, #111);
+  border: 2px solid var(--primary-cyan);
+  border-radius: 12px;
+  box-shadow: 0 0 16px #0ff2;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.tetris-highscore-entry:hover {
+  background: linear-gradient(145deg, #333, #222);
+  box-shadow: 0 0 24px #0ff4;
+  transform: translateY(-2px);
+}
+
+.tetris-rank {
+  color: #ff0;
+  text-shadow: 0 0 8px #ff0;
+  font-weight: bold;
+}
+
+.tetris-name {
+  color: #fff;
+  text-shadow: 0 0 8px #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tetris-score {
+  color: var(--primary-cyan);
+  text-shadow: 0 0 8px var(--primary-cyan);
+  text-align: right;
+  font-weight: bold;
+}
+
+.tetris-level {
+  color: #0f0;
+  text-shadow: 0 0 8px #0f0;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.tetris-no-scores {
+  text-align: center;
+  color: #888;
+  font-size: 1.2rem;
+  margin: 2rem 0;
+}
+
+@media (max-width: 700px) {
+  .tetris-highscores {
+    min-width: 90vw;
+  }
+  
+  .tetris-highscore-entry {
+    grid-template-columns: 50px 1fr 80px 50px;
+    gap: 0.5rem;
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+}

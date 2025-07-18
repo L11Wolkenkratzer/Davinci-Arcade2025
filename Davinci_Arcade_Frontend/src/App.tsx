@@ -7,7 +7,9 @@ import Dino from  './Game_Dinojump/Dinojump.tsx';
 import { useEffect, useState } from 'react'
 import Login from './Login/Login.tsx'
 
+
 import Tetris from './Tetris/Tetris.tsx';
+import PacMan from './PacMan/PacMan.tsx';
 
 
 
@@ -73,18 +75,21 @@ function App() {
 
         <Route path="/spaceships" element={<SpaceshipGame />} />
 
+
         <Route
           path="/pacman"
-          element={
-            currentPlayer ? (
-              <Home currentPlayer={currentPlayer} setCurrentPlayer={setCurrentPlayer} />
-            ) : (
-              <Login setCurrentPlayer={setCurrentPlayer} />
-            )
-          }
+          element={currentPlayer ? <PacMan /> : <Login setCurrentPlayer={setCurrentPlayer} />}
         />
 
-                <Route path="/pacman" element={<PacManGame />} />
+        <Route 
+  path="/tetris" 
+  element={
+    currentPlayer ? 
+      <Tetris currentPlayer={currentPlayer} /> : 
+      <Login setCurrentPlayer={setCurrentPlayer} />
+  } 
+/>
+
                 <Route path="/snake" element={<Snake />} />
                 <Route path="/dino" element={<Dino />} />
 

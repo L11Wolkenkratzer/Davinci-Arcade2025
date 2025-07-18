@@ -14,6 +14,7 @@ import SettingsModal from "./SettingsModal";
 import UserModal from "./UserModal";
 import InfoModal from "./InfoModal";
 import sonicVideo from '/Videos/sonic-preview2.mp4';
+import tetrisVideo from '/Videos/tetris.mp4';
 
 // Types für Player aus App.tsx
 export interface Player {
@@ -57,6 +58,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
   const [videoVisible, setVideoVisible] = useState<boolean>(false);
   const [videoEnded, setVideoEnded] = useState<boolean>(false);
+  const [videoFadeIn, setVideoFadeIn] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -64,7 +66,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
 
   // Games Array mit Video-Support
   const games: Game[] = [
-    { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b" },
+    { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b", video: tetrisVideo},
     { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
     { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
     { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo },
@@ -74,29 +76,25 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
 
   const headerButtons: HeaderButton[] = ["settings", "user", "info"];
 
+
   /* ------------------------------------------------------------------ */
   /* Video Logic                                                        */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    console.log("Game index changed to:", selectedGameIndex, "Game:", games[selectedGameIndex].title);
-
-    // Timer sofort stoppen
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-
-    // Video sofort verstecken und zurücksetzen
-    setVideoVisible(false);
+    // Super smooth fade-in for video
     setVideoEnded(false);
-
-    // Prüfen ob aktuelles Spiel ein Video hat
     const currentGame = games[selectedGameIndex];
     if (currentGame && currentGame.video) {
-      timerRef.current = setTimeout(() => {
-        setVideoVisible(true);
-        setVideoEnded(false);
-      }, 2000);
+      setVideoVisible(true);
+      setVideoFadeIn(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVideoFadeIn(true);
+        });
+      });
+    } else {
+      setVideoVisible(false);
+      setVideoFadeIn(false);
     }
   }, [selectedGameIndex]);
 
@@ -419,22 +417,13 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
                     style={{
                       "--game-color": game.color,
                       ...getCardTransform(index),
-                    }}
+                    } as React.CSSProperties & Record<string, any>}
                   >
+                    
                     <div className="game-content">
+
                       {shouldShowVideo ? (
-                        <div style={{
-                          width: '90%',
-                          height: '60%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginBottom: '1rem',
-                          backgroundColor: 'rgba(0,255,255,0.1)',
-                          borderRadius: '15px',
-                          border: '2px solid #0ff',
-                          position: 'relative'
-                        }}>
+                        <>
                           <video
                             ref={videoRef}
                             src={game.video}
@@ -443,37 +432,48 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
                             playsInline
                             controls={false}
                             style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
                               width: '100%',
                               height: '100%',
                               objectFit: 'cover',
-                              borderRadius: '13px'
+                              zIndex: 1,
+                              borderRadius: '32px',
+                              pointerEvents: 'none',
+                              background: 'black',
+                              opacity: videoFadeIn ? 1 : 0,
+                              transition: 'opacity 0.9s cubic-bezier(0.4,0,0.2,1)',
+                              willChange: 'opacity',
                             }}
                             onEnded={() => setVideoEnded(true)}
                           />
-
+                          {/* Overlay for replay button */}
                           {videoEnded && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '50%',
-                              left: '50%',
-                              transform: 'translate(-50%, -50%)',
-                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                              color: '#0ff',
-                              padding: '10px 20px',
-                              borderRadius: '10px',
-                              fontSize: '14px',
-                              fontFamily: 'Press Start 2P',
-                              textAlign: 'center',
-                              border: '1px solid #0ff',
-                              cursor: 'pointer'
-                            }}
-                            onClick={replayVideo}
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                color: '#0ff',
+                                padding: '10px 20px',
+                                borderRadius: '10px',
+                                fontSize: '14px',
+                                fontFamily: 'Press Start 2P',
+                                textAlign: 'center',
+                                border: '1px solid #0ff',
+                                cursor: 'pointer',
+                                zIndex: 2,
+                              }}
+                              onClick={replayVideo}
                             >
-                              ↻ REPLAY<br/>
-                              <span style={{fontSize: '10px'}}>LEERTASTE</span>
+                              ↻ REPLAY<br />
+                              <span style={{ fontSize: '10px' }}>LEERTASTE</span>
                             </div>
                           )}
-                        </div>
+                        </>
                       ) : (
                         <div className="game-icon-carousel">{game.icon}</div>
                       )}
@@ -524,7 +524,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
               <span className="footer-divider">&amp;</span>
               <span className="footer-text">Philip</span>
             </div>
-            <div className="footer-year">ITS 2025</div>
+            <div className="footer-year">ITS 2024</div>
           </div>
         </footer>
       </div>

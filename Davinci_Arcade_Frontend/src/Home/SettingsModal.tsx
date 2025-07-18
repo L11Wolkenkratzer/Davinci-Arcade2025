@@ -156,11 +156,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
                     </div>
 
                     <div className="setting-item">
-                        <label>Highscore:</label>
-                        <span className="user-highscore">{currentPlayer.totalScore}</span>
-                    </div>
-
-                    <div className="setting-item">
                         <label>Gespielte Spiele:</label>
                         <span className="games-played">{currentPlayer.gamesPlayed}</span>
                     </div>
