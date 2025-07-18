@@ -6,14 +6,28 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
-    const [volume, setVolume] = useState<number>(50);
-    const [brightness, setBrightness] = useState<number>(75);
+    const [volume, setVolume] = useState<number>(() => {
+        const stored = localStorage.getItem('settings_volume');
+        return stored ? parseInt(stored) : 50;
+    });
+    const [brightness, setBrightness] = useState<number>(() => {
+        const stored = localStorage.getItem('settings_brightness');
+        return stored ? parseInt(stored) : 75;
+    });
     const [username, setUsername] = useState<string>("Mustermann");
     const [playedMinutes, setPlayedMinutes] = useState<string>("xxxx");
     const [focusedIndex, setFocusedIndex] = useState<number>(0);
 
     const modalRef = useRef<HTMLDivElement>(null);
     const focusableElements = ['close-button', 'volume-slider', 'brightness-slider', 'edit-user-button'];
+
+
+    // Save settings helper
+    const saveSettings = () => {
+        localStorage.setItem('settings_volume', volume.toString());
+        localStorage.setItem('settings_brightness', brightness.toString());
+        console.log("Settings saved clicked");
+    };
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -49,8 +63,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                     e.preventDefault();
                     if (focusedIndex === 0) { // Close button
                         onClose();
-                    } else if (focusedIndex === 3) { // Edit user button
-                        handleSaveEdit();
+                    } else if (focusedIndex === 3) { // Save button
+                        saveSettings();
+                        onClose();
                     }
                     break;
             }
@@ -58,19 +73,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [focusedIndex, onClose]);
+    }, [focusedIndex, onClose, volume, brightness]);
+
 
     const handleSaveEdit = (): void => {
-        console.log("Settings saved clicked");
+        saveSettings();
+        onClose();
     };
 
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        setVolume(parseInt(e.target.value));
+        const value = parseInt(e.target.value);
+        setVolume(value);
     };
 
     const handleBrightnessChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-        setBrightness(parseInt(e.target.value));
+        const value = parseInt(e.target.value);
+        setBrightness(value);
     };
+
 
     const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {
         if (e.target === e.currentTarget) {
@@ -81,8 +101,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
     const handleModalClick = (e: React.MouseEvent<HTMLDivElement>): void => {
         e.stopPropagation();
     };
-
-
 
     return (
         <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -96,7 +114,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                         ×
                     </button>
                 </div>
-
                 <div className="modal-body">
                     <div className="setting-item">
                         <label>Lautstärke:</label>
@@ -112,7 +129,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                             <span className="slider-value">{volume}%</span>
                         </div>
                     </div>
-
                     <div className="setting-item">
                         <label>Helligkeit:</label>
                         <div className="slider-container">
@@ -127,17 +143,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
                             <span className="slider-value">{brightness}%</span>
                         </div>
                     </div>
-
                     <div className="setting-item">
                         <label>User:</label>
                         <span className="user-name">{username}</span>
                     </div>
-
                     <div className="setting-item">
                         <label>Gespielte Minuten:</label>
                         <span className="played-time">{playedMinutes}</span>
                     </div>
-
                     <button
                         className={`edit-user-button ${focusedIndex === 3 ? 'keyboard-selected' : ''}`}
                         onClick={handleSaveEdit}

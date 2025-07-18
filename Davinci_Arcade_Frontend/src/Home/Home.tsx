@@ -27,7 +27,7 @@ const games: Game[] = [
     {id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1"},
     {id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo},
     {id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57"}, // Geändert von ⚔️ zu 🚀
-    {id: 6, title: "DOOM", icon: "💀", color: "#ff9ff3"}
+    {id: 6, title: "SNAKE", icon: "💀", color: "#3add3aff"}
 ];
 
 const Home: React.FC = () => {
@@ -293,6 +293,9 @@ const Home: React.FC = () => {
                 break;
             case "SPACESHIPS":
                 navigate("/spaceships");
+                break;
+            case "SNAKE":
+                navigate("/snake");
                 break;
             default:
                 console.log(`Noch keine Route für ${game.title}`);
