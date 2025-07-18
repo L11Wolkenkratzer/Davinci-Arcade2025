@@ -1,0 +1,62 @@
+/* DinoJump Game Styles */
+.dinojump-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #e1c699 0%, #f7f7f7 100%);
+}
+.dinojump-menu, .dinojump-controls, .dinojump-leaderboard, .dinojump-gameover, .dinojump-shop, .dinojump-skinshop, .dinojump-backgroundshop {
+  background: rgba(255,255,255,0.85);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 32px 24px;
+  min-width: 320px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.dinojump-game {
+  background: rgba(255,255,255,0.7);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  position: relative;
+  width: 600px;
+  height: 220px;
+  margin-bottom: 24px;
+}
+.dinojump-player {
+  border: 2px solid #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.dinojump-obstacle {
+  border: 2px solid #b91c1c;
+  box-shadow: 0 2px 8px rgba(185,28,28,0.12);
+}
+.dinojump-score, .dinojump-gold {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+  background: #fffbe6;
+  border-radius: 6px;
+  padding: 4px 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.dinojump-btn {
+  cursor: pointer;
+  padding: 8px 18px;
+  border-radius: 8px;
+  background: #a0c4ff;
+  color: #222;
+  font-weight: 600;
+  margin: 6px 0;
+  border: none;
+  transition: background 0.2s;
+}
+.dinojump-btn:hover, .font-bold.underline {
+  background: #4a7c59;
+  color: #fff;
+}
