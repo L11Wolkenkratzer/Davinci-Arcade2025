@@ -15,6 +15,9 @@ import UserModal from "./UserModal";
 import InfoModal from "./InfoModal";
 import sonicVideo from '/Videos/sonic-preview2.mp4';
 import tetrisVideo from '/Videos/tetris.mp4';
+import spaceshipVideo from '/Videos/SpaceShip.mp4';
+import snakeVideo from '/Videos/Snake.mp4';
+
 
 // Types für Player aus App.tsx
 export interface Player {
@@ -69,9 +72,10 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b", video: tetrisVideo},
     { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
     { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
-    { id: 4, title: "DINOS", icon: "🦕", color: "#0b884f", video: sonicVideo },
-    { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57" },
-    { id: 6, title: "Snake", icon: "💀", color: "#2cea22" },
+    { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo },
+    { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
+    { id: 6, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
+
   ];
 
   const headerButtons: HeaderButton[] = ["settings", "user", "info"];
