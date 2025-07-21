@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './Home/Home';
-import PacManGame from './Game1_PACMAN/PacManGame';
+// PacManGame entfernt
 import SpaceshipGame from './Game_SPACESHIPS/SpaceshipsGame.tsx';
 import Snake from './Game_Snake/snake.tsx';
 import Dino from  './Game_Dinojump/Dinojump.tsx';
@@ -9,7 +9,7 @@ import Login from './Login/Login.tsx'
 
 
 import Tetris from './Tetris/Tetris.tsx';
-import PacMan from './PacMan/PacMan.tsx';
+// PacMan entfernt
 
 
 
@@ -76,26 +76,9 @@ function App() {
         <Route path="/spaceships" element={<SpaceshipGame />} />
 
 
-        <Route
-          path="/pacman"
-          element={currentPlayer ? <PacMan /> : <Login setCurrentPlayer={setCurrentPlayer} />}
-        />
-
-        <Route 
-  path="/tetris" 
-  element={
-    currentPlayer ? 
-      <Tetris currentPlayer={currentPlayer} /> : 
-      <Login setCurrentPlayer={setCurrentPlayer} />
-  } 
-/>
-
-                <Route path="/snake" element={<Snake />} />
-                <Route path="/dino" element={<Dino />} />
-
-        <Route path="/tetris" element={currentPlayer ? <Tetris /> : <Login setCurrentPlayer={setCurrentPlayer} />} />
-
-
+        <Route path="/snake" element={<Snake />} />
+        <Route path="/dino" element={<Dino />} />
+        <Route path="/tetris" element={currentPlayer ? <Tetris currentPlayer={currentPlayer} /> : <Login setCurrentPlayer={setCurrentPlayer} />} />
         <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
       </Routes>
     </BrowserRouter>
