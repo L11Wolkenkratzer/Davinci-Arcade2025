@@ -1,62 +1,230 @@
-/* DinoJump Game Styles */
-.dinojump-container {
-  width: 100vw;
-  height: 100vh;
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.dino-arcade-bg {
+  min-height: 100vh;
+  min-width: 100vw;
+  background: var(--dark-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Press Start 2P', cursive;
+  color: var(--primary-cyan);
+  position: relative;
+  overflow: hidden;
+}
+
+.dino-title {
+  font-size: 3rem;
+  color: var(--red-color);
+  text-shadow: 0 0 18px var(--cyan-glow), 0 0 42px var(--cyan-glow), 0 0 63px var(--red-color);
+  margin-bottom: 2rem;
+  animation: titlePulse 2s infinite alternate;
+  text-align: center;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.dino-player-info {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.dino-player-name {
+  font-size: 1.2rem;
+  color: var(--primary-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.dino-input {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.1rem;
+  background: #222;
+  color: var(--primary-cyan);
+  border: 2px solid var(--primary-cyan);
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  outline: none;
+  transition: var(--transition);
+  width: 160px;
+  text-align: center;
+}
+
+.dino-input:focus {
+  border-color: var(--red-color);
+  box-shadow: 0 0 12px var(--red-color);
+}
+
+.dino-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+  align-items: center;
+}
+
+.dino-menu-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.1rem;
+  background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+  color: var(--primary-cyan);
+  border: 2px solid var(--primary-cyan);
+  border-radius: 12px;
+  padding: 0.7rem 2.2rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 18px var(--primary-cyan), 0 0 32px #fff2;
+  margin-bottom: 0.2rem;
+}
+
+
+.dino-menu-btn.selected,
+.dino-menu-btn:focus {
+  border-color: #FFD600;
+  color: #FFD600;
+  box-shadow: 0 0 32px #FFD600, 0 0 32px #fff2;
+  outline: none;
+  transform: scale(1.08);
+}
+
+.dino-menu-btn:hover:not(:disabled) {
+  border-color: #FFD600;
+  color: #FFD600;
+  box-shadow: 0 0 32px #FFD600, 0 0 32px #fff2;
+  transform: scale(1.08);
+}
+
+.dino-menu-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dino-hint {
+  font-size: 1rem;
+  color: var(--primary-cyan);
+  opacity: 0.7;
+  margin-top: 1.2rem;
+  text-align: center;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.dino-preview {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+}
+
+.dino-highscores {
+  max-width: 600px;
+  width: 100%;
+  margin: auto;
+  text-align: center;
+}
+
+.dino-highscore-list {
+  margin: 2rem 0;
+  background: #222;
+  border-radius: 16px;
+  padding: 1.2rem;
+  box-shadow: 0 0 18px var(--primary-cyan);
+}
+
+.dino-highscore-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #333;
+}
+
+.dino-highscore-entry:last-child {
+  border-bottom: none;
+}
+
+.dino-rank {
+  color: var(--red-color);
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+.dino-name {
+  color: var(--primary-cyan);
+  flex: 1;
+  text-align: left;
+}
+
+.dino-score {
+  color: #fff;
+  font-weight: bold;
+  margin-left: 1rem;
+}
+
+.dino-no-scores {
+  color: #888;
+  font-size: 1rem;
+  margin: 1rem 0;
+}
+
+.dino-gameover {
+  text-align: center;
+  max-width: 500px;
+  margin: auto;
+}
+
+.dino-score-final {
+  font-size: 1.3rem;
+  color: var(--primary-cyan);
+  margin: 2rem 0;
+}
+
+.dino-game {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #e1c699 0%, #f7f7f7 100%);
 }
-.dinojump-menu, .dinojump-controls, .dinojump-leaderboard, .dinojump-gameover, .dinojump-shop, .dinojump-skinshop, .dinojump-backgroundshop {
-  background: rgba(255,255,255,0.85);
-  border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-  padding: 32px 24px;
-  min-width: 320px;
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.dinojump-game {
-  background: rgba(255,255,255,0.7);
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+
+.dino-game-canvas {
   position: relative;
-  width: 600px;
-  height: 220px;
-  margin-bottom: 24px;
+  background: linear-gradient(180deg, #222 60%, #444 100%);
+  border: 3px solid var(--primary-cyan);
+  border-radius: 18px;
+  box-shadow: 0 0 32px var(--primary-cyan);
+  overflow: hidden;
+  margin-bottom: 1.2rem;
 }
-.dinojump-player {
-  border: 2px solid #333;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+
+.dino-ground {
+  position: absolute;
+  left: 0;
+  height: 18px;
+  background: repeating-linear-gradient(90deg, #333 0 12px, #222 12px 24px);
+  border-top: 2px solid var(--primary-cyan);
+  z-index: 2;
 }
-.dinojump-obstacle {
-  border: 2px solid #b91c1c;
-  box-shadow: 0 2px 8px rgba(185,28,28,0.12);
+
+.dino-sprite {
+  position: absolute;
+  z-index: 3;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 12px var(--primary-cyan));
 }
-.dinojump-score, .dinojump-gold {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #333;
-  background: #fffbe6;
-  border-radius: 6px;
-  padding: 4px 10px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+
+
+.dino-score-display {
+  position: absolute;
+  top: 12px;
+  left: 24px;
+  font-size: 1.5rem;
+  color: var(--primary-cyan);
+  text-shadow: 0 0 12px var(--primary-cyan);
+  font-family: 'Press Start 2P', cursive;
+  z-index: 10;
 }
-.dinojump-btn {
-  cursor: pointer;
-  padding: 8px 18px;
-  border-radius: 8px;
-  background: #a0c4ff;
-  color: #222;
-  font-weight: 600;
-  margin: 6px 0;
-  border: none;
-  transition: background 0.2s;
-}
-.dinojump-btn:hover, .font-bold.underline {
-  background: #4a7c59;
-  color: #fff;
+
+@keyframes titlePulse {
+  0% { text-shadow: 0 0 18px var(--cyan-glow), 0 0 42px var(--cyan-glow), 0 0 63px var(--red-color); }
+  100% { text-shadow: 0 0 30px var(--cyan-glow), 0 0 52.5px var(--cyan-glow), 0 0 72px var(--red-color), 0 0 90px var(--cyan-glow); }
 }

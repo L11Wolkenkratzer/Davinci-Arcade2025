@@ -1,397 +1,406 @@
-import React, { useState, useEffect, useRef } from 'react';
-import './DinojumpGame.css';
+import React, { useRef, useEffect, useState } from "react";
+import "./DinojumpGame.css";
+import dinoImg from './dino.png';
+import cactusImg from './cactus.png';
+import birdImg from './bird.png';
 
-interface ScoreEntry {
+const GAME_WIDTH = 900;
+const GAME_HEIGHT = 300;
+const GROUND_Y = 240;
+const DINO_SIZE = 72;
+const OBSTACLE_WIDTH = 36;
+const OBSTACLE_HEIGHT = 36;
+const GRAVITY = 1.2;
+const JUMP_VELOCITY = -19;
+const OBSTACLE_SPEED = 7;
+
+type GameState = "start" | "playing" | "gameover" | "highscores";
+
+interface HighscoreEntry {
   name: string;
   score: number;
 }
 
-type GameState =
-  | 'menu'
-  | 'game'
-  | 'controls'
-  | 'leaderboard'
-  | 'gameover'
-  | 'shop'
-  | 'skinshop'
-  | 'backgroundshop';
-
-interface Skin {
-  id: string;
-  name: string;
-  price: number;
-  owned: boolean;
+function getRandomObstacle() {
+  // 70% cactus, 30% bird
+  const isBird = Math.random() < 0.3;
+  // Double obstacle size
+  const size = 96;
+  return {
+    x: GAME_WIDTH,
+    y: isBird ? GROUND_Y - 80 : GROUND_Y,
+    width: size,
+    height: size,
+    type: isBird ? "bird" : "cactus",
+  };
 }
 
-interface Background {
-  id: string;
-  name: string;
-  price: number;
-  owned: boolean;
-}
-
-const DinoJump: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>('menu');
-  const [selectedMenuIndex, setSelectedMenuIndex] = useState(0);
-  const [selectedSubIndex, setSelectedSubIndex] = useState(0);
-  const [selectedGameOverIndex, setSelectedGameOverIndex] = useState(0);
-  const [selectedShopIndex, setSelectedShopIndex] = useState(0);
-  const [selectedSkinIndex, setSelectedSkinIndex] = useState(0);
-  const [selectedBgIndex, setSelectedBgIndex] = useState(0);
-  const [gold, setGold] = useState(50);
-  const [playerY, setPlayerY] = useState(0);
-  const [isJumping, setIsJumping] = useState(false);
-  const isJumpingRef = useRef(false); // Sync block
-  const [obstacles, setObstacles] = useState<{ x: number }[]>([]);
+const Dinojump: React.FC = () => {
+  const [gameState, setGameState] = useState<GameState>("start");
+  const [dinoY, setDinoY] = useState(GROUND_Y);
+  const [dinoVY, setDinoVY] = useState(0);
+  const [obstacles, setObstacles] = useState<Array<any>>([]);
   const [score, setScore] = useState(0);
-  const [highScores, setHighScores] = useState<ScoreEntry[]>([]);
-  const baseSpeed = 10;
-  const jumpRef = useRef<NodeJS.Timeout | null>(null);
-  const gameInterval = useRef<NodeJS.Timeout | null>(null);
+  const [highscores, setHighscores] = useState<HighscoreEntry[]>([]);
+  const [menuIndex, setMenuIndex] = useState(0);
+  const [gameoverIndex, setGameoverIndex] = useState(0);
+  const [isJumping, setIsJumping] = useState(false);
+  const [playerName, setPlayerName] = useState("PLAYER");
+  const requestRef = useRef<number>();
+  // For restart fix
+  const [restartFlag, setRestartFlag] = useState(0);
 
-  const [skins, setSkins] = useState<Skin[]>([
-    { id: 'city', name: 'City Skin (Skateboarder)', price: 10, owned: false },
-    { id: 'jungle', name: 'Jungle Skin (Affe)', price: 25, owned: false },
-  ]);
-  const [equippedSkin, setEquippedSkin] = useState<string | null>(null);
-
-  const [backgrounds, setBackgrounds] = useState<Background[]>([
-    { id: 'city', name: 'City Background', price: 10, owned: false },
-    { id: 'jungle', name: 'Jungle Background', price: 25, owned: false },
-  ]);
-  const [equippedBackground, setEquippedBackground] = useState<string | null>(null);
-
-  const menuOptions = ['Play', 'Controls', 'Leaderboard', 'Shop'];
-  const subOptions = ['Back'];
-  const gameOverOptions = ['Retry', 'Back to Menu'];
-  const shopOptions = ['Skin Shop', 'Background Shop', 'Exit'];
-  const skinShopOptions = ['City Skin (Skateboarder)', 'Jungle Skin (Affe)', 'None', 'Exit'];
-  const backgroundShopOptions = ['City Background', 'Jungle Background', 'None', 'Exit'];
-
+  // Startscreen: Enter Name, Start, Highscores, Exit
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (['menu', 'controls', 'leaderboard', 'gameover', 'shop', 'skinshop', 'backgroundshop'].includes(gameState)) {
-        e.preventDefault();
+    if (gameState === "start" || restartFlag > 0) {
+      setDinoY(GROUND_Y);
+      setDinoVY(0);
+      setObstacles([]);
+      setScore(0);
+      setIsJumping(false);
+      // Only reset restartFlag if we are not in gameover
+      if (restartFlag > 0 && gameState !== "gameover") setRestartFlag(0);
+    }
+  }, [gameState, restartFlag]);
 
-        // Global navigation handler
-        const navHandler = (length: number, setter: React.Dispatch<React.SetStateAction<number>>) => {
-          if (e.code === 'ArrowUp') setter(prev => (prev - 1 + length) % length);
-          else if (e.code === 'ArrowDown') setter(prev => (prev + 1) % length);
+  // Game Loop
+  useEffect(() => {
+    if (gameState !== "playing") return;
+
+    const animate = () => {
+      // Dino physics
+      let newY = dinoY + dinoVY;
+      let newVY = dinoVY + GRAVITY;
+      if (newY >= GROUND_Y) {
+        newY = GROUND_Y;
+        newVY = 0;
+        setIsJumping(false);
+      }
+      setDinoY(newY);
+      setDinoVY(newVY);
+
+      // Obstacles
+      let newObstacles = obstacles
+        .map((obs) => ({ ...obs, x: obs.x - OBSTACLE_SPEED }))
+        .filter((obs) => obs.x + obs.width > 0);
+
+      // Add new obstacle
+      if (
+        newObstacles.length === 0 ||
+        (GAME_WIDTH - newObstacles[newObstacles.length - 1].x > 220 &&
+          Math.random() < 0.02)
+      ) {
+        newObstacles.push(getRandomObstacle());
+      }
+
+      // Collision (smaller hitbox)
+      for (let obs of newObstacles) {
+        // Dino hitbox
+        const dinoBox = {
+          x: 60 + 10,
+          y: dinoY + 10,
+          w: DINO_SIZE - 30,
+          h: DINO_SIZE - 30,
         };
-
-        switch (gameState) {
-          case 'menu':
-            navHandler(menuOptions.length, setSelectedMenuIndex);
-            if (e.code === 'Enter') {
-              const choice = menuOptions[selectedMenuIndex];
-              if (choice === 'Play') setGameState('game');
-              else if (choice === 'Controls') setGameState('controls');
-              else if (choice === 'Leaderboard') setGameState('leaderboard');
-              else if (choice === 'Shop') setGameState('shop');
-            }
-            break;
-
-          case 'controls':
-          case 'leaderboard':
-            navHandler(subOptions.length, setSelectedSubIndex);
-            if (e.code === 'Enter' && selectedSubIndex === 0) setGameState('menu');
-            break;
-
-          case 'gameover':
-            navHandler(gameOverOptions.length, setSelectedGameOverIndex);
-            if (e.code === 'Enter') {
-              setGameState(selectedGameOverIndex === 0 ? 'game' : 'menu');
-            }
-            break;
-
-          case 'shop':
-            navHandler(shopOptions.length, setSelectedShopIndex);
-            if (e.code === 'Enter') {
-              const choice = shopOptions[selectedShopIndex];
-              if (choice === 'Skin Shop') setGameState('skinshop');
-              else if (choice === 'Background Shop') setGameState('backgroundshop');
-              else if (choice === 'Exit') setGameState('menu');
-            }
-            break;
-
-          case 'skinshop':
-            navHandler(skinShopOptions.length, setSelectedSkinIndex);
-            if (e.code === 'Enter') {
-              const option = skinShopOptions[selectedSkinIndex];
-              if (option === 'Exit') setGameState('shop');
-              else if (option === 'None') setEquippedSkin(null);
-              else {
-                const skin = skins[selectedSkinIndex];
-                if (!skin) return;
-                if (!skin.owned && gold >= skin.price) {
-                  setGold(g => g - skin.price);
-                  setSkins(s => {
-                    const newS = [...s];
-                    newS[selectedSkinIndex] = { ...skin, owned: true };
-                    return newS;
-                  });
-                }
-                setEquippedSkin(skin.id);
-              }
-            }
-            break;
-
-          case 'backgroundshop':
-            navHandler(backgroundShopOptions.length, setSelectedBgIndex);
-            if (e.code === 'Enter') {
-              const option = backgroundShopOptions[selectedBgIndex];
-              if (option === 'Exit') setGameState('shop');
-              else if (option === 'None') setEquippedBackground(null);
-              else {
-                const bg = backgrounds[selectedBgIndex];
-                if (!bg) return;
-                if (!bg.owned && gold >= bg.price) {
-                  setGold(g => g - bg.price);
-                  setBackgrounds(b => {
-                    const newB = [...b];
-                    newB[selectedBgIndex] = { ...bg, owned: true };
-                    return newB;
-                  });
-                }
-                setEquippedBackground(bg.id);
-              }
-            }
-            break;
+        // Obstacle hitbox
+        const obsBox = {
+          x: obs.x + 10,
+          y: obs.y + 10,
+          w: obs.width - 20,
+          h: obs.height - 20,
+        };
+        if (
+          dinoBox.x < obsBox.x + obsBox.w &&
+          dinoBox.x + dinoBox.w > obsBox.x &&
+          dinoBox.y < obsBox.y + obsBox.h &&
+          dinoBox.y + dinoBox.h > obsBox.y
+        ) {
+          setGameState("gameover");
+          return;
         }
       }
 
-      if (e.code === 'Space' && gameState === 'game' && !e.repeat) {
-        jump();
-      }
+      setObstacles(newObstacles);
+      setScore((s) => s + 1);
+
+      requestRef.current = requestAnimationFrame(animate);
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [
-    gameState,
-    selectedMenuIndex,
-    selectedSubIndex,
-    selectedGameOverIndex,
-    selectedShopIndex,
-    selectedSkinIndex,
-    selectedBgIndex,
-    skins,
-    backgrounds,
-    gold,
-    equippedSkin,
-    equippedBackground,
-  ]);
+    requestRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(requestRef.current!);
+    // eslint-disable-next-line
+  }, [gameState, dinoY, dinoVY, obstacles, restartFlag]);
 
+  // Keyboard Controls
   useEffect(() => {
-    if (gameState === 'game') {
-      setPlayerY(0);
-      setScore(0);
-      setObstacles([{ x: 1000 }]);
-
-      gameInterval.current = setInterval(() => {
-        setScore(prev => {
-          const newScore = prev + 1;
-          const speed = baseSpeed * (1 + newScore / 250);
-
-          setObstacles(prevObs => {
-            const moved = prevObs.map(o => ({ x: o.x - speed })).filter(o => o.x > -20);
-            const last = moved[moved.length - 1];
-
-            if (!last || last.x < 600) {
-              if (newScore > 300 && Math.random() < 0.3) {
-                moved.push({ x: 1000 }, { x: 1030 });
-              } else if (Math.random() < 0.3) {
-                moved.push({ x: 1000 });
-              }
+    const handle = (e: KeyboardEvent) => {
+      if (gameState === "playing") {
+        if (e.key === "ArrowUp" || e.key === " ") {
+          if (!isJumping && dinoY === GROUND_Y) {
+            setDinoVY(JUMP_VELOCITY);
+            setIsJumping(true);
+          }
+        }
+        if (e.key === "Escape" || e.key === " ") {
+          setGameState("start");
+        }
+      } else if (gameState === "start") {
+        const menuItems = [
+          () => setGameState("playing"),
+          () => setGameState("highscores"),
+          null,
+          () => window.location.href = "/"
+        ];
+        if (["ArrowDown", "ArrowUp"].includes(e.key)) {
+          e.preventDefault();
+          setMenuIndex((idx) => {
+            let next = idx + (e.key === "ArrowDown" ? 1 : -1);
+            while (next >= 0 && next < menuItems.length && menuItems[next] === null) {
+              next += (e.key === "ArrowDown" ? 1 : -1);
             }
-            return moved;
+            if (next < 0) next = menuItems.length - 1;
+            if (next >= menuItems.length) next = 0;
+            while (menuItems[next] === null) {
+              next += (e.key === "ArrowDown" ? 1 : -1);
+              if (next < 0) next = menuItems.length - 1;
+              if (next >= menuItems.length) next = 0;
+            }
+            return next;
           });
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (menuItems[menuIndex]) menuItems[menuIndex]!();
+        }
+      } else if (gameState === "gameover") {
+        const menuItems = [
+          () => setGameState("playing"),
+          () => setGameState("start")
+        ];
+        if (["ArrowDown", "ArrowUp"].includes(e.key)) {
+          e.preventDefault();
+          setGameoverIndex((idx) => (idx + (e.key === "ArrowDown" ? 1 : -1) + menuItems.length) % menuItems.length);
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          menuItems[gameoverIndex]!();
+        }
+      } else if (gameState === "highscores") {
+        if (e.key === "Escape" || e.key === "Enter") {
+          e.preventDefault();
+          setGameState("start");
+        }
+      }
+    };
+    window.addEventListener("keydown", handle);
+    return () => window.removeEventListener("keydown", handle);
+    // eslint-disable-next-line
+  }, [gameState, menuIndex, gameoverIndex, dinoY, isJumping]);
 
-          return newScore;
-        });
-      }, 100);
-
-      return () => clearInterval(gameInterval.current!);
+  // Highscore speichern
+  useEffect(() => {
+    if (gameState === "gameover" && score > 0) {
+      setHighscores((prev) => {
+        const newScores = [...prev, { name: playerName, score }];
+        return newScores
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10);
+      });
     }
+    // eslint-disable-next-line
   }, [gameState]);
 
-  useEffect(() => {
-    obstacles.forEach(ob => {
-      if (ob.x < 420 && ob.x > 380 && playerY < 60) {
-        endGame();
-      }
-    });
-  }, [obstacles, playerY]);
+  // Startscreen
+  if (gameState === "start") {
+    return (
+      <div className="dino-arcade-bg">
+        <div className="dino-startscreen">
+          <h1 className="dino-title">DINO JUMP</h1>
+          <div className="dino-player-info">
+            <div className="dino-player-name">
+              <span>NAME:</span>
+              <input
+                className="dino-input"
+                value={playerName}
+                maxLength={12}
+                onChange={(e) => setPlayerName(e.target.value.toUpperCase())}
+                style={{ fontFamily: "Press Start 2P, cursive" }}
+              />
+            </div>
+          </div>
+          <div className="dino-menu">
+            <button className={`dino-menu-btn${menuIndex === 0 ? " selected" : ""}`} tabIndex={-1}>
+              START GAME
+            </button>
+            <button className={`dino-menu-btn${menuIndex === 1 ? " selected" : ""}`} tabIndex={-1}>
+              HIGHSCORES
+            </button>
+            <button className="dino-menu-btn" disabled tabIndex={-1}>
+              INFO
+            </button>
+            <button className={`dino-menu-btn${menuIndex === 3 ? " selected" : ""}`} tabIndex={-1}>
+              EXIT
+            </button>
+          </div>
+          <div className="dino-hint">
+            Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
+          </div>
+            <img src={dinoImg} alt="Dino" width={DINO_SIZE} height={DINO_SIZE} />
+          </div>
+          </div>
+       
+    );
+  }
 
-  const jump = () => {
-    if (isJumpingRef.current) return;
-    isJumpingRef.current = true;
-    setIsJumping(true);
+  // Highscore Screen
+  if (gameState === "highscores") {
+    return (
+      <div className="dino-arcade-bg">
+        <div className="dino-highscores">
+          <h2 className="dino-title">HIGHSCORES</h2>
+          <div className="dino-highscore-list">
+            {highscores.length > 0 ? (
+              highscores.map((entry, idx) => (
+                <div key={idx} className="dino-highscore-entry">
+                  <span className="dino-rank">#{idx + 1}</span>
+                  <span className="dino-name">{entry.name}</span>
+                  <span className="dino-score">{entry.score}</span>
+                </div>
+              ))
+            ) : (
+              <div className="dino-no-scores">No highscores yet!</div>
+            )}
+          </div>
+          <button className="dino-menu-btn" tabIndex={-1}>
+            BACK
+          </button>
+          <div className="dino-hint">
+            Press <span>ESC</span> or <span>ENTER</span> to go back
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    let velocity = 10;
-    let height = 0;
+  // Gameover Screen
+  if (gameState === "gameover") {
+    return (
+      <div className="dino-arcade-bg">
+        <div className="dino-gameover">
+          <h2 className="dino-title">GAME OVER</h2>
+          <div className="dino-score-final">
+            <div>Score: {score}</div>
+          </div>
+          <div className="dino-menu">
+              <button
+                className={`dino-menu-btn${gameoverIndex === 0 ? " selected" : ""}`}
+                tabIndex={-1}
+                onClick={() => {
+                  // Reset all game variables and go to start screen
+                  setDinoY(GROUND_Y);
+                  setDinoVY(0);
+                  setObstacles([]);
+                  setScore(0);
+                  setIsJumping(false);
+                  setMenuIndex(0);
+                  setGameoverIndex(0);
+                  // Optionally reset playerName if you want a true fresh start
+                  // setPlayerName("PLAYER");
+                  setRestartFlag(0);
+                  setGameState("start");
+                }}
+              >
+                RESTART
+              </button>
+            <button
+              className={`dino-menu-btn${gameoverIndex === 1 ? " selected" : ""}`}
+              tabIndex={-1}
+              onClick={() => setGameState("start")}
+            >
+              BACK TO MENU
+            </button>
+          </div>
+          <div className="dino-hint">
+            Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-    jumpRef.current = setInterval(() => {
-      height += velocity;
-      velocity -= height > 120 ? 1 : height > 60 ? 0.3 : 0.5;
-
-      if (height <= 0) {
-        height = 0;
-        setPlayerY(0);
-        clearInterval(jumpRef.current!);
-        setIsJumping(false);
-        isJumpingRef.current = false;
-        return;
-      }
-
-      setPlayerY(height);
-    }, 20);
-  };
-
-  const endGame = () => {
-    clearInterval(gameInterval.current!);
-    setGameState('gameover');
-    setSelectedGameOverIndex(0);
-
-    const newEntry: ScoreEntry = { name: 'Tom', score };
-    const existing = highScores.find(e => e.name === 'Tom');
-    let updated = existing
-      ? highScores.map(e => (e.name === 'Tom' && score > e.score ? newEntry : e))
-      : [...highScores, newEntry];
-
-    updated = updated.sort((a, b) => b.score - a.score).slice(0, 5);
-    setHighScores(updated);
-  };
-
-  // --- Style Helpers ---
-  const getPlayerSkinStyle = () => {
-    switch (equippedSkin) {
-      case 'city': return { backgroundColor: 'blue' };
-      case 'jungle': return { backgroundColor: 'darkgreen' };
-      default: return { backgroundColor: 'green' };
-    }
-  };
-
-  const getBackgroundStyle = () => {
-    switch (equippedBackground) {
-      case 'city': return { backgroundColor: '#a0c4ff' };
-      case 'jungle': return { backgroundColor: '#4a7c59' };
-      default: return { backgroundColor: '#e1c699' };
-    }
-  };
-
-  // --- Renders ---
-  const renderMenu = () => (
-    <div className="dinojump-menu">
-      <h1 className="text-4xl font-bold">Dino Jump</h1>
-      {menuOptions.map((option, i) => (
-        <div key={i} className={`dinojump-btn ${selectedMenuIndex === i ? 'font-bold underline' : ''}`}>{option}</div>
-      ))}
-      <p className="text-sm">Gold: {gold} | ⬆️⬇️ wählen, ↵ bestätigen</p>
-    </div>
-  );
-
-  const renderControls = () => (
-    <div className="dinojump-controls">
-      <h2 className="text-2xl">Controls</h2>
-      <p>Drücke <strong>Space</strong> zum Springen</p>
-      <div className={`dinojump-btn ${selectedSubIndex === 0 ? 'font-bold underline' : ''}`}>Back</div>
-    </div>
-  );
-
-  const renderLeaderboard = () => (
-    <div className="dinojump-leaderboard">
-      <h2 className="text-2xl">Leaderboard</h2>
-      {highScores.length === 0 ? (
-        <p>Keine Einträge</p>
-      ) : (
-        <ul>{highScores.map((e, i) => <li key={i}>{i + 1}. {e.name} - {e.score}</li>)}</ul>
-      )}
-      <div className={`dinojump-btn ${selectedSubIndex === 0 ? 'font-bold underline' : ''}`}>Back</div>
-    </div>
-  );
-
-  const renderGame = () => (
-    <div className="dinojump-game" style={getBackgroundStyle()}>
-      <div className="dinojump-player" style={{ position: 'absolute', left: 400, bottom: playerY, width: 20, height: 40, borderRadius: 4, ...getPlayerSkinStyle() }} />
-      {obstacles.map((o, i) => (
-        <div key={i} className="dinojump-obstacle" style={{ position: 'absolute', left: o.x, bottom: 0, width: 20, height: 40 }} />
-      ))}
-      <div className="dinojump-score" style={{ position: 'absolute', top: 8, left: 8 }}>Score: {score}</div>
-      <div className="dinojump-gold" style={{ position: 'absolute', top: 8, right: 8 }}>Gold: {gold}</div>
-    </div>
-  );
-
-  const renderGameOver = () => (
-    <div className="dinojump-gameover">
-      <h2 className="text-2xl">Game Over</h2>
-      <p>Your Score: {score}</p>
-      {gameOverOptions.map((o, i) => (
-        <div key={i} className={`dinojump-btn ${selectedGameOverIndex === i ? 'font-bold underline' : ''}`}>{o}</div>
-      ))}
-    </div>
-  );
-
-  const renderShop = () => (
-    <div className="dinojump-shop">
-      <h2 className="text-2xl">Shop</h2>
-      {shopOptions.map((o, i) => (
-        <div key={i} className={`dinojump-btn ${selectedShopIndex === i ? 'font-bold underline' : ''}`}>{o}</div>
-      ))}
-      <p className="text-sm">Gold: {gold}</p>
-    </div>
-  );
-
-  const renderSkinShop = () => (
-    <div className="dinojump-skinshop">
-      <h2 className="text-xl font-bold">Skin Shop</h2>
-      {skinShopOptions.map((o, i) => {
-        let text = o;
-        if (i < 2) {
-          const s = skins[i];
-          text = `${s.name} ${s.owned ? '(Owned)' : `(${s.price} Gold)`}`;
-          if (equippedSkin === s.id) text += ' [Equipped]';
-        } else if (o === 'None' && equippedSkin === null) {
-          text = 'No Skin [Equipped]';
-        }
-        return (
-          <div key={i} className={`dinojump-btn ${selectedSkinIndex === i ? 'font-bold underline' : ''}`}>{text}</div>
-        );
-      })}
-    </div>
-  );
-
-  const renderBackgroundShop = () => (
-    <div className="dinojump-backgroundshop">
-      <h2 className="text-xl font-bold">Background Shop</h2>
-      {backgroundShopOptions.map((o, i) => {
-        let text = o;
-        if (i < 2) {
-          const bg = backgrounds[i];
-          text = `${bg.name} ${bg.owned ? '(Owned)' : `(${bg.price} Gold)`}`;
-          if (equippedBackground === bg.id) text += ' [Equipped]';
-        } else if (o === 'None' && equippedBackground === null) {
-          text = 'No Background [Equipped]';
-        }
-        return (
-          <div key={i} className={`dinojump-btn ${selectedBgIndex === i ? 'font-bold underline' : ''}`}>{text}</div>
-        );
-      })}
-    </div>
-  );
-
+  // Game Screen
   return (
-    <div className="dinojump-container">
-      {gameState === 'menu' && renderMenu()}
-      {gameState === 'controls' && renderControls()}
-      {gameState === 'leaderboard' && renderLeaderboard()}
-      {gameState === 'game' && renderGame()}
-      {gameState === 'gameover' && renderGameOver()}
-      {gameState === 'shop' && renderShop()}
-      {gameState === 'skinshop' && renderSkinShop()}
-      {gameState === 'backgroundshop' && renderBackgroundShop()}
+    <div className="dino-arcade-bg">
+      <div className="dino-game">
+        <div className="dino-game-canvas" style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}>
+          {/* Ground */}
+          <div className="dino-ground" style={{ top: GROUND_Y + DINO_SIZE, width: GAME_WIDTH }} />
+          <img
+            src={dinoImg}
+            alt="Dino"
+            className="dino-sprite"
+            style={{
+              left: 60,
+              top: dinoY - 15,
+              width: DINO_SIZE,
+              height: DINO_SIZE,
+              position: "absolute",
+              imageRendering: "pixelated",
+              filter: "drop-shadow(0 0 24px #0ff)",
+            }}
+          />
+          {/* Obstacles */}
+          {obstacles.map((obs, idx) => {
+            if (obs.type === "cactus") {
+              return (
+                <img
+                  key={idx}
+                  src={cactusImg}
+                  alt="Cactus"
+                  className="dino-obstacle cactus"
+                  style={{
+                    left: obs.x,
+                    top: obs.y - 20,
+                    width: obs.width,
+                    height: obs.height,
+                    position: "absolute",
+                    imageRendering: "pixelated",
+                    zIndex: 2,
+                    filter: "drop-shadow(0 0 24px #0ff)",
+                  }}
+                />
+              );
+            } else if (obs.type === "bird") {
+              return (
+                <img
+                  key={idx}
+                  src={birdImg}
+                  alt="Bird"
+                  className="dino-obstacle bird"
+                  style={{
+                    left: obs.x,
+                    top: obs.y - 20,
+                    width: obs.width,
+                    height: obs.height,
+                    position: "absolute",
+                    imageRendering: "pixelated",
+                    zIndex: 2,
+                    filter: "drop-shadow(0 0 24px #0ff)",
+                  }}
+                />
+              );
+            }
+            return null;
+          })}
+          {/* Score */}
+          <div className="dino-score-display">{score}</div>
+        </div>
+        <div className="dino-hint" style={{ marginTop: "1.2rem", fontSize: "1.1rem", opacity: 0.7 }}>
+          Hold <span>Space</span> To Exit
+        </div>
+      </div>
     </div>
   );
 };
 
-export default DinoJump;
+export default Dinojump;
