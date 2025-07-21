@@ -42,7 +42,6 @@ interface Game {
 type NavigationMode = "games" | "header";
 type HeaderButton = "settings" | "user" | "info";
 
-
 const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   /* ------------------------------------------------------------------ */
   /* State                                                              */
@@ -64,10 +63,9 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  // Games Array mit Video-Support
+  // Games Array ohne PACMAN
   const games: Game[] = [
     { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b", video: tetrisVideo},
-    { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
     { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
     { id: 4, title: "DINOS", icon: "🦕", color: "#0b884f", video: sonicVideo },
     { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57" },
@@ -76,12 +74,11 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
 
   const headerButtons: HeaderButton[] = ["settings", "user", "info"];
 
-
   /* ------------------------------------------------------------------ */
   /* Video Logic                                                        */
   /* ------------------------------------------------------------------ */
   useEffect(() => {
-    // Super smooth fade-in for video
+  
     setVideoEnded(false);
     const currentGame = games[selectedGameIndex];
     if (currentGame && currentGame.video) {
@@ -100,11 +97,9 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
 
   // Video Replay-Funktion
   const replayVideo = useCallback(() => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play();
-      setVideoEnded(false);
-    }
+    videoRef.current.currentTime = 0;
+    videoRef.current.play();
+    setVideoEnded(false);
   }, []);
 
   // Cleanup
@@ -214,9 +209,10 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
       .catch((err) => console.error("Player-Fetch error", err));
   }, [currentPlayer?.badgeId, setCurrentPlayer]);
 
-  // Keyboard-Navigation (Kombiniert aus beiden Branches)
+  // Keyboard-Navigation (Korrigiert - verhindert Spiel-Start aus Modals)
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent): void => {
+      // Escape schließt immer alle Modals
       if (event.key === "Escape") {
         setShowSettings(false);
         setShowUser(false);
@@ -225,61 +221,64 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
         return;
       }
 
-      if (!showSettings && !showUser && !showInfo) {
-        if (navigationMode === "games") {
-          switch (event.key) {
-            case "ArrowLeft":
-              event.preventDefault();
-              navigateToGame((selectedGameIndex - 1 + games.length) % games.length);
-              break;
-            case "ArrowRight":
-              event.preventDefault();
-              navigateToGame((selectedGameIndex + 1) % games.length);
-              break;
-            case "ArrowUp":
-              event.preventDefault();
-              setNavigationMode("header");
-              break;
-            case "Enter":
-              event.preventDefault();
-              handleGameSelect(games[selectedGameIndex]);
-              break;
-            case " ":
-              event.preventDefault();
-              if (videoVisible && videoEnded && games[selectedGameIndex].video) {
-                replayVideo();
-              }
-              break;
-            default:
-              break;
-          }
-        } else if (navigationMode === "header") {
-          switch (event.key) {
-            case "ArrowLeft":
-              event.preventDefault();
-              const currentLeftIdx = headerButtons.indexOf(selectedHeaderButton);
-              setSelectedHeaderButton(
-                headerButtons[(currentLeftIdx - 1 + headerButtons.length) % headerButtons.length]
-              );
-              break;
-            case "ArrowRight":
-              event.preventDefault();
-              const currentRightIdx = headerButtons.indexOf(selectedHeaderButton);
-              setSelectedHeaderButton(
-                headerButtons[(currentRightIdx + 1) % headerButtons.length]
-              );
-              break;
-            case "ArrowDown":
-              event.preventDefault();
-              setNavigationMode("games");
-              break;
-            case "Enter":
-              event.preventDefault();
-              handleHeaderButtonActivate(selectedHeaderButton);
-              break;
-            default:
-              break;
-          }
+      // ⚠️ WICHTIG: Keyboard-Navigation nur wenn KEINE Modals offen sind
+      if (showSettings || showUser || showInfo) {
+        return; // Früh aussteigen wenn ein Modal offen ist
+      }
+
+      if (navigationMode === "games") {
+        switch (event.key) {
+          case "ArrowLeft":
+            event.preventDefault();
+            navigateToGame((selectedGameIndex - 1 + games.length) % games.length);
+            break;
+          case "ArrowRight":
+            event.preventDefault();
+            navigateToGame((selectedGameIndex + 1) % games.length);
+            break;
+          case "ArrowUp":
+            event.preventDefault();
+            setNavigationMode("header");
+            break;
+          case "Enter":
+            event.preventDefault();
+            handleGameSelect(games[selectedGameIndex]);
+            break;
+          case " ":
+            event.preventDefault();
+            if (videoVisible && videoEnded && games[selectedGameIndex].video) {
+              replayVideo();
+            }
+            break;
+          default:
+            break;
+        }
+      } else if (navigationMode === "header") {
+        switch (event.key) {
+          case "ArrowLeft":
+            event.preventDefault();
+            const currentLeftIdx = headerButtons.indexOf(selectedHeaderButton);
+            setSelectedHeaderButton(
+              headerButtons[(currentLeftIdx - 1 + headerButtons.length) % headerButtons.length]
+            );
+            break;
+          case "ArrowRight":
+            event.preventDefault();
+            const currentRightIdx = headerButtons.indexOf(selectedHeaderButton);
+            setSelectedHeaderButton(
+              headerButtons[(currentRightIdx + 1) % headerButtons.length]
+            );
+            break;
+          case "ArrowDown":
+            event.preventDefault();
+            setNavigationMode("games");
+            break;
+          case "Enter":
+            event.preventDefault();
+            handleHeaderButtonActivate(selectedHeaderButton);
+            break;
+          default:
+            break;
         }
       }
     };
