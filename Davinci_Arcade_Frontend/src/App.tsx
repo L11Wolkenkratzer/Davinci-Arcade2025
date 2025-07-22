@@ -9,6 +9,7 @@ const Snake = lazy(() => import('./Game_Snake/snake.tsx'));
 const Dino = lazy(() => import('./Game_Dinojump/Dinojump.tsx'));
 const Tetris = lazy(() => import('./Tetris/Tetris.tsx'));
 const PacMan = lazy(() => import('./PacMan/PacMan.tsx'));
+const Tilliman = lazy(() => import('./Game_Tilliman/Tilliman.tsx').then(module => ({ default: module.Tilliman })));
 
 // Loading component for Suspense
 const GameLoading = () => (
@@ -118,6 +119,10 @@ function App() {
         <Route 
           path="/dino" 
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><Dino /></Suspense> : loginElement}
+        />
+        <Route 
+          path="/tilliman" 
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><Tilliman /></Suspense> : loginElement}
         />
         <Route path="/login" element={loginElement} />
       </Routes>
