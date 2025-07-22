@@ -60,9 +60,13 @@ const GAMES: Game[] = [
   { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo },
   { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
   { id: 6, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
+  { id: 7, title: "TILLIMAN", icon: "⏱️", color: "#f06c00" },
+
 ];
 
 const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
+
+  console.log("Home component rendered");
   /* ------------------------------------------------------------------ */
   /* State                                                              */
   /* ------------------------------------------------------------------ */
@@ -114,12 +118,14 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     }
   }, []);
 
+
   // OPTIMIZED: Use startTransition for smooth updates
   const navigateToGame = useCallback((newIdx: number) => {
     startTransition(() => {
       setSelectedGameIndex(newIdx);
     });
   }, []);
+
 
   // Video Replay Function  
   const replayVideo = useCallback(() => {
