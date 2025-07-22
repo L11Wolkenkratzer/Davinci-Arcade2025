@@ -1,17 +1,29 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import Home from './Home/Home';
-import PacManGame from './Game1_PACMAN/PacManGame';
-import SpaceshipGame from './Game_SPACESHIPS/SpaceshipsGame.tsx';
-import Snake from './Game_Snake/snake.tsx';
-import Dino from  './Game_Dinojump/Dinojump.tsx';
-import { useEffect, useState } from 'react'
-import Login from './Login/Login.tsx'
+import Login from './Login/Login.tsx';
 
+// Lazy load all game components for better performance
+const SpaceshipGame = lazy(() => import('./Game_SPACESHIPS/SpaceshipsGame.tsx'));
+const Snake = lazy(() => import('./Game_Snake/snake.tsx'));
+const Dino = lazy(() => import('./Game_Dinojump/Dinojump.tsx'));
+const Tetris = lazy(() => import('./Tetris/Tetris.tsx'));
+const PacMan = lazy(() => import('./PacMan/PacMan.tsx'));
 
-import Tetris from './Tetris/Tetris.tsx';
-import PacMan from './PacMan/PacMan.tsx';
-
-
+// Loading component for Suspense
+const GameLoading = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    height: '100vh',
+    fontSize: '24px',
+    color: '#00ff00',
+    fontFamily: 'monospace'
+  }}>
+    Loading Game...
+  </div>
+);
 
 // Universeller Player-Typ, passend zum Backend
 export type Player = {
@@ -21,18 +33,17 @@ export type Player = {
   totalScore: number;
   gamesPlayed: number;
   lastPlayed: string; // ISO-String
+  updatedAt?: string;
+  createdAt?: string;
+  __v?: number;
 } | null;
 
 function App() {
-  const [currentPlayer, setCurrentPlayer] = useState<Player>(null);
-
-  useEffect(() => {
-    // Prüfe LocalStorage beim App-Start
+  const [currentPlayer, setCurrentPlayer] = useState<Player>(() => {
     const savedPlayer = localStorage.getItem('currentPlayer');
     if (savedPlayer) {
       try {
         const parsed = JSON.parse(savedPlayer);
-        // Prüfe, ob alle Felder vorhanden sind
         if (
           parsed &&
           typeof parsed._id === 'string' &&
@@ -42,15 +53,23 @@ function App() {
           typeof parsed.gamesPlayed === 'number' &&
           typeof parsed.lastPlayed === 'string'
         ) {
-          setCurrentPlayer(parsed);
-        } else {
-          setCurrentPlayer(null);
+          return parsed;
         }
       } catch {
-        setCurrentPlayer(null);
+        // Invalid JSON in localStorage
       }
     }
-  }, []);
+    return null;
+  });
+
+  // CRITICAL FIX: Use ref-based stable reference
+  const setCurrentPlayerRef = useRef(setCurrentPlayer);
+  setCurrentPlayerRef.current = setCurrentPlayer;
+
+  // STABLE: This function never changes reference
+  const updateCurrentPlayer = useCallback((value: React.SetStateAction<Player>) => {
+    setCurrentPlayerRef.current(value);
+  }, []); // EMPTY DEPENDENCIES - always stable!
 
   const logout = () => {
     localStorage.removeItem('currentPlayer');
@@ -58,45 +77,49 @@ function App() {
     window.location.href = '/login';
   };
 
+  // OPTIMIZED: Only currentPlayer changes should trigger re-memoization
+  const homeElement = useMemo(
+    () => {
+      return <Home currentPlayer={currentPlayer!} setCurrentPlayer={updateCurrentPlayer} />;
+    },
+    [currentPlayer, updateCurrentPlayer] // updateCurrentPlayer is now always stable
+  );
+  
+  const loginElement = useMemo(
+    () => {
+      return <Login setCurrentPlayer={updateCurrentPlayer} />;
+    },
+    [updateCurrentPlayer]
+  );
+
   return (
     <BrowserRouter>
       <Routes>
         <Route
           path="/"
-          element={
-            currentPlayer ? (
-              <Home currentPlayer={currentPlayer} setCurrentPlayer={setCurrentPlayer} />
-            ) : (
-              <Login setCurrentPlayer={setCurrentPlayer} />
-            )
-          }
+          element={currentPlayer ? homeElement : loginElement}
         />
-
-
-        <Route path="/spaceships" element={<SpaceshipGame />} />
-
-
+        <Route 
+          path="/spaceships" 
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><SpaceshipGame /></Suspense> : loginElement} 
+        />
         <Route
           path="/pacman"
-          element={currentPlayer ? <PacMan /> : <Login setCurrentPlayer={setCurrentPlayer} />}
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><PacMan /></Suspense> : loginElement}
         />
-
         <Route 
-  path="/tetris" 
-  element={
-    currentPlayer ? 
-      <Tetris currentPlayer={currentPlayer} /> : 
-      <Login setCurrentPlayer={setCurrentPlayer} />
-  } 
-/>
-
-                <Route path="/snake" element={<Snake />} />
-                <Route path="/dino" element={<Dino />} />
-
-        <Route path="/tetris" element={currentPlayer ? <Tetris /> : <Login setCurrentPlayer={setCurrentPlayer} />} />
-
-
-        <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
+          path="/tetris" 
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><Tetris currentPlayer={currentPlayer} /></Suspense> : loginElement}
+        />
+        <Route 
+          path="/snake" 
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><Snake /></Suspense> : loginElement}
+        />
+        <Route 
+          path="/dino" 
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><Dino /></Suspense> : loginElement}
+        />
+        <Route path="/login" element={loginElement} />
       </Routes>
     </BrowserRouter>
   );
