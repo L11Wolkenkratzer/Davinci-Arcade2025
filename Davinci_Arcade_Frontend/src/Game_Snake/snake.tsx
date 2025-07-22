@@ -16,29 +16,29 @@ const getRandomFood = (): Coord => ({
   x: Math.floor(Math.random() * cols),
   y: Math.floor(Math.random() * rows),
 });
- 
+
 // Optimierte Snake-Rendering-Funktion - 70% weniger CPU-Last
 const drawOptimizedSnake = (ctx: CanvasRenderingContext2D, snake: Coord[], activeSkin: string) => {
   snake.forEach((s, i) => {
     const x = s.x * scale;
     const y = s.y * scale;
-   
+    
     if (i === 0) {
       // === VEREINFACHTER SCHLANGENKOPF ===
       // Basis-Kopf ohne komplexe Effekte
       ctx.fillStyle = '#4a7c59';
       ctx.fillRect(x + 2, y + 2, scale - 4, scale - 4);
-     
+      
       // Einfache Augen
       ctx.fillStyle = '#000';
       ctx.fillRect(x + 8, y + 8, 6, 6);
       ctx.fillRect(x + scale - 14, y + 8, 6, 6);
-     
+      
       // Einfache rote Pupillen
       ctx.fillStyle = '#ff4444';
       ctx.fillRect(x + 10, y + 10, 2, 2);
       ctx.fillRect(x + scale - 12, y + 10, 2, 2);
-     
+      
     } else {
       // === VEREINFACHTE KÖRPER-SEGMENTE ===
       let bodyColor;
@@ -55,11 +55,11 @@ const drawOptimizedSnake = (ctx: CanvasRenderingContext2D, snake: Coord[], activ
         default:
           bodyColor = '#555';
       }
-     
+      
       // Einfaches Rechteck ohne Effekte
       ctx.fillStyle = bodyColor;
       ctx.fillRect(x + 1, y + 1, scale - 2, scale - 2);
-     
+      
       // Minimaler Glanz-Effekt (nur jedes 3. Segment)
       if (i % 3 === 0) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
@@ -68,7 +68,7 @@ const drawOptimizedSnake = (ctx: CanvasRenderingContext2D, snake: Coord[], activ
     }
   });
 };
- 
+
 // Optimierte Apfel-Rendering-Funktion
 const drawOptimizedApple = (ctx: CanvasRenderingContext2D, food: Coord[]) => {
   food.forEach(f => {
@@ -77,13 +77,13 @@ const drawOptimizedApple = (ctx: CanvasRenderingContext2D, food: Coord[]) => {
     const centerX = x + scale / 2;
     const centerY = y + scale / 2;
     const radius = scale * 0.4;
-   
+    
     // Einfacher roter Kreis
     ctx.fillStyle = '#e74c3c';
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
     ctx.fill();
-   
+    
     // Einfacher Stiel
     ctx.strokeStyle = '#8B4513';
     ctx.lineWidth = 2;
@@ -98,7 +98,7 @@ const SnakeGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
   const [screen, setScreen] = useState<"menu" | "game" | "shopMenu" | "skinShop" | "abilityShop">("menu");
- 
+  
   // Startposition: Snake mittig
   const [snake, setSnake] = useState([{ x: Math.floor(cols/2), y: Math.floor(rows/2) }]);
   const [direction, setDirection] = useState({ x: 0, y: 0 });
@@ -113,10 +113,10 @@ const SnakeGame: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [pauseSelected, setPauseSelected] = useState(0);
- 
+  
   const lastDirection = useRef(direction);
   const gameLoopRef = useRef<number>();
- 
+
   const skinOptions = [
     { name: "Gelb", color: "yellow", price: 5 },
     { name: "Rot", color: "red", price: 10 },
@@ -147,11 +147,11 @@ const SnakeGame: React.FC = () => {
       { x: midX - 1, y: midY },
       { x: midX - 2, y: midY }
     ];
- 
+
     setSnake(initial);
     setDirection({ x: 0, y: 0 });
     lastDirection.current = { x: 0, y: 0 };
- 
+
     if (activeAbility === "extrafruit") {
       setFood([
         generateFood(initial, []),
@@ -161,7 +161,7 @@ const SnakeGame: React.FC = () => {
     } else {
       setFood([generateFood(initial, [])]);
     }
- 
+
     setGameOver(false);
     setScreen("game");
     setStarted(false);
@@ -170,7 +170,7 @@ const SnakeGame: React.FC = () => {
   const handleKeyNavigation = (optionsLength: number, actions: (() => void)[]) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (screen === "game") return;
- 
+
       if (e.key === "ArrowUp") {
         setSelectedIndex(prev => (prev - 1 + optionsLength) % optionsLength);
       } else if (e.key === "ArrowDown") {
@@ -179,14 +179,14 @@ const SnakeGame: React.FC = () => {
         actions[selectedIndex]();
       }
     };
- 
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   };
  
   useEffect(() => {
     let cleanup = () => {};
- 
+
     if (screen === "menu") {
       const actions = [handleStart, () => setScreen("shopMenu"), () => navigate("/")];
       cleanup = handleKeyNavigation(3, actions);
@@ -210,7 +210,7 @@ const SnakeGame: React.FC = () => {
       ];
       cleanup = handleKeyNavigation(abilityOptions.length + 1, actions);
     }
- 
+
     return cleanup;
   }, [screen, selectedIndex, fruits, ownedSkins, activeSkin, ownedAbilities, activeAbility]);
  
@@ -235,16 +235,16 @@ const SnakeGame: React.FC = () => {
   const equipAbility = (id: string) => {
     setActiveAbility(c => (c === id ? "" : id));
   };
- 
+
   // Optimiertes Canvas-Rendering mit requestAnimationFrame
   const renderGame = () => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
- 
+
     // Einfacher Hintergrund ohne komplexe Gradients
     ctx.fillStyle = '#2d5016';
     ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
- 
+
     // Einfaches Gitter (nur alle 2. Linie für bessere Performance)
     ctx.strokeStyle = "rgba(178, 255, 178, 0.1)";
     ctx.lineWidth = 1;
@@ -260,49 +260,49 @@ const SnakeGame: React.FC = () => {
       ctx.lineTo(canvasSize.width, y);
       ctx.stroke();
     }
- 
+
     // Optimierte Rendering-Funktionen
     drawOptimizedApple(ctx, food);
     drawOptimizedSnake(ctx, snake, activeSkin);
   };
- 
+
   useEffect(() => {
     if (screen === "game") {
       renderGame();
     }
   }, [snake, food, activeSkin, screen]);
- 
+
   // Optimierte Game Logic mit fester Framerate
   useEffect(() => {
     if (gameOver || screen !== "game") return;
- 
+
     let lastTime = 0;
     const targetFPS = 10; // Reduziert für bessere Performance
     const frameDelay = 1000 / targetFPS;
- 
+
     const gameLoop = (currentTime: number) => {
       if (currentTime - lastTime >= frameDelay) {
         if (direction.x === 0 && direction.y === 0) {
           gameLoopRef.current = requestAnimationFrame(gameLoop);
           return;
         }
- 
+
         setStarted(true);
-       
+        
         setSnake(prev => {
           if (!prev[0]) return prev;
- 
+
           const newHead = { x: prev[0].x + direction.x, y: prev[0].y + direction.y };
           let wrapped = { ...newHead };
- 
+
           if (activeAbility === "wormhole") {
             wrapped.x = (wrapped.x + cols) % cols;
             wrapped.y = (wrapped.y + rows) % rows;
           }
- 
+
           const hitWall = wrapped.x < 0 || wrapped.y < 0 || wrapped.x >= cols || wrapped.y >= rows;
           const hitSelf = prev.some(p => p.x === wrapped.x && p.y === wrapped.y);
- 
+
           if ((hitWall && activeAbility !== "wormhole") || hitSelf) {
             setGameOver(true);
             setTimeout(() => {
@@ -312,14 +312,14 @@ const SnakeGame: React.FC = () => {
             }, 3000);
             return prev;
           }
- 
+
           const ateIndex = food.findIndex(f => f.x === wrapped.x && f.y === wrapped.y);
           let newSnake = [wrapped, ...prev];
- 
+
           if (ateIndex !== -1) {
             const newFoodArray = [...food];
             newFoodArray.splice(ateIndex, 1);
- 
+
             if (activeAbility === "extrafruit") {
               while (newFoodArray.length < 3) {
                 newFoodArray.push(generateFood(newSnake, newFoodArray));
@@ -329,40 +329,40 @@ const SnakeGame: React.FC = () => {
                 newFoodArray.push(generateFood(newSnake, newFoodArray));
               }
             }
- 
+
             setFood(newFoodArray);
             setFruits(f => f + 1);
- 
+
             if (activeAbility === "wormhole") {
               newSnake = [wrapped, ...prev, prev[prev.length - 1]];
             }
           } else {
             newSnake = newSnake.slice(0, -1);
           }
- 
+
           return newSnake;
         });
- 
+
         lastDirection.current = direction;
         lastTime = currentTime;
       }
- 
+
       gameLoopRef.current = requestAnimationFrame(gameLoop);
     };
- 
+
     gameLoopRef.current = requestAnimationFrame(gameLoop);
- 
+
     return () => {
       if (gameLoopRef.current) {
         cancelAnimationFrame(gameLoopRef.current);
       }
     };
   }, [direction, food, activeAbility, gameOver, screen]);
- 
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!started) setStarted(true);
- 
+
       if (paused) {
         if (e.key === "ArrowUp" || e.key === "ArrowDown") {
           setPauseSelected(prev => (prev === 0 ? 1 : 0));
@@ -372,7 +372,7 @@ const SnakeGame: React.FC = () => {
         }
         return;
       }
- 
+
       switch (e.key) {
         case "ArrowUp": if (lastDirection.current.y === 0) setDirection({ x: 0, y: -1 }); break;
         case "ArrowDown": if (lastDirection.current.y === 0) setDirection({ x: 0, y: 1 }); break;
@@ -385,14 +385,14 @@ const SnakeGame: React.FC = () => {
           break;
       }
     };
- 
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [paused, pauseSelected, started]);
- 
+
   const initialLength = 3;
   const score = Math.max(0, snake.length - initialLength);
- 
+
   const hud = (
     <div className="snake-hud">
       <div>
@@ -404,7 +404,7 @@ const SnakeGame: React.FC = () => {
       {activeAbility && <div>{activeAbility}</div>}
     </div>
   );
- 
+
   const renderArcadeButton = (label: string, index: number, onClick: () => void, colorType: 'default' | 'exit' = 'default') => (
     <button
       className={`snake-btn ${index === selectedIndex ? 'selected' : ''} ${colorType === 'exit' ? 'snake-btn-exit' : ''}`}
@@ -413,12 +413,12 @@ const SnakeGame: React.FC = () => {
       {label}
     </button>
   );
- 
+
   return (
     <div className="snake-root">
       <div className="snake-area">
         {hud}
- 
+
         {screen === "menu" && (
           <div className="snake-menu">
             <h1>Snake Game</h1>
@@ -427,7 +427,7 @@ const SnakeGame: React.FC = () => {
             {renderArcadeButton("Exit", 2, () => navigate("/"), 'exit')}
           </div>
         )}
- 
+
         {screen === "shopMenu" && (
           <div className="snake-menu">
             <h1>Shop</h1>
@@ -436,7 +436,7 @@ const SnakeGame: React.FC = () => {
             {renderArcadeButton("Zurück", 2, () => setScreen("menu"))}
           </div>
         )}
- 
+
         {screen === "skinShop" && (
           <div className="snake-shop">
             <h2>Skins</h2>
@@ -454,7 +454,7 @@ const SnakeGame: React.FC = () => {
             {renderArcadeButton("Zurück", skinOptions.length, () => setScreen("shopMenu"))}
           </div>
         )}
- 
+
         {screen === "abilityShop" && (
           <div className="snake-shop">
             <h2>Fähigkeiten</h2>
@@ -472,7 +472,7 @@ const SnakeGame: React.FC = () => {
             {renderArcadeButton("Zurück", abilityOptions.length, () => setScreen("shopMenu"))}
           </div>
         )}
- 
+
         {screen === "game" && (
           <>
             <canvas
@@ -481,7 +481,7 @@ const SnakeGame: React.FC = () => {
               width={canvasSize.width}
               height={canvasSize.height}
             />
- 
+
             {paused && (
               <div className="snake-gameover">
                 <h2>PAUSE</h2>
@@ -502,7 +502,7 @@ const SnakeGame: React.FC = () => {
                 </button>
               </div>
             )}
- 
+
             {gameOver && !paused && (
               <div className="snake-gameover">
                 <h2>Game Over</h2>
