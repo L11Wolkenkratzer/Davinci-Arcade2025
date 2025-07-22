@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./snake.css";
 import { useNavigate } from 'react-router-dom';
-
+ 
 const canvasSize = { width: 700, height: 700 };
 const scale = 35;
 const rows = Math.floor(canvasSize.height / scale);
 const cols = Math.floor(canvasSize.width / scale);
-
+ 
 interface Coord {
   x: number;
   y: number;
 }
-
+ 
 const getRandomFood = (): Coord => ({
   x: Math.floor(Math.random() * cols),
   y: Math.floor(Math.random() * rows),
@@ -93,7 +93,7 @@ const drawOptimizedApple = (ctx: CanvasRenderingContext2D, food: Coord[]) => {
     ctx.stroke();
   });
 };
-
+ 
 const SnakeGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
@@ -122,12 +122,12 @@ const SnakeGame: React.FC = () => {
     { name: "Rot", color: "red", price: 10 },
     { name: "Grün", color: "green", price: 25 },
   ];
-
+ 
   const abilityOptions = [
     { name: "Worm Hole", id: "wormhole", price: 200, description: "Du kannst durch Wände gehen und wirst doppelt so schnell länger." },
     { name: "Extra Früchte", id: "extrafruit", price: 50, description: "Drei Früchte gleichzeitig" },
   ];
-
+ 
   const generateFood = (snake: Coord[], existingFoods: Coord[]): Coord => {
     let newFood: Coord;
     do {
@@ -138,7 +138,7 @@ const SnakeGame: React.FC = () => {
     );
     return newFood;
   };
-
+ 
   const handleStart = () => {
     const midX = Math.floor(cols / 2);
     const midY = Math.floor(rows / 2);
@@ -166,7 +166,7 @@ const SnakeGame: React.FC = () => {
     setScreen("game");
     setStarted(false);
   };
-
+ 
   const handleKeyNavigation = (optionsLength: number, actions: (() => void)[]) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (screen === "game") return;
@@ -183,7 +183,7 @@ const SnakeGame: React.FC = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   };
-
+ 
   useEffect(() => {
     let cleanup = () => {};
 
@@ -213,25 +213,25 @@ const SnakeGame: React.FC = () => {
 
     return cleanup;
   }, [screen, selectedIndex, fruits, ownedSkins, activeSkin, ownedAbilities, activeAbility]);
-
+ 
   const buySkin = (color: string, price: number) => {
     if (fruits >= price && !ownedSkins.includes(color)) {
       setFruits(f => f - price);
       setOwnedSkins(s => [...s, color]);
     }
   };
-
+ 
   const equipSkin = (color: string) => {
     setActiveSkin(c => (c === color ? "black" : color));
   };
-
+ 
   const buyAbility = (id: string, price: number) => {
     if (fruits >= price && !ownedAbilities.includes(id)) {
       setFruits(f => f - price);
       setOwnedAbilities(a => [...a, id]);
     }
   };
-
+ 
   const equipAbility = (id: string) => {
     setActiveAbility(c => (c === id ? "" : id));
   };
@@ -517,5 +517,5 @@ const SnakeGame: React.FC = () => {
     </div>
   );
 };
-
+ 
 export default SnakeGame;
