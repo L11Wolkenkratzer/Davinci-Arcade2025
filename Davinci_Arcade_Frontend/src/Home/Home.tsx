@@ -69,7 +69,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   // Games Array ohne PACMAN
   const games: Game[] = [
     { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b", video: tetrisVideo},
-    { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
+    { id: 3, title: "Tilli Timian", icon: "🍄", color: "#4c697cff" },
     { id: 4, title: "DINOS", icon: "🦕", color: "#0b884f", video: sonicVideo },
     { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
     { id: 6, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
@@ -305,7 +305,10 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   /* Aktionen                                                           */
   /* ------------------------------------------------------------------ */
   const handleGameSelect = (game: Game): void => {
-    const route = `/${game.title.toLowerCase()}`;
+    let route = `/${game.title.toLowerCase()}`;
+    if (game.title === 'Tilli Timian') {
+      route = '/tilliTimian';
+    }
     navigate(route);
   };
 

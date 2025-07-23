@@ -24,9 +24,15 @@ const GamePlayCanvas: React.FC<GamePlayCanvasProps> = ({ onGameOver, onPause, on
 
   // HUD State for React overlay
   const [hud, setHud] = useState({ score: 0, level: 1, health: 100, maxHealth: 100, coins: 0 });
+  const [screen, setScreen] = useState<'lobby' | 'game' | 'shop' | 'highscore' | 'other'>('lobby'); // Add screen state if not present
 
-  // Load images
+  // Load images and sounds
   const imagesRef = useRef<{ [key: string]: HTMLImageElement }>({});
+  const soundsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
+  // ...existing code...
+
+  // ...existing code...
+
   useEffect(() => {
     const asteroid = new window.Image();
     asteroid.src = ASTEROID_IMG;
@@ -35,6 +41,13 @@ const GamePlayCanvas: React.FC<GamePlayCanvasProps> = ({ onGameOver, onPause, on
     const powerup = new window.Image();
     powerup.src = POWERUP_IMG;
     imagesRef.current = { asteroid, ship, powerup };
+
+    // Load sounds
+    const laserShoot = new window.Audio('/Sounds/laserShoot.mp3');
+    const stoneBreak = new window.Audio('/Sounds/asteroid_break.mp3');
+    laserShoot.volume = 0.2;
+    stoneBreak.volume = 0.4;
+    soundsRef.current = { laserShoot, stoneBreak };
   }, []);
 
   // Game loop
@@ -117,13 +130,16 @@ const GamePlayCanvas: React.FC<GamePlayCanvasProps> = ({ onGameOver, onPause, on
       s.ship.x = Math.max(0, Math.min(width - SHIP_SIZE, s.ship.x));
       // Shooting
       s.ship.cooldown -= dt;
-      // Am Anfang sehr langsam schießen, erst mit Upgrades schneller
-      // fireRate startet bei 10, steigt mit Upgrades
-      // Formel: fireInterval = Math.max(18, 50 - (s.ship.fireRate-10)*2)
+      
       const fireInterval = Math.max(18, 50 - (s.ship.fireRate - 10) * 2); // 50 Frames (ca. 0.83s) bei Start, bis 18 Frames (0.3s) bei vielen Upgrades
       if (s.ship.cooldown <= 0 && s.gameRunning && !s.gameOver) {
         s.bullets.push({ x: s.ship.x + 60, y: s.ship.y + 30, v: 14 });
         s.ship.cooldown = fireInterval;
+        // Play laser shoot sound
+        if (soundsRef.current.laserShoot) {
+          soundsRef.current.laserShoot.currentTime = 0;
+          soundsRef.current.laserShoot.play();
+        }
       }
       // Bullets
       s.bullets.forEach(b => b.x += b.v * dt);
@@ -161,6 +177,11 @@ const GamePlayCanvas: React.FC<GamePlayCanvasProps> = ({ onGameOver, onPause, on
               s.coins += Math.floor(asteroid.size / 10);
               s.asteroidsDestroyed++;
               s.asteroids.splice(a, 1);
+              // Play stone_break sound
+              if (soundsRef.current.stoneBreak) {
+                soundsRef.current.stoneBreak.currentTime = 0;
+                soundsRef.current.stoneBreak.play();
+              }
             }
             s.bullets.splice(b, 1);
             break;
@@ -186,12 +207,19 @@ const GamePlayCanvas: React.FC<GamePlayCanvasProps> = ({ onGameOver, onPause, on
       // Level up
       if (s.score > s.level * 600) s.level++;
       // Powerup spawn
-      if (s.asteroidsDestroyed > 0 && s.asteroidsDestroyed % 10 === 0 && !s.powerup) {
+      // Spawn only once per 10 asteroids destroyed
+      if (
+        s.asteroidsDestroyed > 0 &&
+        s.asteroidsDestroyed % 10 === 0 &&
+        !s.powerup &&
+        (!s.lastPowerupSpawn || s.lastPowerupSpawn !== s.asteroidsDestroyed)
+      ) {
         s.powerup = {
           x: width - 80,
           y: Math.random() * (height - 60),
           v: 3.5
         };
+        s.lastPowerupSpawn = s.asteroidsDestroyed;
       }
       // Powerup bewegen
       if (
@@ -203,9 +231,9 @@ const GamePlayCanvas: React.FC<GamePlayCanvasProps> = ({ onGameOver, onPause, on
         typeof s.powerup.v === 'number'
       ) {
         s.powerup.x -= s.powerup.v * dt;
-        if (s.powerup.x < -60) s.powerup = null;
-        // Powerup-Kollision
-        if (
+        if (s.powerup.x < -60) {
+          s.powerup = null;
+        } else if (
           s.ship.x < s.powerup.x + 60 &&
           s.ship.x + SHIP_SIZE > s.powerup.x &&
           s.ship.y < s.powerup.y + 60 &&
@@ -218,7 +246,8 @@ const GamePlayCanvas: React.FC<GamePlayCanvasProps> = ({ onGameOver, onPause, on
           s.powerup = null;
         }
       } else {
-        s.powerup = null;
+        // Nur auf null setzen, wenn s.powerup nicht schon null ist
+        if (s.powerup !== null) s.powerup = null;
       }
     }
 
@@ -300,7 +329,6 @@ const GamePlayCanvas: React.FC<GamePlayCanvasProps> = ({ onGameOver, onPause, on
 
   return (
     <>
-      {/* HUD wirklich außerhalb des Spielfensters, immer sichtbar */}
       <div className="hud-overlay" style={{
         position: 'fixed',
         top: 0,

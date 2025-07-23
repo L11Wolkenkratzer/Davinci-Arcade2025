@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './Home/Home';
 // PacManGame entfernt
 import SpaceshipGame from './Game_SPACESHIPS/SpaceshipsGame.tsx';
+import TilliTimianGame from './Game_TILLI_TIMIAN/TilliTimianGame.tsx';
 import Snake from './Game_Snake/snake.tsx';
 import Dino from  './Game_Dinojump/Dinojump.tsx';
 import { useEffect, useState } from 'react'
@@ -74,8 +75,7 @@ function App() {
 
 
         <Route path="/spaceships" element={<SpaceshipGame />} />
-
-
+        <Route path="/tilliTimian" element={<TilliTimianGame />} />
         <Route path="/snake" element={<Snake />} />
         <Route path="/dino" element={<Dino />} />
         <Route path="/tetris" element={currentPlayer ? <Tetris currentPlayer={currentPlayer} /> : <Login setCurrentPlayer={setCurrentPlayer} />} />

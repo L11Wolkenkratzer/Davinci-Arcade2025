@@ -1,12 +1,10 @@
 // vite.config.ts
-import { defineConfig, splitVendorChunkPlugin } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [
     react(),
-    // optional, aber häufig nützlich: automatische Vendor-Trennung
-    splitVendorChunkPlugin(),
   ],
 
   /* ---------  DEV-SERVER  --------- */
