@@ -7,6 +7,7 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
+    console.log('Login component rendering');
     const [badgeInput, setBadgeInput] = useState('');
     const [isReadingBadge, setIsReadingBadge] = useState(false);
     const [showUsernameForm, setShowUsernameForm] = useState(false);
@@ -84,7 +85,10 @@ const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
                   badgeId: data.player.badgeId,
                   totalScore: data.player.totalScore,
                   gamesPlayed: data.player.gamesPlayed,
-                  lastPlayed: typeof data.player.lastPlayed === 'string' ? data.player.lastPlayed : new Date(data.player.lastPlayed).toISOString()
+                  lastPlayed: typeof data.player.lastPlayed === 'string' ? data.player.lastPlayed : new Date(data.player.lastPlayed).toISOString(),
+                  updatedAt: data.player.updatedAt || new Date().toISOString(),
+                  createdAt: data.player.createdAt,
+                  __v: data.player.__v
                 };
                 localStorage.setItem('currentPlayer', JSON.stringify(player));
                 setCurrentPlayer(player);
@@ -148,7 +152,10 @@ const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
                   badgeId: data.player.badgeId,
                   totalScore: data.player.totalScore,
                   gamesPlayed: data.player.gamesPlayed,
-                  lastPlayed: typeof data.player.lastPlayed === 'string' ? data.player.lastPlayed : new Date(data.player.lastPlayed).toISOString()
+                  lastPlayed: typeof data.player.lastPlayed === 'string' ? data.player.lastPlayed : new Date(data.player.lastPlayed).toISOString(),
+                  updatedAt: data.player.updatedAt || new Date().toISOString(),
+                  createdAt: data.player.createdAt,
+                  __v: data.player.__v
                 };
                 localStorage.setItem('currentPlayer', JSON.stringify(player));
                 setCurrentPlayer(player);

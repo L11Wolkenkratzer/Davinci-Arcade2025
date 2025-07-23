@@ -4,16 +4,22 @@ import "./Tetris.css";
 
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
-const BLOCK_SIZE = 48; // px (bigger blocks for a larger board)
+const BLOCK_SIZE = 48;
 
+// 🎨 Saftige Farben
 const COLORS = [
-  "#00f0f0", // I
-  "#f0a000", // L
-  "#0000f0", // J
-  "#f0f000", // O
-  "#00f000", // S
-  "#f00000", // Z
-  "#a000f0", // T
+  "#00FFFF", // I - Cyan
+  "#FF8C00", // L - Orange
+  "#0080FF", // J - Blau
+  "#FFD700", // O - Gold
+  "#00FF00", // S - Grün
+  "#FF0040", // Z - Rot
+  "#C040FF", // T - Lila
+];
+
+const GLOW_COLORS = [
+  "#80FFFF", "#FFB84D", "#4DA6FF", "#FFF066", 
+  "#66FF66", "#FF6680", "#E680FF"
 ];
 
 const SHAPES = [
@@ -108,6 +114,9 @@ const emptyBoard = () =>
   );
 
 const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const backBufferRef = useRef<HTMLCanvasElement>(null);
+  
   const [gameState, setGameState] = useState<GameState>("start");
   const [board, setBoard] = useState(emptyBoard());
   const [current, setCurrent] = useState<Piece | null>(null);
@@ -123,284 +132,312 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showNewHighscore, setShowNewHighscore] = useState(false);
   
+  // 🚀 ANTI-FLICKER: Double Buffering
   const requestRef = useRef<number>();
   const lastDrop = useRef(Date.now());
+  const lastGameState = useRef<any>(null);
   
-  // Menu navigation state
-  const [menuIndex, setMenuIndex] = useState(0); // for start screen
-  const [gameoverIndex, setGameoverIndex] = useState(0); // for gameover screen
-  const [highscoreIndex, setHighscoreIndex] = useState(0); // for highscore screen
+  // Menu navigation
+  const [menuIndex, setMenuIndex] = useState(0);
+  const [gameoverIndex, setGameoverIndex] = useState(0);
 
-  // 🎯 Load Player Stats beim Start
-  useEffect(() => {
-    if (currentPlayer) {
-      loadPlayerStats();
+  // API Functions (optimiert)
+  const apiCall = async (url: string, options?: RequestInit) => {
+    const origin5000 = window.location.origin.replace(/:5173$/, ':5000');
+    const fullUrl = `${origin5000}${url}`;
+    
+    try {
+      const response = await fetch(fullUrl, options);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      throw error;
     }
+  };
+
+  const loadPlayerStats = async () => {
+    if (!currentPlayer) return;
+    
+    try {
+      const [playerData, scoresData] = await Promise.all([
+        apiCall(`/api/players/${currentPlayer._id}`),
+        apiCall('/api/scores/game/tetris')
+      ]);
+      
+      const tetrisScores = scoresData.filter((score: any) => 
+        score.playerId._id === currentPlayer._id
+      );
+      
+      const tetrisHighscore = tetrisScores.length > 0 
+        ? Math.max(...tetrisScores.map((s: any) => s.score))
+        : 0;
+      
+      const stats: PlayerStats = {
+        totalScore: playerData.totalScore || 0,
+        gamesPlayed: playerData.gamesPlayed || 0,
+        tetrisHighscore,
+        tetrisCoins: Math.floor(tetrisHighscore / 100),
+        tetrisGamesPlayed: tetrisScores.length
+      };
+      
+      setPlayerStats(stats);
+      setCoins(stats.tetrisCoins);
+      
+    } catch (error) {
+      console.error('Load player stats failed:', error);
+    }
+  };
+
+  const loadHighscores = async () => {
+    try {
+      const data = await apiCall('/api/scores/game/tetris');
+      setHighscores(data.slice(0, 10));
+    } catch (error) {
+      console.error('Error loading highscores:', error);
+      setHighscores([]);
+    }
+  };
+
+  const submitGameResult = async (finalScore: number, finalLevel: number, finalDuration: number) => {
+    if (!currentPlayer || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      await apiCall('/api/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId: currentPlayer._id,
+          gameName: 'tetris',
+          score: finalScore,
+          level: finalLevel,
+          duration: finalDuration
+        })
+      });
+      
+      if (playerStats && finalScore > playerStats.tetrisHighscore) {
+        setShowNewHighscore(true);
+        setTimeout(() => setShowNewHighscore(false), 5000);
+      }
+      
+      await loadPlayerStats();
+      
+    } catch (error) {
+      console.error('Error submitting score:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentPlayer) loadPlayerStats();
   }, [currentPlayer]);
 
-// 🔍 Super-detaillierte Debug-API-Funktion
-const apiCall = async (url: string, options?: RequestInit) => {
-  const startTime = Date.now();
-  const origin5000 = window.location.origin.replace(/:5173$/, ':5000');
-  const fullUrl = `${origin5000}${url}`;
-  
-  console.group(`🔍 API DEBUG: ${options?.method || 'GET'} ${url}`);
-  console.log('📍 Full URL:', fullUrl);
-  console.log('🌐 Origin:', window.location.origin);
-  console.log('⚙️ Options:', options);
-  
-  try {
-    // 1. SERVER-STATUS PRÜFEN
-    console.log('🔄 Making request...');
-    const response = await fetch(fullUrl, options);
-    
-    const endTime = Date.now();
-    const duration = endTime - startTime;
-    
-    // 2. RESPONSE-DETAILS LOGGEN
-    console.log('⏱️ Request Duration:', `${duration}ms`);
-    console.log('📊 Response Status:', response.status);
-    console.log('📋 Response Headers:', Object.fromEntries(response.headers.entries()));
-    console.log('🎯 Response OK:', response.ok);
-    console.log('🔗 Response URL:', response.url);
-    
-    // 3. CONTENT-TYPE PRÜFEN
-    const contentType = response.headers.get('content-type');
-    console.log('📄 Content-Type:', contentType);
-    
-    // 4. RESPONSE BODY KLONEN FÜR DEBUGGING
-    const responseClone = response.clone();
-    const rawText = await responseClone.text();
-    console.log('📝 Raw Response (first 200 chars):', rawText.substring(0, 200));
-    
-    if (!response.ok) {
-      console.error('❌ HTTP Error Details:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url,
-        headers: Object.fromEntries(response.headers.entries()),
-        body: rawText
-      });
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  // 🎨 FLACKER-FREIE CANVAS DRAWING FUNCTIONS
+  const initializeBackBuffer = () => {
+    if (!backBufferRef.current) {
+      backBufferRef.current = document.createElement('canvas');
     }
     
-    // 5. JSON-PARSING PRÜFEN
-    if (!contentType || !contentType.includes('application/json')) {
-      console.error('❌ Content-Type Error:', {
-        expected: 'application/json',
-        received: contentType,
-        isHTML: rawText.includes('<!doctype') || rawText.includes('<html'),
-        bodyPreview: rawText.substring(0, 500)
-      });
-      throw new Error(`Expected JSON, got: ${contentType}`);
+    const backBuffer = backBufferRef.current;
+    const canvas = canvasRef.current;
+    if (!canvas || !backBuffer) return null;
+    
+    backBuffer.width = canvas.width;
+    backBuffer.height = canvas.height;
+    
+    return backBuffer.getContext('2d');
+  };
+
+  const drawTetrisBlock = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, colorIndex: number, intensity = 1) => {
+    const baseColor = COLORS[colorIndex];
+    const glowColor = GLOW_COLORS[colorIndex];
+    
+    // Gradient
+    const gradient = ctx.createLinearGradient(x, y, x, y + size);
+    gradient.addColorStop(0, glowColor);
+    gradient.addColorStop(1, baseColor);
+    
+    // Block mit Glow
+    ctx.shadowColor = baseColor;
+    ctx.shadowBlur = 15 * intensity;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.roundRect(x, y, size, size, 8);
+    ctx.fill();
+    
+    // Border
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.shadowBlur = 0;
+  };
+
+  const drawBoard = (ctx: CanvasRenderingContext2D, displayBoard: number[][], boardX: number, boardY: number) => {
+    // Board background
+    const bgGradient = ctx.createLinearGradient(boardX, boardY, boardX, boardY + BOARD_HEIGHT * BLOCK_SIZE);
+    bgGradient.addColorStop(0, "#001122");
+    bgGradient.addColorStop(1, "#000811");
+    
+    ctx.fillStyle = bgGradient;
+    ctx.beginPath();
+    ctx.roundRect(boardX - 4, boardY - 4, BOARD_WIDTH * BLOCK_SIZE + 8, BOARD_HEIGHT * BLOCK_SIZE + 8, 16);
+    ctx.fill();
+    
+    // Board border
+    ctx.shadowColor = "#00DDFF";
+    ctx.shadowBlur = 20;
+    ctx.strokeStyle = "#00DDFF";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    // Grid (subtil)
+    ctx.strokeStyle = "#004466";
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.3;
+    
+    for (let i = 1; i < BOARD_WIDTH; i++) {
+      ctx.beginPath();
+      ctx.moveTo(boardX + i * BLOCK_SIZE, boardY);
+      ctx.lineTo(boardX + i * BLOCK_SIZE, boardY + BOARD_HEIGHT * BLOCK_SIZE);
+      ctx.stroke();
+    }
+    for (let i = 1; i < BOARD_HEIGHT; i++) {
+      ctx.beginPath();
+      ctx.moveTo(boardX, boardY + i * BLOCK_SIZE);
+      ctx.lineTo(boardX + BOARD_WIDTH * BLOCK_SIZE, boardY + i * BLOCK_SIZE);
+      ctx.stroke();
     }
     
-    const data = await response.json();
-    console.log('✅ Parsed JSON:', data);
-    console.log('📦 Data Type:', typeof data);
-    console.log('🔢 Data Length:', Array.isArray(data) ? data.length : 'N/A');
+    ctx.globalAlpha = 1;
     
-    console.groupEnd();
-    return data;
-    
-  } catch (error) {
-    console.error('💥 API Call Failed:', {
-      url: fullUrl,
-      error: error.message,
-      stack: error.stack,
-      duration: `${Date.now() - startTime}ms`
+    // Blocks
+    displayBoard.forEach((row, y) => {
+      row.forEach((cell, x) => {
+        if (cell !== -1) {
+          const time = Date.now() * 0.002;
+          const pulse = 1 + Math.sin(time + x + y) * 0.05;
+          const blockSize = BLOCK_SIZE * 0.95;
+          const offset = (BLOCK_SIZE - blockSize) / 2;
+          
+          drawTetrisBlock(ctx, 
+            boardX + x * BLOCK_SIZE + offset, 
+            boardY + y * BLOCK_SIZE + offset, 
+            blockSize, 
+            cell, 
+            pulse
+          );
+        }
+      });
     });
-    
-    // 6. NETWORK-ERROR DETAILS
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      console.error('🌐 Network Error - Possible causes:', {
-        serverDown: 'Backend server might not be running',
-        cors: 'CORS configuration issue',
-        port: 'Wrong port number',
-        firewall: 'Firewall blocking request'
-      });
-    }
-    
-    console.groupEnd();
-    throw error;
-  }
-};
+  };
 
-// 🔧 SERVER-HEALTH-CHECK HINZUFÜGEN
-const checkServerHealth = async () => {
-  console.group('🏥 SERVER HEALTH CHECK');
-  
-  try {
-    const healthCheck = await fetch('/api/health');
-    console.log('🔍 Health Check Status:', healthCheck.status);
+  const drawNextPiece = (ctx: CanvasRenderingContext2D, piece: Piece, x: number, y: number) => {
+    const boxSize = 120;
     
-    if (healthCheck.ok) {
-      const healthData = await healthCheck.json();
-      console.log('✅ Server is running:', healthData);
-    } else {
-      console.error('❌ Server health check failed:', healthCheck.status);
-    }
-  } catch (error) {
-    console.error('💥 Server unreachable:', error.message);
-  }
-  
-  console.groupEnd();
-};
-
-// 🔧 ROUTE-VALIDATION HINZUFÜGEN
-const validateRoute = async (route: string) => {
-  console.group(`🛣️ ROUTE VALIDATION: ${route}`);
-  
-  try {
-    const response = await fetch(route, { method: 'OPTIONS' });
-    console.log('🔍 OPTIONS Response:', response.status);
-    console.log('🔍 Allowed Methods:', response.headers.get('allow'));
-    console.log('🔍 CORS Headers:', {
-      'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
-      'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
-      'access-control-allow-headers': response.headers.get('access-control-allow-headers')
+    // Next box
+    const bgGradient = ctx.createLinearGradient(x, y, x, y + boxSize);
+    bgGradient.addColorStop(0, "#1a1a2e");
+    bgGradient.addColorStop(1, "#0f0f1a");
+    
+    ctx.fillStyle = bgGradient;
+    ctx.beginPath();
+    ctx.roundRect(x, y, boxSize, boxSize, 12);
+    ctx.fill();
+    
+    ctx.shadowColor = "#00DDFF";
+    ctx.shadowBlur = 15;
+    ctx.strokeStyle = "#00DDFF";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    
+    // Next piece
+    const shape = SHAPES[piece.shape][0];
+    const blockSize = 28;
+    shape.forEach(([dx, dy]) => {
+      drawTetrisBlock(ctx, x + dx * blockSize + 20, y + dy * blockSize + 20, blockSize, piece.shape, 1.2);
     });
-  } catch (error) {
-    console.error('❌ Route validation failed:', error.message);
-  }
-  
-  console.groupEnd();
-};
+  };
 
-// 🔧 ERWEITERTE LOAD-PLAYER-STATS MIT ALLEN DEBUG-FEATURES
-const loadPlayerStats = async () => {
-  if (!currentPlayer) return;
-  
-  console.group('🎮 LOADING PLAYER STATS');
-  console.log('👤 Current Player:', currentPlayer);
-  
-  // 1. SERVER-HEALTH PRÜFEN
-  await checkServerHealth();
-  
-  // 2. ROUTE-VALIDATION
-  await validateRoute(`/api/players/${currentPlayer._id}`);
-  await validateRoute('/api/scores/game/tetris');
-  
-  try {
-    // 3. PLAYER-DATEN LADEN
-    console.log('📊 Loading player data...');
-    const playerData = await apiCall(`/api/players/${currentPlayer._id}`);
+  const drawGameCanvas = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+    const boardX = canvas.width / 2 - (BOARD_WIDTH * BLOCK_SIZE) / 2 - 120;
+    const boardY = (canvas.height - BOARD_HEIGHT * BLOCK_SIZE) / 2;
     
-    // 4. TETRIS-SCORES LADEN
-    console.log('🎮 Loading tetris scores...');
-    const scoresData = await apiCall('/api/scores/game/tetris');
-    
-    // 5. DATEN-VERARBEITUNG
-    console.log('🔄 Processing data...');
-    const tetrisScores = scoresData.filter((score: any) => 
-      score.playerId._id === currentPlayer._id
+    // Clear mit Gradient
+    const bgGradient = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, 0,
+      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height)
     );
+    bgGradient.addColorStop(0, '#001122');
+    bgGradient.addColorStop(0.7, '#000811');
+    bgGradient.addColorStop(1, '#000406');
     
-    console.log('🎯 Filtered tetris scores:', tetrisScores);
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    const tetrisHighscore = tetrisScores.length > 0 
-      ? Math.max(...tetrisScores.map((s: any) => s.score))
-      : 0;
+    // Draw board
+    const displayBoard = getDisplayBoard();
+    drawBoard(ctx, displayBoard, boardX, boardY);
     
-    const tetrisGamesPlayed = tetrisScores.length;
-    const tetrisCoins = Math.floor(tetrisHighscore / 100);
+    // Sidebar
+    const sidebarX = boardX + BOARD_WIDTH * BLOCK_SIZE + 80;
+    const sidebarY = boardY;
     
-    const stats: PlayerStats = {
-      totalScore: playerData.totalScore || 0,
-      gamesPlayed: playerData.gamesPlayed || 0,
-      tetrisHighscore,
-      tetrisCoins,
-      tetrisGamesPlayed
-    };
+    // Next piece
+    ctx.font = "18px 'Press Start 2P'";
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = "#FFD700";
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = "#FFD700";
+    ctx.fillText("NEXT", sidebarX, sidebarY - 25);
+    ctx.shadowBlur = 0;
     
-    console.log('📈 Final calculated stats:', stats);
+    drawNextPiece(ctx, next, sidebarX, sidebarY + 5);
     
-    setPlayerStats(stats);
-    setCoins(tetrisCoins);
+    // Stats
+    const statsStartY = sidebarY + 150;
+    const statItems = [
+      { label: "SCORE", value: score.toString(), color: "#00FFFF" },
+      { label: "LINES", value: lines.toString(), color: "#FF4500" },
+      { label: "LEVEL", value: level.toString(), color: "#32CD32" },
+      { label: "COINS", value: coins.toString(), color: "#FFD700" }
+    ];
     
-  } catch (error) {
-    console.error('💥 Load player stats failed:', error);
-    // Fallback bleibt gleich
-  }
-  
-  console.groupEnd();
-};
-
-
-// 🔧 KORRIGIERT: Highscores laden mit Debug-API
-const loadHighscores = async () => {
-  console.log('🏆 Loading Tetris highscores...');
-  
-  try {
-    const data = await apiCall('/api/scores/game/tetris');
-    const topScores = data.slice(0, 10);
-    
-    console.log('🎯 Top 10 Tetris scores:', topScores);
-    setHighscores(topScores);
-    
-  } catch (error) {
-    console.error('💥 Error loading highscores:', error);
-    console.log('🔄 Using empty highscores list');
-    setHighscores([]); // Fallback: Leere Liste
-  }
-};
-
-// 🔧 KORRIGIERT: Score submitten mit Debug-API
-const submitGameResult = async (finalScore: number, finalLevel: number, finalDuration: number) => {
-  if (!currentPlayer || isSubmitting) return;
-  
-  console.log('💾 Submitting game result:', {
-    player: currentPlayer.name,
-    score: finalScore,
-    level: finalLevel,
-    duration: finalDuration
-  });
-  
-  setIsSubmitting(true);
-  try {
-    const payload = {
-      playerId: currentPlayer._id,
-      gameName: 'tetris',
-      score: finalScore,
-      level: finalLevel,
-      duration: finalDuration
-    };
-    
-    console.log('📤 Sending score payload:', payload);
-    
-    const result = await apiCall('/api/scores', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
+    ctx.font = "16px 'Press Start 2P'";
+    statItems.forEach((stat, index) => {
+      const y = statsStartY + index * 45;
+      
+      ctx.shadowColor = stat.color;
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = stat.color;
+      ctx.fillText(stat.label, sidebarX, y);
+      
+      ctx.shadowColor = "#FFFFFF";
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(stat.value, sidebarX + 160, y);
+      ctx.shadowBlur = 0;
     });
     
-    // Prüfe ob neuer Highscore
-    if (playerStats && finalScore > playerStats.tetrisHighscore) {
-      console.log('🎉 NEW HIGHSCORE ACHIEVED!', {
-        oldHighscore: playerStats.tetrisHighscore,
-        newHighscore: finalScore
-      });
-      setShowNewHighscore(true);
-      setTimeout(() => setShowNewHighscore(false), 5000);
-    }
-    
-    // Update Player Stats
-    console.log('🔄 Refreshing player stats after score submission...');
-    await loadPlayerStats();
-    
-    console.log('✅ Score submitted successfully:', result);
-  } catch (error) {
-    console.error('💥 Error submitting score:', error);
-  } finally {
-    setIsSubmitting(false);
-    console.log('🏁 Score submission process completed');
-  }
-};
+    // Hint
+    ctx.font = "14px 'Press Start 2P'";
+    ctx.textAlign = 'center';
+    ctx.shadowColor = "#00DDFF";
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = "#00DDFF";
+    ctx.fillText("Hold Space To Exit", canvas.width / 2, boardY + BOARD_HEIGHT * BLOCK_SIZE + 45);
+    ctx.shadowBlur = 0;
+  };
 
-
-  // Start Game
+  // Game logic
   const startGame = () => {
     setBoard(emptyBoard());
     setCurrent(getRandomPiece());
@@ -415,7 +452,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
     setGameState("playing");
   };
 
-  // Collision Detection
   const isValid = useCallback(
     (piece: Piece, testBoard = board) => {
       const shape = SHAPES[piece.shape][piece.rotation];
@@ -434,7 +470,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
     [board]
   );
 
-  // Merge piece into board
   const merge = useCallback(
     (piece: Piece, toBoard = board) => {
       const newBoard = toBoard.map((row) => [...row]);
@@ -450,7 +485,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
     []
   );
 
-  // Clear lines
   const clearLines = useCallback((b: number[][]) => {
     let cleared = 0;
     const newBoard = b.filter((row) => {
@@ -466,7 +500,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
     return { newBoard, cleared };
   }, []);
 
-  // Game Over Handler
   const handleGameOver = useCallback(() => {
     const gameDuration = Math.floor((Date.now() - gameStartTime) / 1000);
     const coinsEarned = Math.floor(score / 100);
@@ -480,6 +513,62 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
     setGameState("gameover");
   }, [score, level, currentPlayer, gameStartTime]);
 
+  const getDisplayBoard = () => {
+    const display = board.map((row) => [...row]);
+    if (current) {
+      SHAPES[current.shape][current.rotation].forEach(([dx, dy]) => {
+        const x = current.x + dx;
+        const y = current.y + dy;
+        if (y >= 0 && y < BOARD_HEIGHT && x >= 0 && x < BOARD_WIDTH) {
+          display[y][x] = current.shape;
+        }
+      });
+    }
+    return display;
+  };
+
+  // 🚀 FLACKER-FREIE CANVAS RENDER LOOP - NUR FÜR PLAYING STATE
+  useEffect(() => {
+    if (gameState !== "playing") return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationId: number;
+
+    const render = () => {
+      // 🎯 ANTI-FLICKER: Double buffering
+      const backCtx = initializeBackBuffer();
+      if (!backCtx || !backBufferRef.current) {
+        animationId = requestAnimationFrame(render);
+        return;
+      }
+
+      // Render auf Back Buffer
+      drawGameCanvas(backCtx, backBufferRef.current);
+      
+      // Copy back buffer to main canvas (atomic operation)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(backBufferRef.current, 0, 0);
+      
+      animationId = requestAnimationFrame(render);
+    };
+
+    animationId = requestAnimationFrame(render);
+    
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [gameState, board, current, next, score, lines, level, coins]);
+
   // Drop logic
   useEffect(() => {
     if (gameState !== "playing" || !current) return;
@@ -489,7 +578,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
       if (isValid(moved)) {
         setCurrent(moved);
       } else {
-        // Merge and check for lines
         let merged = merge(current, board);
         const { newBoard, cleared } = clearLines(merged);
         setBoard(newBoard);
@@ -500,7 +588,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
           setDropTime((t) => Math.max(100, t - 60));
         }
         
-        // New piece
         const n = next;
         if (!isValid({ ...n, y: 0, x: n.x }, newBoard)) {
           handleGameOver();
@@ -522,7 +609,7 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
     return () => cancelAnimationFrame(requestRef.current!);
   }, [gameState, current, board, next, isValid, merge, clearLines, dropTime, level, lines, handleGameOver]);
 
-  // Keyboard controls for game
+  // Keyboard controls
   useEffect(() => {
     if (gameState !== "playing" || !current) return;
     
@@ -546,7 +633,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
         if (isValid(rotated)) setCurrent(rotated);
       }
       if (e.key === " ") {
-        // SPACE: Drop if possible, else exit to menu
         let drop = { ...current };
         let didDrop = false;
         while (isValid({ ...drop, y: drop.y + 1 })) {
@@ -567,17 +653,16 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
     return () => window.removeEventListener("keydown", handle);
   }, [gameState, current, isValid, handleGameOver]);
 
-  // Keyboard navigation for menus
+  // Menu navigation
   useEffect(() => {
     if (gameState === "playing") return;
     
     const handle = (e: KeyboardEvent) => {
-      // Start screen navigation
       if (gameState === "start") {
         const menuItems = [
           () => startGame(),
           () => { loadHighscores(); setGameState("highscores"); },
-          null, // INFO (disabled)
+          null,
           () => window.location.href = "/"
         ];
         
@@ -585,13 +670,11 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
           e.preventDefault();
           setMenuIndex((idx) => {
             let next = idx + (e.key === "ArrowDown" ? 1 : -1);
-            // Skip disabled items
             while (next >= 0 && next < menuItems.length && menuItems[next] === null) {
               next += (e.key === "ArrowDown" ? 1 : -1);
             }
             if (next < 0) next = menuItems.length - 1;
             if (next >= menuItems.length) next = 0;
-            // Skip disabled items again if we wrapped around
             while (menuItems[next] === null) {
               next += (e.key === "ArrowDown" ? 1 : -1);
               if (next < 0) next = menuItems.length - 1;
@@ -607,7 +690,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
         }
       }
       
-      // Gameover screen navigation
       if (gameState === "gameover") {
         const menuItems = [
           () => startGame(),
@@ -625,7 +707,6 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
         }
       }
       
-      // Highscore screen navigation
       if (gameState === "highscores") {
         if (e.key === "Escape" || e.key === "Enter") {
           e.preventDefault();
@@ -638,247 +719,165 @@ const submitGameResult = async (finalScore: number, finalLevel: number, finalDur
     return () => window.removeEventListener("keydown", handle);
   }, [gameState, menuIndex, gameoverIndex]);
 
-  // Draw board with current piece
-  const getDisplayBoard = () => {
-    const display = board.map((row) => [...row]);
-    if (current) {
-      SHAPES[current.shape][current.rotation].forEach(([dx, dy]) => {
-        const x = current.x + dx;
-        const y = current.y + dy;
-        if (y >= 0 && y < BOARD_HEIGHT && x >= 0 && x < BOARD_WIDTH) {
-          display[y][x] = current.shape;
-        }
-      });
-    }
-    return display;
-  };
-
-  // UI
+  // 🎮 HYBRID RENDER: HTML für Menüs, Canvas für Spiel
   return (
-    <div className="tetris-arcade-bg" style={{justifyContent: 'center', alignItems: 'center', minHeight: '100vh', minWidth: '100vw', display: 'flex'}}>
-      {/* New Highscore Notification */}
+    <div className="tetris-hybrid-container">
+      {/* 🎉 NEW HIGHSCORE NOTIFICATION */}
       {showNewHighscore && (
-        <div className="tetris-highscore-notification">
-          🎉 NEW HIGHSCORE! 🎉
+        <div className="tetris-notification">
+          <div className="tetris-notification-content">
+            🎉 NEW HIGHSCORE! 🎉
+          </div>
         </div>
       )}
-      
+
+      {/* 🏠 START SCREEN - HTML */}
       {gameState === "start" && (
-        <div className="tetris-startscreen" style={{maxWidth: '900px', width: '100%', margin: 'auto'}}>
-          <h1 className="tetris-title">TETRIS</h1>
-          
-          {/* Player Info */}
-          {currentPlayer && (
-            <div className="tetris-player-info">
-              <div className="tetris-player-name">
+        <div className="tetris-screen tetris-start-screen">
+          <div className="tetris-panel">
+            <h1 className="tetris-title">TETRIS</h1>
+            
+            {currentPlayer && (
+              <div className="tetris-welcome">
                 Welcome, {currentPlayer.name}!
               </div>
-            </div>
-          )}
-          
-          {/* Player Stats */}
-          {playerStats && (
-            <div className="tetris-player-stats">
-              <div className="tetris-info-row">
-                <span className="tetris-label">COINS:</span>
-                <span className="tetris-value">{playerStats.tetrisCoins}</span>
-              </div>
-              <div className="tetris-info-row">
-                <span className="tetris-label">HIGHSCORE:</span>
-                <span className="tetris-value">{playerStats.tetrisHighscore}</span>
-              </div>
-              <div className="tetris-info-row">
-                <span className="tetris-label">GAMES PLAYED:</span>
-                <span className="tetris-value">{playerStats.tetrisGamesPlayed}</span>
-              </div>
-            </div>
-          )}
-          
-          <div className="tetris-menu">
-            <button 
-              className={`tetris-menu-btn${menuIndex === 0 ? " selected" : ""}`} 
-              onClick={startGame} 
-              tabIndex={-1}
-            >
-              START GAME
-            </button>
-            <button 
-              className={`tetris-menu-btn${menuIndex === 1 ? " selected" : ""}`} 
-              onClick={() => { loadHighscores(); setGameState("highscores"); }} 
-              tabIndex={-1}
-            >
-              HIGHSCORES
-            </button>
-            <button className="tetris-menu-btn" disabled tabIndex={-1}>
-              INFO
-            </button>
-            <button 
-              className={`tetris-menu-btn${menuIndex === 3 ? " selected" : ""}`} 
-              onClick={() => window.location.href = '/'} 
-              tabIndex={-1}
-            >
-              EXIT
-            </button>
-          </div>
-          
-          <div className="tetris-hint">
-            Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
-          </div>
-        </div>
-      )}
-
-      {gameState === "highscores" && (
-        <div className="tetris-highscores">
-          <h2 className="tetris-title">HIGHSCORES</h2>
-          <div className="tetris-highscore-list">
-            {highscores.length > 0 ? (
-              highscores.map((entry, index) => (
-                <div key={entry._id} className="tetris-highscore-entry">
-                  <span className="tetris-rank">#{index + 1}</span>
-                  <span className="tetris-name">{entry.playerId.name}</span>
-                  <span className="tetris-score">{entry.score}</span>
-                  <span className="tetris-level">L{entry.level}</span>
-                </div>
-              ))
-            ) : (
-              <div className="tetris-no-scores">No highscores yet!</div>
             )}
-          </div>
-          <button 
-            className="tetris-menu-btn" 
-            onClick={() => setGameState("start")}
-            tabIndex={-1}
-          >
-            BACK
-          </button>
-          <div className="tetris-hint">
-            Press <span>ESC</span> or <span>ENTER</span> to go back
-          </div>
-        </div>
-      )}
-
-      {gameState === "playing" && (
-        <div className="tetris-game" style={{justifyContent: 'center', alignItems: 'center', display: 'flex', width: '100vw', height: '100vh', minHeight: '100vh'}}>
-          <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 'none'}}>
-            <div
-              className="tetris-board"
-              style={{
-                width: `calc(${BOARD_WIDTH} * ${BLOCK_SIZE}px + 2px)`,
-                height: `calc(${BOARD_HEIGHT} * ${BLOCK_SIZE}px + 2px)`
-              }}
-            >
-              {getDisplayBoard().map((row, y) =>
-                row.map((cell, x) => (
-                  <div
-                    key={x + '-' + y}
-                    className={`tetris-cell${cell !== -1 ? ' filled' : ''}`}
-                    style={{
-                      left: x * BLOCK_SIZE,
-                      top: y * BLOCK_SIZE,
-                      width: BLOCK_SIZE,
-                      height: BLOCK_SIZE,
-                      background: cell !== -1 ? COLORS[cell] : undefined,
-                      boxShadow: cell !== -1 ? `0 0 16px ${COLORS[cell]}, 0 0 32px #fff2` : undefined,
-                    }}
-                  />
-                ))
-              )}
-              {/* Grid Overlay */}
-              {[...Array(BOARD_WIDTH + 1)].map((_, i) => (
-                <div key={"v" + i} className="tetris-grid-v" style={{ left: i * BLOCK_SIZE, height: BOARD_HEIGHT * BLOCK_SIZE }} />
-              ))}
-              {[...Array(BOARD_HEIGHT + 1)].map((_, i) => (
-                <div key={"h" + i} className="tetris-grid-h" style={{ top: i * BLOCK_SIZE, width: BOARD_WIDTH * BLOCK_SIZE }} />
-              ))}
-            </div>
-            <div className="tetris-hint" style={{marginTop: '1.2rem', fontSize: '1.1rem', opacity: 0.7}}>
-              Hold <span>Space</span> To Exit
-            </div>
-          </div>
-          
-          <div className="tetris-sidebar" style={{marginLeft: '3vw', minWidth: 210, fontSize: '1.2rem'}}>
-            <div className="tetris-next">
-              <span className="tetris-label">NEXT</span>
-              <div className="tetris-next-shape" style={{width: 120, height: 120}}>
-                {SHAPES[next.shape][0].map(([dx, dy], i) => (
-                  <div
-                    key={i}
-                    className="tetris-cell filled"
-                    style={{
-                      left: dx * 36,
-                      top: dy * 36,
-                      width: 36,
-                      height: 36,
-                      background: COLORS[next.shape],
-                      boxShadow: `0 0 12px ${COLORS[next.shape]}, 0 0 24px #fff2`,
-                    }}
-                  />
-                ))}
+            
+            {playerStats && (
+              <div className="tetris-stats">
+                <div className="tetris-stat-row">
+                  <span className="tetris-label">COINS:</span>
+                  <span className="tetris-value">{playerStats.tetrisCoins}</span>
+                </div>
+                <div className="tetris-stat-row">
+                  <span className="tetris-label">HIGHSCORE:</span>
+                  <span className="tetris-value">{playerStats.tetrisHighscore}</span>
+                </div>
+                <div className="tetris-stat-row">
+                  <span className="tetris-label">GAMES PLAYED:</span>
+                  <span className="tetris-value">{playerStats.tetrisGamesPlayed}</span>
+                </div>
               </div>
+            )}
+            
+            <div className="tetris-menu">
+              <button 
+                className={`tetris-btn ${menuIndex === 0 ? 'selected' : ''}`}
+                onClick={startGame}
+              >
+                START GAME
+              </button>
+              <button 
+                className={`tetris-btn ${menuIndex === 1 ? 'selected' : ''}`}
+                onClick={() => { loadHighscores(); setGameState("highscores"); }}
+              >
+                HIGHSCORES
+              </button>
+              <button className="tetris-btn disabled" disabled>
+                INFO
+              </button>
+              <button 
+                className={`tetris-btn ${menuIndex === 3 ? 'selected' : ''}`}
+                onClick={() => window.location.href = '/'}
+              >
+                EXIT
+              </button>
             </div>
             
-            <div className="tetris-score">
-              <span className="tetris-label">SCORE</span>
-              <span className="tetris-value">{score}</span>
+            <div className="tetris-hint">
+              Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
             </div>
-            
-            <div className="tetris-score">
-              <span className="tetris-label">LINES</span>
-              <span className="tetris-value">{lines}</span>
-            </div>
-            
-            <div className="tetris-score">
-              <span className="tetris-label">LEVEL</span>
-              <span className="tetris-value">{level}</span>
-            </div>
-            
-            <div className="tetris-score">
-              <span className="tetris-label">COINS</span>
-              <span className="tetris-value">{coins}</span>
-            </div>
-            
-            <button className="tetris-menu-btn" onClick={() => handleGameOver()}>
-              EXIT
-            </button>
           </div>
         </div>
       )}
 
+      {/* 🎮 GAME SCREEN - CANVAS */}
+      {gameState === "playing" && (
+        <div className="tetris-canvas-wrapper">
+          <canvas
+            ref={canvasRef}
+            className="tetris-game-canvas"
+          />
+        </div>
+      )}
+
+      {/* ☠️ GAME OVER SCREEN - HTML */}
       {gameState === "gameover" && (
-        <div className="tetris-gameover">
-          <h2 className="tetris-title">GAME OVER</h2>
-          <div className="tetris-score-final">
-            <div>Final Score: {score}</div>
-            <div>Level Reached: {level}</div>
-            <div>Lines Cleared: {lines}</div>
-            <div>Coins Earned: {Math.floor(score / 100)}</div>
-          </div>
-          
-          {isSubmitting && (
-            <div className="tetris-submitting">
-              Saving score...
+        <div className="tetris-screen tetris-gameover-screen">
+          <div className="tetris-panel gameover">
+            <h2 className="tetris-title red">GAME OVER</h2>
+            
+            <div className="tetris-final-stats">
+              <div className="tetris-final-stat">Final Score: {score}</div>
+              <div className="tetris-final-stat">Level Reached: {level}</div>
+              <div className="tetris-final-stat">Lines Cleared: {lines}</div>
+              <div className="tetris-final-stat">Coins Earned: {Math.floor(score / 100)}</div>
             </div>
-          )}
-          
-          <div className="tetris-menu">
-            <button 
-              className={`tetris-menu-btn${gameoverIndex === 0 ? " selected" : ""}`} 
-              onClick={startGame} 
-              tabIndex={-1}
-            >
-              RESTART
-            </button>
-            <button 
-              className={`tetris-menu-btn${gameoverIndex === 1 ? " selected" : ""}`} 
-              onClick={() => setGameState("start")} 
-              tabIndex={-1}
-            >
-              BACK TO MENU
-            </button>
+            
+            {isSubmitting && (
+              <div className="tetris-submitting">
+                Saving score...
+              </div>
+            )}
+            
+            <div className="tetris-menu">
+              <button 
+                className={`tetris-btn ${gameoverIndex === 0 ? 'selected' : ''}`}
+                onClick={startGame}
+              >
+                RESTART
+              </button>
+              <button 
+                className={`tetris-btn ${gameoverIndex === 1 ? 'selected' : ''}`}
+                onClick={() => setGameState("start")}
+              >
+                BACK TO MENU
+              </button>
+            </div>
+            
+            <div className="tetris-hint">
+              Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
+            </div>
           </div>
-          
-          <div className="tetris-hint">
-            Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
+        </div>
+      )}
+
+      {/* 🏆 HIGHSCORES SCREEN - HTML */}
+      {gameState === "highscores" && (
+        <div className="tetris-screen tetris-highscores-screen">
+          <div className="tetris-panel highscores">
+            <h2 className="tetris-title green">HIGHSCORES</h2>
+            
+            <div className="tetris-highscore-list">
+              {highscores.length > 0 ? (
+                highscores.map((entry, index) => (
+                  <div key={entry._id} className={`tetris-highscore-entry rank-${index + 1}`}>
+                    <span className="tetris-rank">#{index + 1}</span>
+                    <span className="tetris-name">
+                      {entry.playerId.name.length > 15 
+                        ? entry.playerId.name.substring(0, 15) + "..." 
+                        : entry.playerId.name
+                      }
+                    </span>
+                    <span className="tetris-score">{entry.score}</span>
+                    <span className="tetris-level">L{entry.level}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="tetris-no-scores">No highscores yet!</div>
+              )}
+            </div>
+            
+            <button 
+              className="tetris-btn"
+              onClick={() => setGameState("start")}
+            >
+              BACK
+            </button>
+            
+            <div className="tetris-hint">
+              Press <span>ESC</span> or <span>ENTER</span> to go back
+            </div>
           </div>
         </div>
       )}

@@ -5,6 +5,7 @@ interface GamePlayProps {
     onGameOver: (score: number, coins: number) => void;
     onPause: () => void;
     onStart: () => void;
+    onReset?: () => void;
 }
 
 const GamePlay: React.FC<GamePlayProps> = ({ onGameOver, onPause, onStart }) => {
