@@ -30,52 +30,14 @@ export class Collectible implements CollectibleEntity {
         this.position.y = this.position.y + floatY * deltaTime;
     }
     
-    public render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
         const asset = this.game.getAssetManager().getAsset('collect_gearpart');
-        
         if (asset) {
-            // Add rotation effect
-            ctx.save();
-            ctx.translate(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2);
-            ctx.rotate(this.time * 2);
-            ctx.drawImage(asset, -this.size.x / 2, -this.size.y / 2, this.size.x, this.size.y);
-            ctx.restore();
+            ctx.drawImage(asset, this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
         } else {
-            // Fallback gear rendering
-            ctx.save();
-            ctx.translate(this.position.x + this.size.x / 2, this.position.y + this.size.y / 2);
-            ctx.rotate(this.time * 2);
-            
-            // Outer circle
             ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size.x / 2, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Inner hole
-            ctx.fillStyle = '#87CEEB';
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size.x / 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Gear teeth
-            ctx.fillStyle = '#FFD700';
-            ctx.strokeStyle = '#B8860B';
-            ctx.lineWidth = 1;
-            for (let i = 0; i < 8; i++) {
-                const angle = (i / 8) * Math.PI * 2;
-                ctx.save();
-                ctx.rotate(angle);
-                ctx.fillRect(-2, this.size.x / 2 - 2, 4, 4);
-                ctx.strokeRect(-2, this.size.x / 2 - 2, 4, 4);
-                ctx.restore();
-            }
-            
-            ctx.restore();
+            ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
         }
-        
-        // Add sparkle effect
-        this.renderSparkles(ctx);
     }
     
     private renderSparkles(ctx: CanvasRenderingContext2D) {

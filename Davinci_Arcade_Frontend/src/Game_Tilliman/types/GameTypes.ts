@@ -42,7 +42,7 @@ export interface Entity {
     active: boolean;
     
     update(deltaTime: number): void;
-    render(ctx: CanvasRenderingContext2D): void;
+    render(ctx: CanvasRenderingContext2D, cameraX?: number): void;
     getBounds(): Rectangle;
 }
 
@@ -129,6 +129,7 @@ export interface GameOptions {
     onGearsCollected: (gears: number) => void;
     onGameOver: () => void;
     onLevelComplete: () => void;
+    onReturnToHome?: () => void;
 }
 
 // Asset Types

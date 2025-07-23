@@ -100,8 +100,14 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   /* ------------------------------------------------------------------ */
   
   const handleGameSelect = useCallback((game: Game): void => {
-    const route = `/${game.title.toLowerCase()}`;
-    navigate(route);
+    // Spezielle Behandlung für TILLIMAN -> führt zur Lobby
+    if (game.title === "TILLIMAN") {
+      navigate('/tillimanhome');
+    } else {
+      // Alle anderen Spiele verwenden die normale Route
+      const route = `/${game.title.toLowerCase()}`;
+      navigate(route);
+    }
   }, [navigate]);
 
   const handleHeaderButtonActivate = useCallback((button: HeaderButton): void => {

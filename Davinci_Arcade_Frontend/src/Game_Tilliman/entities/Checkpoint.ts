@@ -28,16 +28,16 @@ export class Checkpoint implements Entity {
         }
     }
     
-    public render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
         const asset = this.game.getAssetManager().getAsset('checkpoint');
         
         if (asset) {
-            ctx.drawImage(asset, this.position.x, this.position.y, this.size.x, this.size.y);
+            ctx.drawImage(asset, this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
         } else {
             // Fallback flag rendering
             // Flag pole
             ctx.fillStyle = '#8B4513';
-            ctx.fillRect(this.position.x + 4, this.position.y + 8, 4, 24);
+            ctx.fillRect(this.position.x - cameraX + 4, this.position.y + 8, 4, 24);
             
             // Flag
             ctx.fillStyle = this.isActivated ? '#32CD32' : '#888888';
@@ -46,25 +46,25 @@ export class Checkpoint implements Entity {
             if (this.isActivated) {
                 // Waving flag
                 const waveOffset = Math.sin(this.time * 3) * 2;
-                ctx.moveTo(this.position.x + 8, this.position.y + 8);
+                ctx.moveTo(this.position.x - cameraX + 8, this.position.y + 8);
                 ctx.quadraticCurveTo(
-                    this.position.x + 16 + waveOffset,
+                    this.position.x - cameraX + 16 + waveOffset,
                     this.position.y + 10,
-                    this.position.x + 20,
+                    this.position.x - cameraX + 20,
                     this.position.y + 12
                 );
-                ctx.lineTo(this.position.x + 20, this.position.y + 14);
+                ctx.lineTo(this.position.x - cameraX + 20, this.position.y + 14);
                 ctx.quadraticCurveTo(
-                    this.position.x + 16 + waveOffset,
+                    this.position.x - cameraX + 16 + waveOffset,
                     this.position.y + 14,
-                    this.position.x + 8,
+                    this.position.x - cameraX + 8,
                     this.position.y + 16
                 );
             } else {
                 // Static flag
-                ctx.moveTo(this.position.x + 8, this.position.y + 8);
-                ctx.lineTo(this.position.x + 20, this.position.y + 12);
-                ctx.lineTo(this.position.x + 8, this.position.y + 16);
+                ctx.moveTo(this.position.x - cameraX + 8, this.position.y + 8);
+                ctx.lineTo(this.position.x - cameraX + 20, this.position.y + 12);
+                ctx.lineTo(this.position.x - cameraX + 8, this.position.y + 16);
             }
             
             ctx.closePath();
@@ -81,7 +81,7 @@ export class Checkpoint implements Entity {
             ctx.fillStyle = 'rgba(50, 205, 50, 0.3)';
             ctx.beginPath();
             ctx.arc(
-                this.position.x + this.size.x / 2,
+                this.position.x - cameraX + this.size.x / 2,
                 this.position.y + this.size.y / 2,
                 20 + Math.sin(this.time * 2) * 3,
                 0,

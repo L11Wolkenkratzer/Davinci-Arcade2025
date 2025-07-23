@@ -24,33 +24,15 @@ export class Trap implements Entity {
         // Traps are static, but we keep time for animation effects
     }
     
-    public render(ctx: CanvasRenderingContext2D) {
+    public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
         const asset = this.game.getAssetManager().getAsset('trap_rustpatch');
         
         if (asset) {
-            // Tile the trap texture
-            const tileSize = 32;
-            const tilesX = Math.ceil(this.size.x / tileSize);
-            const tilesY = Math.ceil(this.size.y / tileSize);
-            
-            for (let i = 0; i < tilesX; i++) {
-                for (let j = 0; j < tilesY; j++) {
-                    const drawX = this.position.x + i * tileSize;
-                    const drawY = this.position.y + j * tileSize;
-                    const drawWidth = Math.min(tileSize, this.size.x - i * tileSize);
-                    const drawHeight = Math.min(tileSize, this.size.y - j * tileSize);
-                    
-                    ctx.drawImage(
-                        asset,
-                        0, 0, drawWidth, drawHeight,
-                        drawX, drawY, drawWidth, drawHeight
-                    );
-                }
-            }
+            ctx.drawImage(asset, this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
         } else {
             // Fallback rust patch rendering
             ctx.fillStyle = '#8B4513';
-            ctx.fillRect(this.position.x, this.position.y, this.size.x, this.size.y);
+            ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
             
             // Add rust texture
             ctx.fillStyle = '#A0522D';

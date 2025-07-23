@@ -1,14 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Game } from './engine/Game';
 import './Tilliman.css';
-
+    
 export const Tilliman: React.FC = () => {
+    const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const gameRef = useRef<Game | null>(null);
-    const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameOver' | 'levelComplete'>('menu');
+    const [gameState, setGameState] = useState<'menu' | 'playing' | 'paused' | 'gameOver' | 'levelComplete'>('playing');
     const [score, setScore] = useState(0);
     const [lives, setLives] = useState(3);
     const [collectedGears, setCollectedGears] = useState(0);
+
+    // Smart navigation handler für Game Over
+    const handleReturnToHome = () => {
+        navigate('/tillimanhome');
+    };
 
     useEffect(() => {
         if (canvasRef.current && !gameRef.current) {
@@ -23,9 +30,12 @@ export const Tilliman: React.FC = () => {
                     setTimeout(() => {
                         setGameState('playing');
                     }, 3000);
-                }
+                },
+                onReturnToHome: handleReturnToHome
             });
             gameRef.current = game;
+            // Spiel direkt starten
+            game.start();
         }
 
         return () => {
@@ -34,9 +44,10 @@ export const Tilliman: React.FC = () => {
                 gameRef.current = null;
             }
         };
-    }, []);
+    }, [navigate]);
 
     const startGame = () => {
+       
         if (gameRef.current) {
             gameRef.current.start();
             setGameState('playing');
@@ -93,32 +104,15 @@ export const Tilliman: React.FC = () => {
                     className="game-canvas"
                 />
 
-                {gameState === 'menu' && (
-                    <div className="game-overlay" style={{ fontFamily: 'Press Start 2P, cursive' }}>
-                        <div className="menu-content">
-                            <h2>Willkommen zu Zeital!</h2>
-                            <p>Hilf Tilli Timian, die Zahnradteile zu sammeln und die Zeit zu reparieren!</p>
-                            <div className="controls-info">
-                                <h3>Steuerung:</h3>
-                                <ul>
-                                    <li>← → - Bewegung</li>
-                                    <li>Leertaste - Springen</li>
-                                    <li>Shift - Dash</li>
-                                    <li>P - Pause</li>
-                                </ul>
-                            </div>
-                            <button onClick={startGame} className="game-button" style={{ fontFamily: 'Press Start 2P, cursive' }}>
-                                Spiel starten
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 {gameState === 'paused' && (
                     <div className="game-overlay" style={{ fontFamily: 'Press Start 2P, cursive' }}>
                         <div className="pause-content">
                             <h2>Pause</h2>
-                            <button onClick={pauseGame} className="game-button" style={{ fontFamily: 'Press Start 2P, cursive' }}>
+                            <button
+                                className="game-button"
+                                style={{ fontFamily: 'Press Start 2P, cursive' }}
+                                disabled
+                            >
                                 Weiter spielen
                             </button>
                         </div>
@@ -130,9 +124,22 @@ export const Tilliman: React.FC = () => {
                         <div className="gameover-content">
                             <h2>Game Over</h2>
                             <p>Deine Punktzahl: {score}</p>
-                            <button onClick={restartGame} className="game-button" style={{ fontFamily: 'Press Start 2P, cursive' }}>
-                                Nochmal spielen
-                            </button>
+                            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '20px' }}>
+                                <button
+                                    className="game-button"
+                                    style={{ fontFamily: 'Press Start 2P, cursive' }}
+                                    onClick={restartGame}
+                                >
+                                    Nochmal spielen
+                                </button>
+                                <button
+                                    className="game-button"
+                                    style={{ fontFamily: 'Press Start 2P, cursive' }}
+                                    onClick={handleReturnToHome}
+                                >
+                                    Zurück zur Lobby
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -151,7 +158,11 @@ export const Tilliman: React.FC = () => {
 
             {gameState === 'playing' && (
                 <div className="game-controls">
-                    <button onClick={pauseGame} className="control-button" style={{ fontFamily: 'Press Start 2P, cursive' }}>
+                    <button
+                        className="control-button"
+                        style={{ fontFamily: 'Press Start 2P, cursive' }}
+                        disabled
+                    >
                         Pause
                     </button>
                 </div>
