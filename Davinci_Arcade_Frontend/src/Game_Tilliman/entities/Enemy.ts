@@ -140,6 +140,7 @@ export class Enemy implements EnemyEntity {
         this.active = this.isVisible;
     }
     
+
     public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
         const asset = this.game.getAssetManager().getAsset(`enemy_${this.enemyType}`);
         if (asset) {
@@ -147,6 +148,7 @@ export class Enemy implements EnemyEntity {
         } else {
             ctx.fillStyle = '#800080';
             ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
+
         }
     }
     

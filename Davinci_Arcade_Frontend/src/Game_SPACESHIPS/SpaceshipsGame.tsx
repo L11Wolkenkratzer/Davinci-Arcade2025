@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './SpaceshipGame.css';
 import GameLobby from './components/GameLobby';
@@ -14,6 +14,30 @@ const SpaceshipGame: React.FC = () => {
     const [currentScreen, setCurrentScreen] = useState<GameScreen>('lobby');
     const [selectedMenuItem, setSelectedMenuItem] = useState(0);
     const navigate = useNavigate();
+    // Hintergrundmusik-Ref
+    const bgMusicRef = useRef<HTMLAudioElement | null>(null);
+    // Hintergrundmusik-Logik
+    useEffect(() => {
+        if (!bgMusicRef.current) {
+            bgMusicRef.current = new window.Audio('/Sounds/background.mp3');
+            bgMusicRef.current.loop = true;
+            bgMusicRef.current.volume = 0.4;
+        }
+        // Musik nur in Menüs, nicht im Spiel
+        const menuScreens = ['lobby', 'shop', 'shipManager', 'highscore', 'info'];
+        if (menuScreens.includes(currentScreen)) {
+            bgMusicRef.current.play().catch(() => {});
+        } else {
+            bgMusicRef.current.pause();
+        }
+        // Stoppe Musik komplett beim Unmount (z.B. Startseite)
+        return () => {
+            if (bgMusicRef.current) {
+                bgMusicRef.current.pause();
+                bgMusicRef.current.currentTime = 0;
+            }
+        };
+    }, [currentScreen]);
 
     const {
         gameState,

@@ -30,11 +30,13 @@
   border: 2px solid #6fff6f;
 }
 
+
 .snake-hud {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+  top: 5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
   background: rgba(10,10,19,0.98);
   color: #fff;
   z-index: 10;
@@ -49,8 +51,7 @@
   padding: 0.3rem 1.2rem;
   letter-spacing: 1px;
   gap: 1.2rem;
-  border-top-left-radius: 0;
-  border-bottom-right-radius: 18px;
+  border-radius: 18px;
 }
 
 
@@ -193,30 +194,7 @@
   box-shadow: 0 0 16px #b388ff;
 }
 
-.snake-hud {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background: rgba(30, 180, 30, 0.98);
-  color: #fff;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: 'Press Start 2P', cursive, monospace;
-  font-size: 1rem;
-  box-shadow: 0 2px 16px #6fff6f;
-  border-bottom: 2px solid #6fff6f;
-  min-height: 44px;
-  padding: 0.3rem 1.2rem;
-  letter-spacing: 1px;
-  gap: 1.2rem;
-  border-top-left-radius: 0;
-  border-bottom-right-radius: 18px;
-}
-  margin-right: 10px;
-}
+
 
 .snake-value {
   color: #ffe082;

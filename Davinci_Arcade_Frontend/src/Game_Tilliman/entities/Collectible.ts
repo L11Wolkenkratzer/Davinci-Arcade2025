@@ -30,6 +30,7 @@ export class Collectible implements CollectibleEntity {
         this.position.y = this.position.y + floatY * deltaTime;
     }
     
+
     public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
         const asset = this.game.getAssetManager().getAsset('collect_gearpart');
         if (asset) {
@@ -38,6 +39,7 @@ export class Collectible implements CollectibleEntity {
             ctx.fillStyle = '#FFD700';
             ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
         }
+
     }
     
     private renderSparkles(ctx: CanvasRenderingContext2D) {

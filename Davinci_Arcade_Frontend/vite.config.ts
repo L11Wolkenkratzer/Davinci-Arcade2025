@@ -1,10 +1,13 @@
 // vite.config.ts
+
 import { defineConfig, splitVendorChunkPlugin } from 'vite'
+
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [
+
     react({
       // ✅ Babel-Optimierungen für Production
       babel: {
@@ -99,6 +102,7 @@ export default defineConfig({
   },
 
   // 🔧 Development Server Optimierungen
+
   server: {
     // HTTP/2 für bessere Performance
     https: false,
@@ -114,6 +118,7 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
+
         // ✅ Entfernt unnötige rewrite-Funktion
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
@@ -181,4 +186,5 @@ export default defineConfig({
       }
     }
   }
+
 })

@@ -140,6 +140,7 @@ export class Game {
     }
     
     private render() {
+
         // Kamera-Logik
         let cameraX = 0;
         const levelWidth = this.levelManager.getLevelWidth();
@@ -177,12 +178,14 @@ export class Game {
         this.ctx.save();
         this.ctx.translate(-cameraX * 0.5, 0); // Parallax-Effekt für Hintergrund
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+
         // Cloud 1
         this.ctx.beginPath();
         this.ctx.arc(100, 100, 30, 0, Math.PI * 2);
         this.ctx.arc(130, 100, 40, 0, Math.PI * 2);
         this.ctx.arc(160, 100, 30, 0, Math.PI * 2);
         this.ctx.fill();
+
         // Cloud 2
         this.ctx.beginPath();
         this.ctx.arc(500, 150, 25, 0, Math.PI * 2);
@@ -190,6 +193,7 @@ export class Game {
         this.ctx.arc(550, 150, 25, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.restore();
+
     }
     
     private renderUI() {

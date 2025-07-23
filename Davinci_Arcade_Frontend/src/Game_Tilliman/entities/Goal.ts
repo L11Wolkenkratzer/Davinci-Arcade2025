@@ -29,6 +29,7 @@ export class Goal implements Entity {
         }
     }
     
+
     public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
         const asset = this.game.getAssetManager().getAsset('goal_portal');
         if (asset) {
@@ -36,6 +37,7 @@ export class Goal implements Entity {
         } else {
             ctx.fillStyle = '#00CED1';
             ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
+
         }
         
         // If not activated, show lock overlay

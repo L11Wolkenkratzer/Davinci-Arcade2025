@@ -135,7 +135,9 @@ export class Player implements PlayerEntity {
         return this.dashTimer > 0;
     }
     
+
     public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
+
         const asset = this.game.getAssetManager().getAsset(`player_${this.state}`);
         
         if (asset) {
@@ -144,12 +146,16 @@ export class Player implements PlayerEntity {
                 ctx.globalAlpha = 0.5;
             }
             
+
             ctx.drawImage(asset, this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
+
             ctx.globalAlpha = 1;
         } else {
             // Fallback rectangle
             ctx.fillStyle = this.invulnerable ? 'rgba(255, 0, 0, 0.5)' : 'orange';
+
             ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
+
         }
     }
     

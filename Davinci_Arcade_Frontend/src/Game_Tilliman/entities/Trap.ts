@@ -24,6 +24,7 @@ export class Trap implements Entity {
         // Traps are static, but we keep time for animation effects
     }
     
+
     public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
         const asset = this.game.getAssetManager().getAsset('trap_rustpatch');
         
@@ -33,6 +34,7 @@ export class Trap implements Entity {
             // Fallback rust patch rendering
             ctx.fillStyle = '#8B4513';
             ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
+
             
             // Add rust texture
             ctx.fillStyle = '#A0522D';

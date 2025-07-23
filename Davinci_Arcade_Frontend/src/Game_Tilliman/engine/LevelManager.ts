@@ -163,7 +163,9 @@ export class LevelManager {
         return this.currentLevel;
     }
 
+
     public getLevelWidth(): number {
         return this.levelData?.width || 800;
     }
+
 } 

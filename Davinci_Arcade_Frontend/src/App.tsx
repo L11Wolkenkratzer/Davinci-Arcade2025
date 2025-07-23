@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import Home from './Home/Home';
+
 import Login from './Login/Login.tsx';
 
 // Lazy load all game components for better performance
@@ -10,7 +11,7 @@ const Dino = lazy(() => import('./Game_Dinojump/Dinojump.tsx'));
 const Tetris = lazy(() => import('./Tetris/Tetris.tsx'));
 const PacMan = lazy(() => import('./PacMan/PacMan.tsx'));
 const Tilliman = lazy(() => import('./Game_Tilliman/Tilliman.tsx').then(module => ({ default: module.Tilliman })));
-const TilliTimianGame = lazy(() => import('./Game_Tilliman/TilliTimianGame.tsx'));
+
 
 
 // Loading component for Suspense
@@ -27,6 +28,7 @@ const GameLoading = () => (
     Loading Game...
   </div>
 );
+
 
 // Universeller Player-Typ, passend zum Backend
 export type Player = {
@@ -106,6 +108,9 @@ function App() {
           path="/spaceships" 
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><SpaceshipGame /></Suspense> : loginElement} 
         />
+
+          <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
+
         <Route
           path="/pacman"
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><PacMan /></Suspense> : loginElement}
@@ -128,10 +133,12 @@ function App() {
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><Tilliman /></Suspense> : loginElement}
         />
 
+
         <Route 
           path="/tillimanhome" 
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><TilliTimianGame /></Suspense> : loginElement}
         />
+
 
         <Route path="/login" element={loginElement} />
       </Routes>

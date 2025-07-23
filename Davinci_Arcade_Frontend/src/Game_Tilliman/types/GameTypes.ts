@@ -43,6 +43,7 @@ export interface Entity {
     
     update(deltaTime: number): void;
     render(ctx: CanvasRenderingContext2D, cameraX?: number): void;
+
     getBounds(): Rectangle;
 }
 
@@ -130,6 +131,7 @@ export interface GameOptions {
     onGameOver: () => void;
     onLevelComplete: () => void;
     onReturnToHome?: () => void;
+
 }
 
 // Asset Types

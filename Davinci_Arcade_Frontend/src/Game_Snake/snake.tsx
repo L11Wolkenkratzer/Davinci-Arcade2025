@@ -1,46 +1,42 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./snake.css";
 import { useNavigate } from 'react-router-dom';
- 
+
 const canvasSize = { width: 700, height: 700 };
 const scale = 35;
 const rows = Math.floor(canvasSize.height / scale);
 const cols = Math.floor(canvasSize.width / scale);
- 
+
 interface Coord {
   x: number;
   y: number;
 }
- 
+
+// Food darf nicht in der obersten Zeile (HUD) spawnen
 const getRandomFood = (): Coord => ({
   x: Math.floor(Math.random() * cols),
-  y: Math.floor(Math.random() * rows),
+  y: 1 + Math.floor(Math.random() * (rows - 1)),
 });
 
 // Optimierte Snake-Rendering-Funktion - 70% weniger CPU-Last
 const drawOptimizedSnake = (ctx: CanvasRenderingContext2D, snake: Coord[], activeSkin: string) => {
+  if (snake.length === 0) return;
   snake.forEach((s, i) => {
     const x = s.x * scale;
     const y = s.y * scale;
-    
     if (i === 0) {
-      // === VEREINFACHTER SCHLANGENKOPF ===
-      // Basis-Kopf ohne komplexe Effekte
+      // Kopf exakt auf Zelle
       ctx.fillStyle = '#4a7c59';
-      ctx.fillRect(x + 2, y + 2, scale - 4, scale - 4);
-      
-      // Einfache Augen
+      ctx.fillRect(x, y, scale, scale);
+      // Augen
       ctx.fillStyle = '#000';
-      ctx.fillRect(x + 8, y + 8, 6, 6);
-      ctx.fillRect(x + scale - 14, y + 8, 6, 6);
-      
-      // Einfache rote Pupillen
+      ctx.fillRect(x + scale * 0.23, y + scale * 0.23, scale * 0.17, scale * 0.17);
+      ctx.fillRect(x + scale * 0.6, y + scale * 0.23, scale * 0.17, scale * 0.17);
+      // Pupillen
       ctx.fillStyle = '#ff4444';
-      ctx.fillRect(x + 10, y + 10, 2, 2);
-      ctx.fillRect(x + scale - 12, y + 10, 2, 2);
-      
+      ctx.fillRect(x + scale * 0.29, y + scale * 0.29, scale * 0.06, scale * 0.06);
+      ctx.fillRect(x + scale * 0.66, y + scale * 0.29, scale * 0.06, scale * 0.06);
     } else {
-      // === VEREINFACHTE KÖRPER-SEGMENTE ===
       let bodyColor;
       switch (activeSkin) {
         case 'yellow':
@@ -55,15 +51,12 @@ const drawOptimizedSnake = (ctx: CanvasRenderingContext2D, snake: Coord[], activ
         default:
           bodyColor = '#555';
       }
-      
-      // Einfaches Rechteck ohne Effekte
       ctx.fillStyle = bodyColor;
-      ctx.fillRect(x + 1, y + 1, scale - 2, scale - 2);
-      
+      ctx.fillRect(x, y, scale, scale);
       // Minimaler Glanz-Effekt (nur jedes 3. Segment)
       if (i % 3 === 0) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fillRect(x + 3, y + 3, 8, 8);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.fillRect(x + scale * 0.15, y + scale * 0.15, scale * 0.25, scale * 0.25);
       }
     }
   });
@@ -93,11 +86,11 @@ const drawOptimizedApple = (ctx: CanvasRenderingContext2D, food: Coord[]) => {
     ctx.stroke();
   });
 };
- 
+
 const SnakeGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
-  const [screen, setScreen] = useState<"menu" | "game" | "shopMenu" | "skinShop" | "abilityShop">("menu");
+  const [screen, setScreen] = useState<"menu" | "game" | "shopMenu" | "skinShop" | "abilityShop" | "highscore">("menu");
   
   // Startposition: Snake mittig
   const [snake, setSnake] = useState([{ x: Math.floor(cols/2), y: Math.floor(rows/2) }]);
@@ -122,23 +115,24 @@ const SnakeGame: React.FC = () => {
     { name: "Rot", color: "red", price: 10 },
     { name: "Grün", color: "green", price: 25 },
   ];
- 
+
   const abilityOptions = [
     { name: "Worm Hole", id: "wormhole", price: 200, description: "Du kannst durch Wände gehen und wirst doppelt so schnell länger." },
     { name: "Extra Früchte", id: "extrafruit", price: 50, description: "Drei Früchte gleichzeitig" },
   ];
- 
+
   const generateFood = (snake: Coord[], existingFoods: Coord[]): Coord => {
     let newFood: Coord;
     do {
       newFood = getRandomFood();
     } while (
+      newFood.y === 0 || // nie in der HUD-Zeile
       snake.some(s => s.x === newFood.x && s.y === newFood.y) ||
       existingFoods.some(f => f.x === newFood.x && f.y === newFood.y)
     );
     return newFood;
   };
- 
+
   const handleStart = () => {
     const midX = Math.floor(cols / 2);
     const midY = Math.floor(rows / 2);
@@ -166,7 +160,7 @@ const SnakeGame: React.FC = () => {
     setScreen("game");
     setStarted(false);
   };
- 
+
   const handleKeyNavigation = (optionsLength: number, actions: (() => void)[]) => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (screen === "game") return;
@@ -183,13 +177,24 @@ const SnakeGame: React.FC = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   };
- 
+
+  // Highscore-Navigation Handler
+  const handleHighscore = () => {
+    setSelectedIndex(0);
+    setScreen('highscore');
+  };
+
   useEffect(() => {
     let cleanup = () => {};
 
     if (screen === "menu") {
-      const actions = [handleStart, () => setScreen("shopMenu"), () => navigate("/")];
-      cleanup = handleKeyNavigation(3, actions);
+      const actions = [
+        handleStart, 
+        () => setScreen("shopMenu"), 
+        handleHighscore, 
+        () => navigate("/")
+      ];
+      cleanup = handleKeyNavigation(4, actions); // Geändert von 3 auf 4
     } else if (screen === "shopMenu") {
       const actions = [() => setScreen("skinShop"), () => setScreen("abilityShop"), () => setScreen("menu")];
       cleanup = handleKeyNavigation(3, actions);
@@ -209,29 +214,36 @@ const SnakeGame: React.FC = () => {
         () => setScreen("shopMenu")
       ];
       cleanup = handleKeyNavigation(abilityOptions.length + 1, actions);
+    } else if (screen === "highscore") {
+      // NEU: Highscore-Navigation hinzugefügt
+      const actions = [() => {
+        setSelectedIndex(0);
+        setScreen("menu");
+      }];
+      cleanup = handleKeyNavigation(1, actions);
     }
 
     return cleanup;
   }, [screen, selectedIndex, fruits, ownedSkins, activeSkin, ownedAbilities, activeAbility]);
- 
+
   const buySkin = (color: string, price: number) => {
     if (fruits >= price && !ownedSkins.includes(color)) {
       setFruits(f => f - price);
       setOwnedSkins(s => [...s, color]);
     }
   };
- 
+
   const equipSkin = (color: string) => {
     setActiveSkin(c => (c === color ? "black" : color));
   };
- 
+
   const buyAbility = (id: string, price: number) => {
     if (fruits >= price && !ownedAbilities.includes(id)) {
       setFruits(f => f - price);
       setOwnedAbilities(a => [...a, id]);
     }
   };
- 
+
   const equipAbility = (id: string) => {
     setActiveAbility(c => (c === id ? "" : id));
   };
@@ -241,24 +253,12 @@ const SnakeGame: React.FC = () => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
 
-    // Einfacher Hintergrund ohne komplexe Gradients
-    ctx.fillStyle = '#2d5016';
-    ctx.fillRect(0, 0, canvasSize.width, canvasSize.height);
-
-    // Einfaches Gitter (nur alle 2. Linie für bessere Performance)
-    ctx.strokeStyle = "rgba(178, 255, 178, 0.1)";
-    ctx.lineWidth = 1;
-    for (let x = 0; x < canvasSize.width; x += scale * 2) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvasSize.height);
-      ctx.stroke();
-    }
-    for (let y = 0; y < canvasSize.height; y += scale * 2) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(canvasSize.width, y);
-      ctx.stroke();
+    // Hintergrund: Jede Zelle als Rechteck exakt in Snake-Größe
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        ctx.fillStyle = (row + col) % 2 === 0 ? '#2d5016' : '#35661e';
+        ctx.fillRect(col * scale, row * scale, scale, scale);
+      }
     }
 
     // Optimierte Rendering-Funktionen
@@ -277,7 +277,7 @@ const SnakeGame: React.FC = () => {
     if (gameOver || screen !== "game") return;
 
     let lastTime = 0;
-    const targetFPS = 10; // Reduziert für bessere Performance
+    const targetFPS = 10;
     const frameDelay = 1000 / targetFPS;
 
     const gameLoop = (currentTime: number) => {
@@ -409,113 +409,167 @@ const SnakeGame: React.FC = () => {
     <button
       className={`snake-btn ${index === selectedIndex ? 'selected' : ''} ${colorType === 'exit' ? 'snake-btn-exit' : ''}`}
       onClick={onClick}
+      tabIndex={0}
     >
       {label}
     </button>
   );
 
+  // Highscore-Daten (Demo)
+  const [highscores, setHighscores] = useState<{ name: string; score: number }[]>([
+    { name: 'Livio', score: 22 },
+    { name: 'Gian', score: 18 },
+    { name: 'Philip', score: 15 },
+  ]);
+
   return (
-    <div className="snake-root">
-      <div className="snake-area">
-        {hud}
+    <>
+      <div className="snake-root">
+        <div>{hud}</div>
+      
+        <div className="snake-area">
+          {screen === "menu" && (
+            <div className="snake-menu">
+              <h1>Snake Game</h1>
+              {renderArcadeButton("Start Game", 0, handleStart)}
+              {renderArcadeButton("Shop", 1, () => setScreen("shopMenu"))}
+              {renderArcadeButton("Highscore", 2, handleHighscore)}
+              {renderArcadeButton("Exit", 3, () => navigate("/"), 'exit')}
+            </div>
+          )}
 
-        {screen === "menu" && (
-          <div className="snake-menu">
-            <h1>Snake Game</h1>
-            {renderArcadeButton("Start Game", 0, handleStart)}
-            {renderArcadeButton("Shop", 1, () => setScreen("shopMenu"))}
-            {renderArcadeButton("Exit", 2, () => navigate("/"), 'exit')}
-          </div>
-        )}
-
-        {screen === "shopMenu" && (
-          <div className="snake-menu">
-            <h1>Shop</h1>
-            {renderArcadeButton("Skins", 0, () => setScreen("skinShop"))}
-            {renderArcadeButton("Fähigkeiten", 1, () => setScreen("abilityShop"))}
-            {renderArcadeButton("Zurück", 2, () => setScreen("menu"))}
-          </div>
-        )}
-
-        {screen === "skinShop" && (
-          <div className="snake-shop">
-            <h2>Skins</h2>
-            <p>Früchte: {fruits}</p>
-            {skinOptions.map(({ name, color, price }, i) => (
-              <div key={i}>
-                <h3>{name}</h3>
-                {!ownedSkins.includes(color) ? (
-                  renderArcadeButton(`Kaufen (${price})`, i, () => buySkin(color, price))
-                ) : (
-                  renderArcadeButton(activeSkin === color ? "Ausgerüstet" : "Ausrüsten", i, () => equipSkin(color))
-                )}
+          {screen === "highscore" && (
+            <div className="snake-highscore">
+              <h2>🏆 Highscore</h2>
+              <div style={{ 
+                background: 'rgba(74, 124, 89, 0.1)', 
+                padding: '20px', 
+                borderRadius: '10px', 
+                border: '2px solid #4a7c59' 
+              }}>
+                {highscores.map((entry, i) => (
+                  <div key={i} style={{ 
+                    fontSize: '1.4em', 
+                    margin: '15px 0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: i === 0 ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                    padding: '10px 15px',
+                    borderRadius: '5px'
+                  }}>
+                    <span style={{ 
+                      fontWeight: 'bold', 
+                      color: i === 0 ? '#ffd700' : '#4a7c59' 
+                    }}>
+                      {i + 1}. {entry.name}
+                    </span>
+                    <span style={{ 
+                      color: '#ff4444',
+                      fontFamily: 'monospace',
+                      fontSize: '1.2em'
+                    }}>
+                      {entry.score}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-            {renderArcadeButton("Zurück", skinOptions.length, () => setScreen("shopMenu"))}
-          </div>
-        )}
+              {renderArcadeButton("Zurück zum Menü", 0, () => {
+                setSelectedIndex(0);
+                setScreen("menu");
+              })}
+            </div>
+          )}
 
-        {screen === "abilityShop" && (
-          <div className="snake-shop">
-            <h2>Fähigkeiten</h2>
-            <p>Früchte: {fruits}</p>
-            {abilityOptions.map(({ name, id, price, description }, i) => (
-              <div key={i}>
-                <h3>{name} – {description}</h3>
-                {!ownedAbilities.includes(id) ? (
-                  renderArcadeButton(`Kaufen (${price})`, i, () => buyAbility(id, price))
-                ) : (
-                  renderArcadeButton(activeAbility === id ? "Aktiviert" : "Aktivieren", i, () => equipAbility(id))
-                )}
-              </div>
-            ))}
-            {renderArcadeButton("Zurück", abilityOptions.length, () => setScreen("shopMenu"))}
-          </div>
-        )}
+          {screen === "shopMenu" && (
+            <div className="snake-menu">
+              <h1>Shop</h1>
+              {renderArcadeButton("Skins", 0, () => setScreen("skinShop"))}
+              {renderArcadeButton("Fähigkeiten", 1, () => setScreen("abilityShop"))}
+              {renderArcadeButton("Zurück", 2, () => setScreen("menu"))}
+            </div>
+          )}
 
-        {screen === "game" && (
-          <>
-            <canvas
-              ref={canvasRef}
-              className="snake-canvas"
-              width={canvasSize.width}
-              height={canvasSize.height}
-            />
+          {screen === "skinShop" && (
+            <div className="snake-shop">
+              <h2>Skins</h2>
+              <p>Früchte: {fruits}</p>
+              {skinOptions.map(({ name, color, price }, i) => (
+                <div key={i}>
+                  <h3>{name}</h3>
+                  {!ownedSkins.includes(color) ? (
+                    renderArcadeButton(`Kaufen (${price})`, i, () => buySkin(color, price))
+                  ) : (
+                    renderArcadeButton(activeSkin === color ? "Ausgerüstet" : "Ausrüsten", i, () => equipSkin(color))
+                  )}
+                </div>
+              ))}
+              {renderArcadeButton("Zurück", skinOptions.length, () => setScreen("shopMenu"))}
+            </div>
+          )}
 
-            {paused && (
-              <div className="snake-gameover">
-                <h2>PAUSE</h2>
-                <p>Spiel pausiert</p>
-                <button
-                  className={`snake-btn ${pauseSelected === 0 ? 'selected' : ''}`}
-                  onClick={() => setPaused(false)}
-                  tabIndex={0}
-                >
-                  Weiterspielen
-                </button>
-                <button
-                  className={`snake-btn ${pauseSelected === 1 ? 'selected' : ''}`}
-                  onClick={() => setScreen('menu')}
-                  tabIndex={0}
-                >
-                  Exit
-                </button>
-              </div>
-            )}
+          {screen === "abilityShop" && (
+            <div className="snake-shop">
+              <h2>Fähigkeiten</h2>
+              <p>Früchte: {fruits}</p>
+              {abilityOptions.map(({ name, id, price, description }, i) => (
+                <div key={i}>
+                  <h3>{name} – {description}</h3>
+                  {!ownedAbilities.includes(id) ? (
+                    renderArcadeButton(`Kaufen (${price})`, i, () => buyAbility(id, price))
+                  ) : (
+                    renderArcadeButton(activeAbility === id ? "Aktiviert" : "Aktivieren", i, () => equipAbility(id))
+                  )}
+                </div>
+              ))}
+              {renderArcadeButton("Zurück", abilityOptions.length, () => setScreen("shopMenu"))}
+            </div>
+          )}
 
-            {gameOver && !paused && (
-              <div className="snake-gameover">
-                <h2>Game Over</h2>
-                <p>Score: {score}</p>
-                <p>Früchte: {fruits}</p>
-                {renderArcadeButton("Zurück zum Menü", 0, () => setScreen("menu"), 'exit')}
-              </div>
-            )}
-          </>
-        )}
+          {screen === "game" && (
+            <>
+              <canvas
+                ref={canvasRef}
+                className="snake-canvas"
+                width={canvasSize.width}
+                height={canvasSize.height}
+              />
+
+              {paused && (
+                <div className="snake-gameover">
+                  <h2>PAUSE</h2>
+                  <p>Spiel pausiert</p>
+                  <button
+                    className={`snake-btn ${pauseSelected === 0 ? 'selected' : ''}`}
+                    onClick={() => setPaused(false)}
+                    tabIndex={0}
+                  >
+                    Weiterspielen
+                  </button>
+                  <button
+                    className={`snake-btn ${pauseSelected === 1 ? 'selected' : ''}`}
+                    onClick={() => setScreen('menu')}
+                    tabIndex={0}
+                  >
+                    Exit
+                  </button>
+                </div>
+              )}
+
+              {gameOver && !paused && (
+                <div className="snake-gameover">
+                  <h2>Game Over</h2>
+                  <p>Score: {score}</p>
+                  <p>Früchte: {fruits}</p>
+                  {renderArcadeButton("Zurück zum Menü", 0, () => setScreen("menu"), 'exit')}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
- 
+
 export default SnakeGame;
