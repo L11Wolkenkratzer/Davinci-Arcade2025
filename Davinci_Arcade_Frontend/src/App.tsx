@@ -11,7 +11,7 @@ const Dino = lazy(() => import('./Game_Dinojump/Dinojump.tsx'));
 const Tetris = lazy(() => import('./Tetris/Tetris.tsx'));
 const PacMan = lazy(() => import('./PacMan/PacMan.tsx'));
 const Tilliman = lazy(() => import('./Game_Tilliman/Tilliman.tsx').then(module => ({ default: module.Tilliman })));
-
+const TilliTimianGame = lazy(() => import('./Game_Tilliman/TilliTimianGame.tsx'));
 
 
 // Loading component for Suspense
