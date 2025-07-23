@@ -104,7 +104,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   const handleGameSelect = useCallback((game: Game): void => {
     let route = `/${game.title.toLowerCase()}`;
     if (game.title === 'TILLIMAN') {
-      route = '/tilliTimian';
+      route = '/tilliman';
     }
     navigate(route);
   }, [navigate]);

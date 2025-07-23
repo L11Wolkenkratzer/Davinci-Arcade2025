@@ -109,12 +109,7 @@ function App() {
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><SpaceshipGame /></Suspense> : loginElement} 
         />
 
-        <Route path="/spaceships" element={<SpaceshipGame />} />
-        <Route path="/tilliTimian" element={<TilliTimianGame />} />
-        <Route path="/snake" element={<Snake />} />
-        <Route path="/dino" element={<Dino />} />
-        <Route path="/tetris" element={currentPlayer ? <Tetris currentPlayer={currentPlayer} /> : <Login setCurrentPlayer={setCurrentPlayer} />} />
-        <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
+          <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
 
         <Route
           path="/pacman"
