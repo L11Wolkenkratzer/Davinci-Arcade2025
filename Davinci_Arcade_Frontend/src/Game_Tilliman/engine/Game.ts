@@ -140,46 +140,60 @@ export class Game {
     }
     
     private render() {
+
+        // Kamera-Logik
+        let cameraX = 0;
+        const levelWidth = this.levelManager.getLevelWidth();
+        if (this.player) {
+            // Kamera folgt dem Spieler, bleibt aber im Levelbereich
+            cameraX = this.player.position.x + this.player.size.x / 2 - this.canvas.width / 2;
+            cameraX = Math.max(0, Math.min(cameraX, levelWidth - this.canvas.width));
+        }
+
         // Clear canvas
         this.ctx.fillStyle = '#87CEEB'; // Sky blue background
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         // Render background elements (clouds, etc.)
-        this.renderBackground();
-        
+        this.renderBackground(cameraX);
+
         // Render all entities
         for (const entity of this.entities) {
             if (entity.active) {
-                entity.render(this.ctx);
+                entity.render(this.ctx, cameraX);
             }
         }
-        
+
         // Render player on top
         if (this.player) {
-            this.player.render(this.ctx);
+            this.player.render(this.ctx, cameraX);
         }
-        
-        // Render UI elements
+
+        // Render UI elements (nicht verschieben)
         this.renderUI();
     }
-    
-    private renderBackground() {
-        // Simple cloud rendering
+
+    // Passe renderBackground an, damit Wolken mit Kamera mitwandern (optional, für Parallax-Effekt)
+    private renderBackground(cameraX: number = 0) {
+        this.ctx.save();
+        this.ctx.translate(-cameraX * 0.5, 0); // Parallax-Effekt für Hintergrund
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        
+
         // Cloud 1
         this.ctx.beginPath();
         this.ctx.arc(100, 100, 30, 0, Math.PI * 2);
         this.ctx.arc(130, 100, 40, 0, Math.PI * 2);
         this.ctx.arc(160, 100, 30, 0, Math.PI * 2);
         this.ctx.fill();
-        
+
         // Cloud 2
         this.ctx.beginPath();
         this.ctx.arc(500, 150, 25, 0, Math.PI * 2);
         this.ctx.arc(525, 150, 35, 0, Math.PI * 2);
         this.ctx.arc(550, 150, 25, 0, Math.PI * 2);
         this.ctx.fill();
+        this.ctx.restore();
+
     }
     
     private renderUI() {

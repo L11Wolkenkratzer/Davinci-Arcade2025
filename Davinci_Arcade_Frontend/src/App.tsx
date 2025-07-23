@@ -133,6 +133,13 @@ function App() {
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><Tilliman /></Suspense> : loginElement}
         />
 
+
+        <Route 
+          path="/tillimanhome" 
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><TilliTimianGame /></Suspense> : loginElement}
+        />
+
+
         <Route path="/login" element={loginElement} />
       </Routes>
     </BrowserRouter>

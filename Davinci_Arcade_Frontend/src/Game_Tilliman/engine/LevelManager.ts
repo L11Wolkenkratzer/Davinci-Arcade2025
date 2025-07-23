@@ -162,4 +162,10 @@ export class LevelManager {
     public getCurrentLevel(): number {
         return this.currentLevel;
     }
+
+
+    public getLevelWidth(): number {
+        return this.levelData?.width || 800;
+    }
+
 } 

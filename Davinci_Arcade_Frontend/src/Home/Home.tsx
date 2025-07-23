@@ -61,11 +61,13 @@ const GAMES: Game[] = [
   { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
   { id: 6, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
   { id: 7, title: "TILLIMAN", icon: "⏱️", color: "#f06c00" },
+
 ];
 
 const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
+
   console.log("Home component rendered");
-  
+
   /* ------------------------------------------------------------------ */
   /* State                                                              */
   /* ------------------------------------------------------------------ */
@@ -102,11 +104,16 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   /* ------------------------------------------------------------------ */
   
   const handleGameSelect = useCallback((game: Game): void => {
-    let route = `/${game.title.toLowerCase()}`;
-    if (game.title === 'TILLIMAN') {
-      route = '/tilliman';
+
+    // Spezielle Behandlung für TILLIMAN -> führt zur Lobby
+    if (game.title === "TILLIMAN") {
+      navigate('/tillimanhome');
+    } else {
+      // Alle anderen Spiele verwenden die normale Route
+      const route = `/${game.title.toLowerCase()}`;
+      navigate(route);
     }
-    navigate(route);
+
   }, [navigate]);
 
   const handleHeaderButtonActivate = useCallback((button: HeaderButton): void => {
@@ -123,7 +130,9 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     }
   }, []);
 
-  // OPTIMIZED: Use startTransition for smooth updates with transition control
+
+  // OPTIMIZED: Use startTransition for smooth updates
+
   const navigateToGame = useCallback((newIdx: number) => {
     if (isTransitioning) return;
     
@@ -139,7 +148,9 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     timerRef.current = setTimeout(() => setIsTransitioning(false), 400);
   }, [isTransitioning]);
 
-  // Video Replay Function with ref support
+
+  // Video Replay Function  
+
   const replayVideo = useCallback(() => {
     setVideoEnded(false);
     if (videoRef.current) {

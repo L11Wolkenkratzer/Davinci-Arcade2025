@@ -140,16 +140,15 @@ export class Enemy implements EnemyEntity {
         this.active = this.isVisible;
     }
     
-    public render(ctx: CanvasRenderingContext2D) {
-        if (!this.isVisible && this.enemyType === 'cuckooshadow') return;
-        
+
+    public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
         const asset = this.game.getAssetManager().getAsset(`enemy_${this.enemyType}`);
-        
         if (asset) {
-            ctx.drawImage(asset, this.position.x, this.position.y, this.size.x, this.size.y);
+            ctx.drawImage(asset, this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
         } else {
-            // Fallback rendering
-            this.renderFallback(ctx);
+            ctx.fillStyle = '#800080';
+            ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
+
         }
     }
     

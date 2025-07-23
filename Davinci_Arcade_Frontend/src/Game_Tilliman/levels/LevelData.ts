@@ -339,3 +339,111 @@ export const levelData: LevelData[] = [
         ]
     }
 ]; 
+// Neue Level
+levelData.push(
+    {
+        id: 'level4',
+        name: 'Zahnräder im Uhrturm',
+        width: 800,
+        height: 600,
+        playerStart: { x: 50, y: 500 },
+        requiredGears: 3,
+        entities: [
+            // Vertikale Plattformen
+            { type: 'platform', x: 0, y: 550, width: 200, height: 50, properties: {} },
+            { type: 'platform', x: 300, y: 450, width: 100, height: 20, properties: {} },
+            { type: 'platform', x: 500, y: 350, width: 100, height: 20, properties: {} },
+            { type: 'platform', x: 650, y: 250, width: 120, height: 20, properties: {} },
+            // Bewegliche Plattformen
+            { type: 'movingPlatform', x: 200, y: 500, width: 80, height: 20, properties: { startY: 500, endY: 300, speed: 40 } },
+            { type: 'movingPlatform', x: 600, y: 200, width: 80, height: 20, properties: { startX: 600, endX: 700, speed: 60 } },
+            // Feinde
+            { type: 'enemy', x: 350, y: 418, width: 32, height: 32, properties: { enemyType: 'tickspike', speed: 70, range: 100 } },
+            { type: 'enemy', x: 700, y: 230, width: 32, height: 32, properties: { enemyType: 'rustling', speed: 60, range: 80 } },
+            // Zahnräder
+            { type: 'collectible', x: 320, y: 420, width: 24, height: 24, properties: {} },
+            { type: 'collectible', x: 680, y: 220, width: 24, height: 24, properties: {} },
+            { type: 'collectible', x: 550, y: 330, width: 24, height: 24, properties: {} },
+            // Fallen
+            { type: 'trap', x: 400, y: 570, width: 50, height: 20, properties: {} },
+            { type: 'trap', x: 600, y: 370, width: 50, height: 20, properties: {} },
+            // Checkpoint
+            { type: 'checkpoint', x: 500, y: 330, width: 24, height: 32, properties: {} },
+            // Ziel
+            { type: 'goal', x: 750, y: 210, width: 48, height: 48, properties: {} }
+        ]
+    },
+    {
+        id: 'level5',
+        name: 'Die Zahnräderfabrik',
+        width: 900,
+        height: 600,
+        playerStart: { x: 30, y: 500 },
+        requiredGears: 3,
+        entities: [
+            // Förderbänder (bewegliche Plattformen)
+            { type: 'movingPlatform', x: 100, y: 550, width: 120, height: 20, properties: { startX: 100, endX: 300, speed: 50 } },
+            { type: 'movingPlatform', x: 400, y: 400, width: 100, height: 20, properties: { startY: 400, endY: 200, speed: 40 } },
+            { type: 'movingPlatform', x: 700, y: 300, width: 100, height: 20, properties: { startX: 700, endX: 800, speed: 60 } },
+            // Plattformen
+            { type: 'platform', x: 0, y: 580, width: 100, height: 20, properties: {} },
+            { type: 'platform', x: 350, y: 500, width: 100, height: 20, properties: {} },
+            { type: 'platform', x: 600, y: 450, width: 100, height: 20, properties: {} },
+            { type: 'platform', x: 800, y: 200, width: 100, height: 20, properties: {} },
+            // Feinde
+            { type: 'enemy', x: 200, y: 570, width: 32, height: 32, properties: { enemyType: 'tickspike', speed: 90, range: 120 } },
+            { type: 'enemy', x: 750, y: 420, width: 32, height: 32, properties: { enemyType: 'rustling', speed: 70, range: 100 } },
+            // Zahnräder
+            { type: 'collectible', x: 420, y: 380, width: 24, height: 24, properties: {} },
+            { type: 'collectible', x: 850, y: 180, width: 24, height: 24, properties: {} },
+            { type: 'collectible', x: 150, y: 530, width: 24, height: 24, properties: {} },
+            // Fallen
+            { type: 'trap', x: 500, y: 570, width: 50, height: 20, properties: {} },
+            { type: 'trap', x: 800, y: 470, width: 50, height: 20, properties: {} },
+            // Checkpoints
+            { type: 'checkpoint', x: 400, y: 480, width: 24, height: 32, properties: {} },
+            { type: 'checkpoint', x: 800, y: 180, width: 24, height: 32, properties: {} },
+            // Ziel
+            { type: 'goal', x: 870, y: 170, width: 48, height: 48, properties: {} }
+        ]
+    },
+    {
+        id: 'level6',
+        name: 'Finale im Maschinenraum',
+        width: 800,
+        height: 600,
+        playerStart: { x: 30, y: 550 },
+        requiredGears: 3,
+        entities: [
+            // Komplexe Plattformstruktur
+            { type: 'platform', x: 0, y: 580, width: 200, height: 20, properties: {} },
+            { type: 'platform', x: 250, y: 500, width: 120, height: 20, properties: {} },
+            { type: 'platform', x: 450, y: 420, width: 120, height: 20, properties: {} },
+            { type: 'platform', x: 700, y: 350, width: 120, height: 20, properties: {} },
+            { type: 'platform', x: 900, y: 250, width: 100, height: 20, properties: {} },
+            // Viele bewegliche Plattformen
+            { type: 'movingPlatform', x: 200, y: 550, width: 80, height: 20, properties: { startY: 550, endY: 400, speed: 50 } },
+            { type: 'movingPlatform', x: 600, y: 400, width: 100, height: 20, properties: { startX: 600, endX: 800, speed: 70 } },
+            { type: 'movingPlatform', x: 850, y: 200, width: 80, height: 20, properties: { startY: 200, endY: 350, speed: 60 } },
+            // Viele Feinde
+            { type: 'enemy', x: 300, y: 470, width: 32, height: 32, properties: { enemyType: 'tickspike', speed: 100, range: 150 } },
+            { type: 'enemy', x: 750, y: 320, width: 32, height: 32, properties: { enemyType: 'rustling', speed: 90, range: 120 } },
+            { type: 'enemy', x: 500, y: 400, width: 32, height: 48, properties: { enemyType: 'cuckooshadow', speed: 1.0, range: 2.0, phase: 0 } },
+            { type: 'enemy', x: 900, y: 230, width: 32, height: 48, properties: { enemyType: 'cuckooshadow', speed: 0.8, range: 1.5, phase: 1 } },
+            // Zahnräder schwer erreichbar
+            { type: 'collectible', x: 470, y: 400, width: 24, height: 24, properties: {} },
+            { type: 'collectible', x: 950, y: 230, width: 24, height: 24, properties: {} },
+            { type: 'collectible', x: 250, y: 480, width: 24, height: 24, properties: {} },
+            // Viele Fallen
+            { type: 'trap', x: 350, y: 570, width: 50, height: 20, properties: {} },
+            { type: 'trap', x: 800, y: 370, width: 50, height: 20, properties: {} },
+            { type: 'trap', x: 950, y: 270, width: 50, height: 20, properties: {} },
+            // Checkpoints
+            { type: 'checkpoint', x: 450, y: 400, width: 24, height: 32, properties: {} },
+            { type: 'checkpoint', x: 900, y: 230, width: 24, height: 32, properties: {} },
+            // Ziel
+            { type: 'goal', x: 970, y: 210, width: 48, height: 48, properties: {} }
+        ]
+    }
+); 
+
