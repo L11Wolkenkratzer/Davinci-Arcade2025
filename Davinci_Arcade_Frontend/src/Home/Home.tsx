@@ -61,12 +61,11 @@ const GAMES: Game[] = [
   { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
   { id: 6, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
   { id: 7, title: "TILLIMAN", icon: "⏱️", color: "#f06c00" },
-
 ];
 
 const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
-
   console.log("Home component rendered");
+  
   /* ------------------------------------------------------------------ */
   /* State                                                              */
   /* ------------------------------------------------------------------ */
@@ -79,9 +78,12 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
   const [videoVisible, setVideoVisible] = useState<boolean>(false);
   const [videoEnded, setVideoEnded] = useState<boolean>(false);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
   const navigate = useNavigate();
   const playerFetchInProgressRef = useRef<boolean>(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   // Refs for stable handleKeyPress
   const selectedGameIndexRef = useRef<number>(selectedGameIndex);
@@ -100,7 +102,10 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
   /* ------------------------------------------------------------------ */
   
   const handleGameSelect = useCallback((game: Game): void => {
-    const route = `/${game.title.toLowerCase()}`;
+    let route = `/${game.title.toLowerCase()}`;
+    if (game.title === 'TILLIMAN') {
+      route = '/tilliTimian';
+    }
     navigate(route);
   }, [navigate]);
 
@@ -118,20 +123,78 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     }
   }, []);
 
-
-  // OPTIMIZED: Use startTransition for smooth updates
+  // OPTIMIZED: Use startTransition for smooth updates with transition control
   const navigateToGame = useCallback((newIdx: number) => {
+    if (isTransitioning) return;
+    
+    setIsTransitioning(true);
     startTransition(() => {
       setSelectedGameIndex(newIdx);
     });
-  }, []);
+    
+    // Reset transition state after animation
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => setIsTransitioning(false), 400);
+  }, [isTransitioning]);
 
-
-  // Video Replay Function  
+  // Video Replay Function with ref support
   const replayVideo = useCallback(() => {
     setVideoEnded(false);
-    // Video replay handled in Carousel component
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play();
+    }
   }, []);
+
+  /* ------------------------------------------------------------------ */
+  /* Helper Functions                                                   */
+  /* ------------------------------------------------------------------ */
+  const getCardDimensions = useCallback(() => {
+    if (containerWidth <= 1920) {
+      return { cardWidth: 280, gap: 200 };
+    }
+    return { cardWidth: 420, gap: 240 };
+  }, [containerWidth]);
+
+  const getCardTransform = useCallback(
+    (index: number) => {
+      const total = GAMES.length;
+      const { cardWidth, gap } = getCardDimensions();
+      const spacing = cardWidth + gap;
+      let rel = index - selectedGameIndex;
+
+      if (rel > total / 2) rel -= total;
+      if (rel < -total / 2) rel += total;
+
+      const translateX = rel * spacing;
+      const abs = Math.abs(rel);
+      let scale = 0.4,
+        opacity = 0.2,
+        zIndex = 1;
+      if (abs === 0) {
+        scale = 1;
+        opacity = 1;
+        zIndex = 10;
+      } else if (abs === 1) {
+        scale = 0.8;
+        opacity = 0.7;
+        zIndex = 5;
+      } else if (abs === 2) {
+        scale = 0.6;
+        opacity = 0.4;
+        zIndex = 2;
+      }
+
+      return {
+        transform: `translateX(${translateX}px) scale(${scale})`,
+        opacity,
+        zIndex,
+      } as React.CSSProperties;
+    },
+    [selectedGameIndex, getCardDimensions]
+  );
 
   /* ------------------------------------------------------------------ */
   /* Video Logic                                                        */
@@ -159,6 +222,7 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
 
   // OPTIMIZED: Keyboard handler with batched updates
   const handleKeyPress = useCallback((event: KeyboardEvent): void => {
+    // Escape schließt immer alle Modals
     if (event.key === "Escape") {
       unstable_batchedUpdates(() => {
         setShowSettings(false);
@@ -169,62 +233,65 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
       return;
     }
 
-    if (!modalsStateRef.current.showSettings && !modalsStateRef.current.showUser && !modalsStateRef.current.showInfo) {
-      if (navigationModeRef.current === "games") {
-        switch (event.key) {
-          case "ArrowLeft":
-            event.preventDefault();
-            navigateToGame((selectedGameIndexRef.current - 1 + GAMES.length) % GAMES.length);
-            break;
-          case "ArrowRight":
-            event.preventDefault();
-            navigateToGame((selectedGameIndexRef.current + 1) % GAMES.length);
-            break;
-          case "ArrowUp":
-            event.preventDefault();
-            setNavigationMode("header");
-            break;
-          case "Enter":
-            event.preventDefault();
-            handleGameSelect(GAMES[selectedGameIndexRef.current]);
-            break;
-          case " ":
-            event.preventDefault();
-            if (videoEnded && GAMES[selectedGameIndexRef.current].video) {
-              replayVideo();
-            }
-            break;
-        }
-      } else if (navigationModeRef.current === "header") {
-        switch (event.key) {
-          case "ArrowLeft": {
-            event.preventDefault();
-            const currentLeftIdx = headerButtons.indexOf(selectedHeaderButtonRef.current);
-            setSelectedHeaderButton(
-              headerButtons[(currentLeftIdx - 1 + headerButtons.length) % headerButtons.length]
-            );
-            break;
+    // ⚠️ WICHTIG: Keyboard-Navigation nur wenn KEINE Modals offen sind
+    if (modalsStateRef.current.showSettings || modalsStateRef.current.showUser || modalsStateRef.current.showInfo) {
+      return; // Früh aussteigen wenn ein Modal offen ist
+    }
+
+    if (navigationModeRef.current === "games") {
+      switch (event.key) {
+        case "ArrowLeft":
+          event.preventDefault();
+          navigateToGame((selectedGameIndexRef.current - 1 + GAMES.length) % GAMES.length);
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          navigateToGame((selectedGameIndexRef.current + 1) % GAMES.length);
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          setNavigationMode("header");
+          break;
+        case "Enter":
+          event.preventDefault();
+          handleGameSelect(GAMES[selectedGameIndexRef.current]);
+          break;
+        case " ":
+          event.preventDefault();
+          if (videoVisible && videoEnded && GAMES[selectedGameIndexRef.current].video) {
+            replayVideo();
           }
-          case "ArrowRight": {
-            event.preventDefault();
-            const currentRightIdx = headerButtons.indexOf(selectedHeaderButtonRef.current);
-            setSelectedHeaderButton(
-              headerButtons[(currentRightIdx + 1) % headerButtons.length]
-            );
-            break;
-          }
-          case "ArrowDown":
-            event.preventDefault();
-            setNavigationMode("games");
-            break;
-          case "Enter":
-            event.preventDefault();
-            handleHeaderButtonActivate(selectedHeaderButtonRef.current);
-            break;
+          break;
+      }
+    } else if (navigationModeRef.current === "header") {
+      switch (event.key) {
+        case "ArrowLeft": {
+          event.preventDefault();
+          const currentLeftIdx = headerButtons.indexOf(selectedHeaderButtonRef.current);
+          setSelectedHeaderButton(
+            headerButtons[(currentLeftIdx - 1 + headerButtons.length) % headerButtons.length]
+          );
+          break;
         }
+        case "ArrowRight": {
+          event.preventDefault();
+          const currentRightIdx = headerButtons.indexOf(selectedHeaderButtonRef.current);
+          setSelectedHeaderButton(
+            headerButtons[(currentRightIdx + 1) % headerButtons.length]
+          );
+          break;
+        }
+        case "ArrowDown":
+          event.preventDefault();
+          setNavigationMode("games");
+          break;
+        case "Enter":
+          event.preventDefault();
+          handleHeaderButtonActivate(selectedHeaderButtonRef.current);
+          break;
       }
     }
-  }, [navigateToGame, handleGameSelect, handleHeaderButtonActivate, headerButtons, videoEnded, replayVideo]);
+  }, [navigateToGame, handleGameSelect, handleHeaderButtonActivate, headerButtons, videoVisible, videoEnded, replayVideo]);
 
   // Event listener registration
   useEffect(() => {
@@ -234,9 +301,10 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
     };
   }, [handleKeyPress]);
 
-  // Player details fetch
+  // Player details fetch - optimized version
   useEffect(() => {
     let isMounted = true;
+    
     const fetchPlayerDetails = async () => {
       if (!currentPlayer?.badgeId) return;
       if (currentPlayer.updatedAt && currentPlayer.createdAt) return;
@@ -270,6 +338,15 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
       clearTimeout(timeoutId);
     };
   }, [currentPlayer?.badgeId, currentPlayer?.updatedAt, setCurrentPlayer]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   /* ------------------------------------------------------------------ */
   /* Handlers                                                           */
@@ -321,6 +398,8 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
           videoEnded={videoEnded}
           onVideoReplay={replayVideo}
           setVideoEnded={setVideoEnded}
+          getCardTransform={getCardTransform}
+          videoRef={videoRef}
         />
 
         <Footer />

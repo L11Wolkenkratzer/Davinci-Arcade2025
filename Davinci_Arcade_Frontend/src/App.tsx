@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import Home from './Home/Home';
+
 import Login from './Login/Login.tsx';
 
 // Lazy load all game components for better performance
@@ -27,6 +28,7 @@ const GameLoading = () => (
     Loading Game...
   </div>
 );
+
 
 // Universeller Player-Typ, passend zum Backend
 export type Player = {
@@ -106,6 +108,14 @@ function App() {
           path="/spaceships" 
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><SpaceshipGame /></Suspense> : loginElement} 
         />
+
+        <Route path="/spaceships" element={<SpaceshipGame />} />
+        <Route path="/tilliTimian" element={<TilliTimianGame />} />
+        <Route path="/snake" element={<Snake />} />
+        <Route path="/dino" element={<Dino />} />
+        <Route path="/tetris" element={currentPlayer ? <Tetris currentPlayer={currentPlayer} /> : <Login setCurrentPlayer={setCurrentPlayer} />} />
+        <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
+
         <Route
           path="/pacman"
           element={currentPlayer ? <Suspense fallback={<GameLoading />}><PacMan /></Suspense> : loginElement}
