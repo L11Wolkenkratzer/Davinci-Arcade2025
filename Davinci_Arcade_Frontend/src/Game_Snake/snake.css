@@ -197,7 +197,7 @@
 
 
 .snake-value {
-  color: #ffe082;
+  color: #02fc4d;
   text-shadow: 0 0 8px #fff;
   margin-right: 10px;
 }
@@ -212,4 +212,126 @@
   color: #ffe082;
   text-shadow: 0 0 8px #fff;
   margin-right: 10px;
+}
+
+/* Add styles for backend integration elements */
+
+/* New Highscore Notification */
+.snake-notification {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: linear-gradient(45deg, #4a7c59, #6ab04c);
+  color: white;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.2em;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: slideInBounce 0.5s ease-out;
+}
+
+.snake-notification-content {
+  animation: pulse 2s infinite;
+}
+
+@keyframes slideInBounce {
+  0% { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+  70% { transform: translateX(-50%) translateY(10px); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(0px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Player Welcome and Stats */
+.snake-welcome {
+  background: rgba(74, 124, 89, 0.2);
+  color: #02fc4d;
+  padding: 10px 20px;
+  border-radius: 8px;
+  margin: 15px 0;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1em;
+  text-align: center;
+}
+
+.snake-stats {
+  background: rgba(74, 124, 89, 0.1);
+  border: 2px solid #4a7c59;
+  border-radius: 10px;
+  padding: 15px;
+  margin: 15px 0;
+}
+
+.snake-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.9em;
+}
+
+.snake-label {
+  color: #02fc4d;
+  font-weight: bold;
+}
+
+.snake-value {
+  color: #02fc4d;
+  font-family: monospace;
+  font-size: 1.5em;
+}
+
+/* Submitting State */
+.snake-submitting {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  padding: 10px 15px;
+  border-radius: 5px;
+  margin: 10px 0;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8em;
+  text-align: center;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.5; }
+}
+
+/* Enhanced Highscore Display */
+.snake-highscore h2 {
+  color: #02fc4d;
+  text-align: center;
+  margin-bottom: 20px;
+  font-family: 'Press Start 2P', cursive;
+}
+
+/* Responsive improvements for mobile */
+@media (max-width: 768px) {
+  .snake-notification {
+    font-size: 1em;
+    padding: 10px 20px;
+  }
+  
+  .snake-stats {
+    padding: 10px;
+  }
+  
+  .snake-stat-row {
+    font-size: 0.8em;
+  }
+  
+  .snake-welcome {
+    font-size: 0.9em;
+    padding: 8px 15px;
+  }
 }

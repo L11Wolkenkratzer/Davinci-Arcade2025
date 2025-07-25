@@ -49,8 +49,8 @@ export class Game {
         // Lade Assets
         await this.assetManager.loadAssets();
         
-        // Initialisiere Level
-        this.levelManager.loadLevel(1);
+        // SENIOR DEV FIX: Don't auto-load level 1, let external code control level loading
+        console.log('🎮 Game initialized, waiting for explicit level loading...');
     }
     
     public start() {
@@ -86,6 +86,32 @@ export class Game {
         this.gameState = 'playing';
         this.lastTime = performance.now();
         this.gameLoop();
+    }
+
+    // SENIOR DEV FIX: New method for level advancement without resetting to level 1
+    public advanceToLevel(levelNumber: number) {
+        console.log(`🎮 Game.advanceToLevel(${levelNumber}) called`);
+        
+        // Reset game stats but keep current progress
+        this.score = 0;
+        this.lives = 3;
+        this.collectedGears = 0;
+        this.entities = [];
+        
+        // Notify UI of reset
+        this.options.onScoreChange(this.score);
+        this.options.onLivesChange(this.lives);
+        this.options.onGearsCollected(this.collectedGears);
+        
+        // Load the specified level (not always level 1)
+        this.levelManager.loadLevel(levelNumber);
+        
+        // Set game state and restart loop
+        this.gameState = 'playing';
+        this.lastTime = performance.now();
+        this.gameLoop();
+        
+        console.log(`✅ Successfully advanced to Level ${levelNumber}`);
     }
     
     private gameLoop = () => {
@@ -145,9 +171,21 @@ export class Game {
         let cameraX = 0;
         const levelWidth = this.levelManager.getLevelWidth();
         if (this.player) {
-            // Kamera folgt dem Spieler, bleibt aber im Levelbereich
+            // Kamera folgt dem Spieler zentriert
             cameraX = this.player.position.x + this.player.size.x / 2 - this.canvas.width / 2;
-            cameraX = Math.max(0, Math.min(cameraX, levelWidth - this.canvas.width));
+            
+            // Nur links begrenzen, damit Spieler rechts über Level hinauslaufen kann
+            cameraX = Math.max(0, cameraX);
+            
+            // Rechte Begrenzung nur wenn Level kleiner als Canvas ist
+            if (levelWidth < this.canvas.width) {
+                cameraX = 0; // Level kleiner als Canvas, kein Scrolling nötig
+            } else {
+                // Erlaube Kamera über Level-Ende hinaus zu gehen für große Level
+                // Das ermöglicht dem Spieler das Level-Ende zu erreichen
+                const maxCameraX = levelWidth; // Erweiterte Grenze
+                cameraX = Math.min(cameraX, maxCameraX);
+            }
         }
 
         // Clear canvas
@@ -252,6 +290,11 @@ export class Game {
     
     public setPlayer(player: Player) {
         this.player = player;
+        
+        // Initialize player with profile data if available
+        if (this.options.playerProfile) {
+            player.initializeFromProfile(this.options.playerProfile);
+        }
     }
     
     public getPlayer(): Player | null {
@@ -260,6 +303,14 @@ export class Game {
     
     public getAssetManager(): AssetManager {
         return this.assetManager;
+    }
+    
+    public getOptions(): GameOptions {
+        return this.options;
+    }
+    
+    public getLevelManager() {
+        return this.levelManager;
     }
     
     public addScore(points: number) {

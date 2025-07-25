@@ -7,15 +7,38 @@ import Shop from './components/Shop';
 import ShipManager from './components/ShipManager';
 import Highscore from './components/Highscore';
 import Info from './components/Info';
-import type {GameScreen, Ship, Upgrade, HighscoreEntry} from './types/gametypes.ts';
+import type { GameScreen, Player } from './types/gametypes';
 import { useGameState } from './hooks/useGameState';
 
-const SpaceshipGame: React.FC = () => {
+interface SpaceshipGameProps {
+    currentPlayer?: Player | null;
+}
+
+const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
     const [currentScreen, setCurrentScreen] = useState<GameScreen>('lobby');
-    const [selectedMenuItem, setSelectedMenuItem] = useState(0);
     const navigate = useNavigate();
+    
     // Hintergrundmusik-Ref
     const bgMusicRef = useRef<HTMLAudioElement | null>(null);
+    
+    // Enhanced useGameState with currentPlayer
+    const {
+        gameState,
+        ships,
+        upgrades,
+        highscores,
+        playerStats,
+        isSubmitting,
+        showNewHighscore,
+        buyShip,
+        buyUpgrade,
+        equipShip,
+        startGame,
+        resetGame,
+        submitGameResult,
+        trackGameEvent,
+    } = useGameState(currentPlayer);
+
     // Hintergrundmusik-Logik
     useEffect(() => {
         if (!bgMusicRef.current) {
@@ -23,6 +46,7 @@ const SpaceshipGame: React.FC = () => {
             bgMusicRef.current.loop = true;
             bgMusicRef.current.volume = 0.4;
         }
+        
         // Musik nur in Menüs, nicht im Spiel
         const menuScreens = ['lobby', 'shop', 'shipManager', 'highscore', 'info'];
         if (menuScreens.includes(currentScreen)) {
@@ -30,7 +54,8 @@ const SpaceshipGame: React.FC = () => {
         } else {
             bgMusicRef.current.pause();
         }
-        // Stoppe Musik komplett beim Unmount (z.B. Startseite)
+        
+        // Stoppe Musik komplett beim Unmount
         return () => {
             if (bgMusicRef.current) {
                 bgMusicRef.current.pause();
@@ -38,19 +63,6 @@ const SpaceshipGame: React.FC = () => {
             }
         };
     }, [currentScreen]);
-
-    const {
-        gameState,
-        ships,
-        upgrades,
-        highscores,
-        buyShip,
-        buyUpgrade,
-        equipShip,
-        startGame,
-        resetGame,
-        addHighscore
-    } = useGameState();
 
     const handleKeyPress = useCallback((event: KeyboardEvent) => {
         if (event.key === 'Escape') {
@@ -68,6 +80,13 @@ const SpaceshipGame: React.FC = () => {
         window.addEventListener('keydown', handleKeyPress);
         return () => window.removeEventListener('keydown', handleKeyPress);
     }, [handleKeyPress]);
+
+    const handleGameOver = useCallback(async (score: number, coins: number) => {
+        if (currentPlayer && score > 0) {
+            await submitGameResult(score, gameState.level);
+        }
+        setCurrentScreen('lobby');
+    }, [currentPlayer, submitGameResult, gameState.level]);
 
     const renderScreen = () => {
         switch (currentScreen) {
@@ -87,13 +106,7 @@ const SpaceshipGame: React.FC = () => {
             case 'game':
                 return (
                     <GamePlay
-                        gameState={gameState}
-                        onGameOver={(score) => {
-                            if (score > 0) {
-                                addHighscore('Player', score);
-                            }
-                            setCurrentScreen('lobby');
-                        }}
+                        onGameOver={handleGameOver}
                         onPause={() => setCurrentScreen('lobby')}
                         onStart={startGame}
                         onReset={resetGame}
@@ -103,10 +116,8 @@ const SpaceshipGame: React.FC = () => {
                 return (
                     <Shop
                         ships={ships}
-                        upgrades={upgrades}
                         coins={gameState.coins}
-                        onBuyShip={buyShip}
-                        onBuyUpgrade={buyUpgrade}
+                        onBuyShip={(shipId: string) => { buyShip(shipId).catch(console.error); return true; }}
                         onBack={() => setCurrentScreen('lobby')}
                     />
                 );
@@ -139,6 +150,15 @@ const SpaceshipGame: React.FC = () => {
 
     return (
         <div className="spaceship-game">
+            {/* New Highscore Notification */}
+            {showNewHighscore && (
+                <div className="spaceship-notification">
+                    <div className="spaceship-notification-content">
+                        🚀 NEW HIGHSCORE! 🚀
+                    </div>
+                </div>
+            )}
+            
             <div className="game-container">
                 {renderScreen()}
             </div>

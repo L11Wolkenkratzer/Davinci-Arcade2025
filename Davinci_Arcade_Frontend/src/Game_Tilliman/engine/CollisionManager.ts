@@ -137,9 +137,15 @@ export class CollisionManager {
     private checkSideCollisions(player: Player, entities: Entity[]) {
         const playerBounds = player.getBounds();
         
+        // Check if player is trying to go left out of bounds (x < 0)
+        if (player.position.x < 0) {
+            player.position.x = 0;
+            player.velocity.x = Math.max(0, player.velocity.x); // Only allow positive velocity
+        }
+        
         for (const entity of entities) {
             if (!entity.active) continue;
-            if (entity.type !== 'platform' && entity.type !== 'movingPlatform') continue;
+            if (entity.type !== 'platform' && entity.type !== 'movingPlatform') continue; 
             
             const platformBounds = entity.getBounds();
             
@@ -154,17 +160,17 @@ export class CollisionManager {
                     platformBounds.y + platformBounds.height - playerBounds.y
                 );
                 
-                // Resolve collision based on smallest overlap
+                // Only resolve horizontal collisions on the LEFT side (prevent going out of level)
                 if (overlapX < overlapY) {
-                    // Horizontal collision
-                    if (playerBounds.x < platformBounds.x) {
+                    // Only block LEFT side collisions, allow RIGHT side passage
+                    if (playerBounds.x < platformBounds.x && platformBounds.x <= 50) {
+                        // Only block if platform is near left edge (x <= 50)
                         player.position.x = platformBounds.x - playerBounds.width;
-                    } else {
-                        player.position.x = platformBounds.x + platformBounds.width;
+                        player.velocity.x = Math.max(0, player.velocity.x); // Only allow moving right
                     }
-                    player.velocity.x = 0;
+                    // Right side collisions are ignored - player can pass through
                 } else if (player.velocity.y < 0) {
-                    // Hitting platform from below
+                    // Hitting platform from below (head collision)
                     player.position.y = platformBounds.y + platformBounds.height;
                     player.velocity.y = 0;
                 }

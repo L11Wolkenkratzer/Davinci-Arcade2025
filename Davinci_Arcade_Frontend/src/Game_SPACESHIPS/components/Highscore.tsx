@@ -42,11 +42,15 @@ const Highscore: React.FC<HighscoreProps> = ({ highscores, onBack }) => {
 
                 <div className="highscore-list">
                     {highscores.map((entry, index) => (
-                        <div key={index} className="highscore-entry">
+                        <div key={entry._id || index} className="highscore-entry">
                             <span className="rank">#{index + 1}</span>
-                            <span className="name">{entry.name}</span>
+                            <span className="name">
+                                {entry.playerId?.name || 'Unknown Player'}
+                            </span>
                             <span className="score">{entry.score}</span>
-                            <span className="date">{entry.date}</span>
+                            <span className="date">
+                                {new Date(entry.createdAt).toLocaleDateString()}
+                            </span>
                         </div>
                     ))}
                 </div>

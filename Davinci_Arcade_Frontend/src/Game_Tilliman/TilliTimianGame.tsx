@@ -1,25 +1,39 @@
 import React, { useState } from 'react';
 import TilliTimianLobby from './components/TilliTimianLobby.tsx';
-import TilliTimianPlay from './components/TilliTimianPlay.tsx';
-import TilliTimianHighscore from './components/TilliTimianHighscore.tsx';
-import TilliTimianInfo from './components/TilliTimianInfo.tsx';
 import './TilliTimianGame.css';
+
+// Player type definition (matching App.tsx)
+type Player = {
+  _id: string;
+  badgeId: string;
+  name: string;
+  totalScore: number;
+  gamesPlayed: number;
+  lastPlayed: string;
+  updatedAt?: string;
+  createdAt?: string;
+  __v?: number;
+} | null;
 
 export type TilliScreen = 'lobby' | 'game' | 'highscore' | 'info';
 
-const TilliTimianGame: React.FC = () => {
+interface TilliTimianGameProps {
+  currentPlayer: Player;
+}
+
+const TilliTimianGame: React.FC<TilliTimianGameProps> = ({ currentPlayer }) => {
   const [screen, setScreen] = useState<TilliScreen>('lobby');
 
   const renderScreen = () => {
     switch (screen) {
       case 'lobby':
-        return <TilliTimianLobby onOpenHighscore={() => setScreen('highscore')} onOpenInfo={() => setScreen('info')} />;
+        return <TilliTimianLobby currentPlayer={currentPlayer} onOpenHighscore={() => setScreen('highscore')} onOpenInfo={() => setScreen('info')} />;
       case 'game':
-        return <TilliTimianPlay onGameOver={() => setScreen('lobby')} />;
+        return <div>Game component would go here</div>;
       case 'highscore':
-        return <TilliTimianHighscore onBack={() => setScreen('lobby')} />;
+        return <div>Highscore component would go here</div>;
       case 'info':
-        return <TilliTimianInfo onBack={() => setScreen('lobby')} />;
+        return <div>Info component would go here</div>;
       default:
         return null;
     }
