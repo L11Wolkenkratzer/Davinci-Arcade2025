@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useSettings } from "../SettingsContext";
 import type { Player } from "../App";
 import "./Tetris.css";
 
@@ -114,6 +115,15 @@ const emptyBoard = () =>
   );
 
 const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
+  // SettingsContext für Sound
+  const { volume, isMuted } = useSettings();
+
+  // Sound-Refs
+  const lineClearSoundRef = useRef<HTMLAudioElement>(null);
+  const gameOverSoundRef = useRef<HTMLAudioElement>(null);
+  const levelUpSoundRef = useRef<HTMLAudioElement>(null);
+  const lobbyMusicRef = useRef<HTMLAudioElement>(null);
+  const gameMusicRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const backBufferRef = useRef<HTMLCanvasElement>(null);
   
@@ -438,6 +448,85 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
   };
 
   // Game logic
+  // Sound-Initialisierung
+  useEffect(() => {
+    // Falls volume als Prozentwert kommt, umrechnen
+    const safeVolume = typeof volume === "number" && volume > 1 ? volume / 100 : volume;
+    if (lineClearSoundRef.current) {
+      lineClearSoundRef.current.volume = isMuted ? 0 : safeVolume;
+    }
+    if (gameOverSoundRef.current) {
+      gameOverSoundRef.current.volume = isMuted ? 0 : safeVolume;
+    }
+    if (levelUpSoundRef.current) {
+      levelUpSoundRef.current.volume = isMuted ? 0 : safeVolume;
+    }
+    if (lobbyMusicRef.current) {
+      lobbyMusicRef.current.volume = isMuted ? 0 : safeVolume;
+    }
+    if (gameMusicRef.current) {
+      gameMusicRef.current.volume = isMuted ? 0 : safeVolume;
+    }
+  }, [volume, isMuted]);
+
+  // Musiksteuerung: Lobby/Game
+  useEffect(() => {
+    if (gameState === "start") {
+      if (lobbyMusicRef.current) {
+        lobbyMusicRef.current.currentTime = 0;
+        lobbyMusicRef.current.loop = true;
+        if (!isMuted) lobbyMusicRef.current.play();
+      }
+      if (gameMusicRef.current) {
+        gameMusicRef.current.pause();
+        gameMusicRef.current.currentTime = 0;
+      }
+    } else if (gameState === "playing") {
+      if (gameMusicRef.current) {
+        gameMusicRef.current.currentTime = 0;
+        gameMusicRef.current.loop = true;
+        if (!isMuted) gameMusicRef.current.play();
+      }
+      if (lobbyMusicRef.current) {
+        lobbyMusicRef.current.pause();
+        lobbyMusicRef.current.currentTime = 0;
+      }
+    } else {
+      if (lobbyMusicRef.current) {
+        lobbyMusicRef.current.pause();
+        lobbyMusicRef.current.currentTime = 0;
+      }
+      if (gameMusicRef.current) {
+        gameMusicRef.current.pause();
+        gameMusicRef.current.currentTime = 0;
+      }
+    }
+  }, [gameState, isMuted]);
+
+  const playLineClear = () => {
+    if (lineClearSoundRef.current && lineClearSoundRef.current.src) {
+      lineClearSoundRef.current.currentTime = 0;
+      lineClearSoundRef.current.play();
+    }
+  };
+  const playGameOver = () => {
+    if (gameOverSoundRef.current && gameOverSoundRef.current.src) {
+      gameOverSoundRef.current.currentTime = 0;
+      gameOverSoundRef.current.play();
+    }
+  };
+  const playLevelUp = () => {
+    if (levelUpSoundRef.current && levelUpSoundRef.current.src) {
+      levelUpSoundRef.current.currentTime = 0;
+      levelUpSoundRef.current.play();
+    }
+  };
+
+  // ...existing code...
+
+  // Sound-Elemente (aus public-Ordner)
+  // lineClear.mp3, gameOver.mp3, levelUp.mp3 müssen im public-Ordner liegen
+
   const startGame = () => {
     setBoard(emptyBoard());
     setCurrent(getRandomPiece());
@@ -497,19 +586,24 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
     while (newBoard.length < BOARD_HEIGHT) {
       newBoard.unshift(Array(BOARD_WIDTH).fill(-1));
     }
+    if (cleared > 0) {
+      playLineClear();
+    }
     return { newBoard, cleared };
-  }, []);
+  }, [playLineClear]);
 
   const handleGameOver = useCallback(() => {
     const gameDuration = Math.floor((Date.now() - gameStartTime) / 1000);
     const coinsEarned = Math.floor(score / 100);
-    
+
     setCoins(prev => prev + coinsEarned);
-    
+
+    playGameOver();
+
     if (currentPlayer) {
       submitGameResult(score, level, gameDuration);
     }
-    
+
     setGameState("gameover");
   }, [score, level, currentPlayer, gameStartTime]);
 
@@ -586,6 +680,7 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
         if (cleared > 0 && (lines + cleared) % 10 === 0) {
           setLevel((lv) => lv + 1);
           setDropTime((t) => Math.max(100, t - 60));
+          playLevelUp();
         }
         
         const n = next;
@@ -722,6 +817,12 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
   // 🎮 HYBRID RENDER: HTML für Menüs, Canvas für Spiel
   return (
     <div className="tetris-hybrid-container">
+      {/* Sound-Elemente */}
+      <audio ref={lineClearSoundRef} src="/lineClear.mp3" preload="auto" />
+      <audio ref={gameOverSoundRef} src="/gameOver.mp3" preload="auto" />
+      <audio ref={levelUpSoundRef} src="/levelUp.mp3" preload="auto" />
+      <audio ref={lobbyMusicRef} src="/Sounds/Tetris/tetris_lobby music.mp3" preload="auto" />
+      <audio ref={gameMusicRef} src="/Sounds/Tetris/tetris game music.mp3" preload="auto" />
       {/* 🎉 NEW HIGHSCORE NOTIFICATION */}
       {showNewHighscore && (
         <div className="tetris-notification">
