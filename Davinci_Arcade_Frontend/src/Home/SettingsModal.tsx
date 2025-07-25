@@ -1,5 +1,7 @@
+// src/Home/SettingsModal.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import './Home.css';
+import { useSettings } from '../SettingsContext'; // ← Geändert
 
 import type { Player } from "./Home";
 
@@ -10,32 +12,22 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, setCurrentPlayer }) => {
-    const [volume, setVolume] = useState<number>(() => {
-        const stored = localStorage.getItem('settings_volume');
-        return stored ? parseInt(stored) : 50;
-    });
-    const [brightness, setBrightness] = useState<number>(() => {
-        const stored = localStorage.getItem('settings_brightness');
-        return stored ? parseInt(stored) : 75;
-    });
+    // WICHTIG: Verwende useSettings statt lokalen State
+    const { volume, setVolume, brightness, setBrightness } = useSettings();
+
     const [focusedIndex, setFocusedIndex] = useState<number>(0);
 
     const modalRef = useRef<HTMLDivElement>(null);
     const focusableElements = ['close-button', 'volume-slider', 'brightness-slider', 'edit-user-button'];
 
-    // Save settings helper
     const saveSettings = () => {
-        localStorage.setItem('settings_volume', volume.toString());
-        localStorage.setItem('settings_brightness', brightness.toString());
-        console.log("Settings saved clicked");
+        console.log("Settings saved - Volume:", volume, "Brightness:", brightness);
     };
 
-    // ⚠️ KORRIGIERT: Event-Propagation stoppen
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Events immer stoppen, damit sie nicht nach Home durchsickern
             e.stopPropagation();
-            
+
             switch (e.key) {
                 case 'Escape':
                     e.preventDefault();
@@ -52,17 +44,17 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
                 case 'ArrowLeft':
                     e.preventDefault();
                     if (focusedIndex === 1) { // Volume slider
-                        setVolume(prev => Math.max(0, prev - 5));
+                        setVolume(Math.max(0, volume - 5));
                     } else if (focusedIndex === 2) { // Brightness slider
-                        setBrightness(prev => Math.max(0, prev - 5));
+                        setBrightness(Math.max(0, brightness - 5)); // ← Context verwenden
                     }
                     break;
                 case 'ArrowRight':
                     e.preventDefault();
                     if (focusedIndex === 1) { // Volume slider
-                        setVolume(prev => Math.min(100, prev + 5));
+                        setVolume(Math.min(100, volume + 5));
                     } else if (focusedIndex === 2) { // Brightness slider
-                        setBrightness(prev => Math.min(100, prev + 5));
+                        setBrightness(Math.min(100, brightness + 5)); // ← Context verwenden
                     }
                     break;
                 case 'Enter':
@@ -77,10 +69,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
             }
         };
 
-        // Event mit capture=true registrieren für höhere Priorität
         document.addEventListener('keydown', handleKeyDown, true);
         return () => document.removeEventListener('keydown', handleKeyDown, true);
-    }, [focusedIndex, onClose, volume, brightness]);
+    }, [focusedIndex, onClose, volume, brightness, setVolume, setBrightness]);
 
     const handleSaveEdit = (): void => {
         saveSettings();
@@ -94,7 +85,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ onClose, currentPlayer, s
 
     const handleBrightnessChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         const value = parseInt(e.target.value);
-        setBrightness(value);
+        setBrightness(value); // ← Context verwenden
     };
 
     const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>): void => {

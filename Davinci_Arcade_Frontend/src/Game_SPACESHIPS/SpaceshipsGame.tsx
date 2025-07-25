@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAudio } from '../SettingsContext.tsx';
 import './SpaceshipGame.css';
 import GameLobby from './components/GameLobby';
 import GamePlay from './components/GamePlay';
@@ -14,30 +15,9 @@ const SpaceshipGame: React.FC = () => {
     const [currentScreen, setCurrentScreen] = useState<GameScreen>('lobby');
     const [selectedMenuItem, setSelectedMenuItem] = useState(0);
     const navigate = useNavigate();
-    // Hintergrundmusik-Ref
+
+    const { volume } = useAudio();
     const bgMusicRef = useRef<HTMLAudioElement | null>(null);
-    // Hintergrundmusik-Logik
-    useEffect(() => {
-        if (!bgMusicRef.current) {
-            bgMusicRef.current = new window.Audio('/Sounds/background.mp3');
-            bgMusicRef.current.loop = true;
-            bgMusicRef.current.volume = 0.4;
-        }
-        // Musik nur in Menüs, nicht im Spiel
-        const menuScreens = ['lobby', 'shop', 'shipManager', 'highscore', 'info'];
-        if (menuScreens.includes(currentScreen)) {
-            bgMusicRef.current.play().catch(() => {});
-        } else {
-            bgMusicRef.current.pause();
-        }
-        // Stoppe Musik komplett beim Unmount (z.B. Startseite)
-        return () => {
-            if (bgMusicRef.current) {
-                bgMusicRef.current.pause();
-                bgMusicRef.current.currentTime = 0;
-            }
-        };
-    }, [currentScreen]);
 
     const {
         gameState,
@@ -51,6 +31,54 @@ const SpaceshipGame: React.FC = () => {
         resetGame,
         addHighscore
     } = useGameState();
+
+    // Hintergrundmusik-Initialisierung
+    useEffect(() => {
+        if (!bgMusicRef.current) {
+            bgMusicRef.current = new window.Audio('/Sounds/background.mp3');
+            bgMusicRef.current.loop = true;
+            bgMusicRef.current.volume = (volume / 100) * 0.4; // 40% der globalen Lautstärke
+
+            bgMusicRef.current.addEventListener('canplaythrough', () => {
+                console.log('🎵 Spaceship background music loaded');
+            });
+
+            bgMusicRef.current.addEventListener('error', (e) => {
+                console.error('❌ Error loading spaceship background music:', e);
+            });
+        }
+    }, [volume]);
+
+    // Lautstärke aktualisieren wenn sich globale Lautstärke ändert
+    useEffect(() => {
+        if (bgMusicRef.current) {
+            bgMusicRef.current.volume = (volume / 100) * 0.4;
+        }
+    }, [volume]);
+
+    // Hintergrundmusik-Steuerung basierend auf Screen
+    useEffect(() => {
+        if (!bgMusicRef.current) return;
+
+        // Musik nur in Menüs, nicht im Spiel
+        const menuScreens = ['lobby', 'shop', 'shipManager', 'highscore', 'info'];
+
+        if (menuScreens.includes(currentScreen)) {
+            bgMusicRef.current.play().catch((error) => {
+                console.log('🔇 Background music autoplay blocked:', error);
+            });
+        } else {
+            bgMusicRef.current.pause();
+        }
+
+        // Stoppe Musik komplett beim Unmount (z.B. Startseite)
+        return () => {
+            if (bgMusicRef.current) {
+                bgMusicRef.current.pause();
+                bgMusicRef.current.currentTime = 0;
+            }
+        };
+    }, [currentScreen]);
 
     const handleKeyPress = useCallback((event: KeyboardEvent) => {
         if (event.key === 'Escape') {
@@ -82,6 +110,7 @@ const SpaceshipGame: React.FC = () => {
                         onExit={() => navigate('/')}
                         coins={gameState.coins}
                         currentShip={gameState.ship}
+                        upgrades={upgrades}
                     />
                 );
             case 'game':
@@ -141,6 +170,22 @@ const SpaceshipGame: React.FC = () => {
         <div className="spaceship-game">
             <div className="game-container">
                 {renderScreen()}
+
+                {/* Debug-Info für Audio (optional - kannst du entfernen) */}
+                <div style={{
+                    position: 'fixed',
+                    bottom: 10,
+                    right: 10,
+                    background: 'rgba(0,0,0,0.7)',
+                    color: '#fff',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '10px',
+                    zIndex: 9999,
+                    fontFamily: 'monospace'
+                }}>
+                    🎵 Volume: {volume}% | Screen: {currentScreen}
+                </div>
             </div>
         </div>
     );

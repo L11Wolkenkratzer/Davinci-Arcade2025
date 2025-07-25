@@ -90,7 +90,47 @@ const drawOptimizedApple = (ctx: CanvasRenderingContext2D, food: Coord[]) => {
 const SnakeGame: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
+  // Sound-Refs
+  const lobbyMusicRef = useRef<HTMLAudioElement | null>(null);
+  const eatSoundRef = useRef<HTMLAudioElement | null>(null);
+  // SettingsContext für Lautstärke
+  const settings = React.useContext((window as any).SettingsContext || React.createContext({ volume: 50 }));
+  const volume = typeof settings.volume === 'number' ? settings.volume : 50;
   const [screen, setScreen] = useState<"menu" | "game" | "shopMenu" | "skinShop" | "abilityShop" | "highscore">("menu");
+  // Initialisiere Sounds nur einmal
+  useEffect(() => {
+    if (!lobbyMusicRef.current) {
+      lobbyMusicRef.current = new Audio('/Sounds/Snake/snake_lobby.mp3');
+      lobbyMusicRef.current.loop = true;
+      lobbyMusicRef.current.volume = volume / 100;
+    }
+    if (!eatSoundRef.current) {
+      eatSoundRef.current = new Audio('/Sounds/Snake/snake_eating.mp3');
+      eatSoundRef.current.volume = volume / 100;
+    }
+    return () => {
+      lobbyMusicRef.current?.pause();
+      lobbyMusicRef.current && (lobbyMusicRef.current.currentTime = 0);
+    };
+  }, [volume]);
+    // Lautstärke dynamisch anpassen
+    if (lobbyMusicRef.current) lobbyMusicRef.current.volume = volume / 100;
+    if (eatSoundRef.current) eatSoundRef.current.volume = volume / 100;
+
+  // Lobby-Musik steuern
+  useEffect(() => {
+    // Musik in menu, shopMenu, skinShop, abilityShop, highscore
+    const shouldPlay = ["menu", "shopMenu", "skinShop", "abilityShop", "highscore"].includes(screen);
+    if (shouldPlay) {
+      if (lobbyMusicRef.current && lobbyMusicRef.current.paused) {
+        lobbyMusicRef.current.currentTime = 0;
+        lobbyMusicRef.current.play().catch(() => {});
+      }
+    } else {
+      lobbyMusicRef.current?.pause();
+      lobbyMusicRef.current && (lobbyMusicRef.current.currentTime = 0);
+    }
+  }, [screen]);
   
   // Startposition: Snake mittig
   const [snake, setSnake] = useState([{ x: Math.floor(cols/2), y: Math.floor(rows/2) }]);
@@ -317,6 +357,10 @@ const SnakeGame: React.FC = () => {
           let newSnake = [wrapped, ...prev];
 
           if (ateIndex !== -1) {
+            // Sound abspielen
+            eatSoundRef.current && (eatSoundRef.current.currentTime = 0);
+            eatSoundRef.current?.play().catch(() => {});
+
             const newFoodArray = [...food];
             newFoodArray.splice(ateIndex, 1);
 
