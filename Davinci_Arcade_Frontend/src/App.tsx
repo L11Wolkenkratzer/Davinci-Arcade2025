@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { SettingsProvider } from './SettingsContext';
 import Home from './Home/Home';
 import Login from './Login/Login.tsx';
-// ...existing code...
+
 const SpaceshipGame = lazy(() => import('./Game_SPACESHIPS/SpaceshipsGame.tsx'));
 const Snake = lazy(() => import('./Game_Snake/snake.tsx'));
 const Dino = lazy(() => import('./Game_Dinojump/Dinojump.tsx'));
@@ -56,9 +56,10 @@ function App() {
                     return parsed;
                 }
             } catch {
+                // FIX: leerer catch block
             }
-
-        return null;
+        } // FIX: Diese geschweifte Klammer war das Problem
+        return null; // FIX: return null muss außerhalb des if-Blocks stehen
     });
 
     // ✅ VEREINFACHT: Direkter stabiler Callback ohne Ref-Komplexität
@@ -71,8 +72,6 @@ function App() {
         setCurrentPlayer(null);
         window.location.href = '/login';
     };
-
-    // ✅ ENTFERNT: useMemo für Elemente - React.memo in Komponenten übernimmt Optimierung
 
     return (
         <SettingsProvider>
@@ -186,3 +185,4 @@ function App() {
 }
 
 export default App;
+
