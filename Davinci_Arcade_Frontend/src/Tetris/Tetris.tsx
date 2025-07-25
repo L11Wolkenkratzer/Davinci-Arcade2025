@@ -133,7 +133,7 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
   const [showNewHighscore, setShowNewHighscore] = useState(false);
   
   // 🚀 ANTI-FLICKER: Double Buffering
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number>(0);
   const lastDrop = useRef(Date.now());
   const lastGameState = useRef<any>(null);
   

@@ -56,12 +56,9 @@ type HeaderButton = "settings" | "user" | "info";
 const GAMES: Game[] = [
   { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b", video: tetrisVideo},
   { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
-  { id: 3, title: "MARIO", icon: "🍄", color: "#45b7d1" },
-  { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo },
-  { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
-  { id: 6, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
-  { id: 7, title: "TILLIMAN", icon: "⏱️", color: "#f06c00" },
-
+  { id: 3, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
+  { id: 4, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
+  { id: 5, title: "TILLIMAN", icon: "⏱️", color: "#f06c00" },
 ];
 
 const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {

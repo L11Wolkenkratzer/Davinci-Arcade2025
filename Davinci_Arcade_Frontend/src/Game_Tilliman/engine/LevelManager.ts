@@ -1,5 +1,5 @@
 import type { Game } from './Game';
-import type { LevelData, LevelObject } from '../types/GameTypes';
+import type { LevelData, LevelObject, Entity } from '../types/GameTypes';
 import { Player } from '../entities/Player';
 import { Platform } from '../entities/Platform';
 import { Enemy } from '../entities/Enemy';
@@ -11,7 +11,7 @@ import { levelData } from '../levels/LevelData';
 
 export class LevelManager {
     private game: Game;
-    private currentLevel: number = 1;
+    private currentLevel: number = 0; // SENIOR DEV FIX: Don't default to 1, let loadLevel set it
     private levelData: LevelData | null = null;
     
     constructor(game: Game) {
@@ -19,17 +19,26 @@ export class LevelManager {
     }
     
     public loadLevel(levelNumber: number) {
-        // Clear existing entities
+        console.log(`🎯 LevelManager.loadLevel() called with level: ${levelNumber}`);
+        
+        // CRITICAL: Set currentLevel FIRST before any operations
+        this.currentLevel = levelNumber;
+        
+        // Clear existing entities AFTER setting level
         this.clearLevel();
+        
+        // Clear game entities to prevent duplicates
+        this.game.clearEntities();
         
         // Get level data
         this.levelData = levelData[levelNumber - 1];
         if (!this.levelData) {
-            console.error(`Level ${levelNumber} not found`);
+            console.error(`❌ Level ${levelNumber} not found in levelData array`);
+            console.error(`Available levels: 1-${levelData.length}`);
             return;
         }
         
-        this.currentLevel = levelNumber;
+        console.log(`✅ Loading Level ${levelNumber}: ${this.levelData.name} with ${this.levelData.entities.length} entities`);
         
         // Create player
         const player = new Player(
@@ -41,12 +50,17 @@ export class LevelManager {
         
         // Create entities from level data
         for (const obj of this.levelData.entities) {
-            this.createEntity(obj);
+            const entity = this.createEntity(obj);
+            if (entity) {
+                this.game.addEntity(entity);
+            }
         }
+        
+        console.log(`✅ Level ${levelNumber} loaded successfully`);
     }
     
-    private createEntity(obj: LevelObject) {
-        let entity;
+    private createEntity(obj: LevelObject): Entity | null {
+        let entity: Entity | null = null;
         
         switch (obj.type) {
             case 'platform':
@@ -118,12 +132,10 @@ export class LevelManager {
                 
             default:
                 console.warn(`Unknown entity type: ${obj.type}`);
-                return;
+                return null;
         }
         
-        if (entity) {
-            this.game.addEntity(entity);
-        }
+        return entity;
     }
     
     private clearLevel() {
@@ -152,11 +164,43 @@ export class LevelManager {
         const nextLevelNumber = this.currentLevel + 1;
         if (nextLevelNumber <= levelData.length) {
             this.loadLevel(nextLevelNumber);
+            
+            // Unlock next level in profile
+            if (this.game.getOptions().onLevelUnlock) {
+                this.game.getOptions().onLevelUnlock!(nextLevelNumber);
+            }
         } else {
             // Game completed! All levels finished
-            console.log('Congratulations! All levels completed!');
+            console.log('Congratulations! All 10 levels completed!');
             // Could trigger a "game completed" state
         }
+    }
+    
+    public isLevelUnlocked(levelNumber: number): boolean {
+        const profile = this.game.getOptions().playerProfile;
+        if (!profile) return levelNumber === 1; // Only first level unlocked by default
+        
+        // Check if level is in unlocked levels array
+        const unlockedLevels = profile.unlockedLevels || [1];
+        return unlockedLevels.includes(levelNumber);
+    }
+    
+    public getUnlockedLevels(): number[] {
+        const profile = this.game.getOptions().playerProfile;
+        return profile?.unlockedLevels || [1];
+    }
+    
+    public getTotalLevels(): number {
+        return levelData.length;
+    }
+    
+    public getLevelInfo(levelNumber: number) {
+        const level = levelData[levelNumber - 1];
+        return level ? {
+            id: level.id,
+            name: level.name,
+            requiredGears: level.requiredGears
+        } : null;
     }
     
     public getCurrentLevel(): number {

@@ -106,7 +106,7 @@ function App() {
         />
         <Route 
           path="/spaceships" 
-          element={currentPlayer ? <Suspense fallback={<GameLoading />}><SpaceshipGame /></Suspense> : loginElement} 
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><SpaceshipGame currentPlayer={currentPlayer} /></Suspense> : loginElement} 
         />
 
           <Route path="/login" element={<Login setCurrentPlayer={setCurrentPlayer} />} />
@@ -121,7 +121,7 @@ function App() {
         />
         <Route 
           path="/snake" 
-          element={currentPlayer ? <Suspense fallback={<GameLoading />}><Snake /></Suspense> : loginElement}
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><Snake currentPlayer={currentPlayer} /></Suspense> : loginElement}
         />
         <Route 
           path="/dino" 
@@ -130,13 +130,12 @@ function App() {
 
         <Route 
           path="/tilliman" 
-          element={currentPlayer ? <Suspense fallback={<GameLoading />}><Tilliman /></Suspense> : loginElement}
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><Tilliman currentPlayer={currentPlayer} /></Suspense> : loginElement}
         />
-
 
         <Route 
           path="/tillimanhome" 
-          element={currentPlayer ? <Suspense fallback={<GameLoading />}><TilliTimianGame /></Suspense> : loginElement}
+          element={currentPlayer ? <Suspense fallback={<GameLoading />}><TilliTimianGame currentPlayer={currentPlayer} /></Suspense> : loginElement}
         />
 
 

@@ -58,6 +58,16 @@ export interface PlayerEntity extends Entity {
     dashCooldown: number;
     invulnerable: boolean;
     invulnerabilityTimer: number;
+    
+    // New abilities
+    canDoubleJump: boolean;
+    hasDoubleJumped: boolean;
+    jumpCount: number;
+    maxJumps: number;
+    
+    // Skin system
+    equippedSkin: string;
+    ownedAbilities: string[];
 }
 
 // Platform-spezifische Properties
@@ -131,7 +141,18 @@ export interface GameOptions {
     onGameOver: () => void;
     onLevelComplete: () => void;
     onReturnToHome?: () => void;
-
+    
+    // Profile system
+    playerProfile?: {
+        badgeId: string;
+        name: string;
+        equippedSkin: string;
+        ownedAbilities: string[];
+        currentLevel: number;
+        unlockedLevels: number[];
+    };
+    onProfileUpdate?: (profileData: any) => void;
+    onLevelUnlock?: (level: number) => void;
 }
 
 // Asset Types
