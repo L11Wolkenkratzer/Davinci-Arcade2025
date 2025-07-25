@@ -57,7 +57,7 @@ function App() {
                 }
             } catch {
             }
-        }
+
         return null;
     });
 

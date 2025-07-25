@@ -19,6 +19,16 @@ export class Player implements PlayerEntity {
     public invulnerable: boolean = false;
     public invulnerabilityTimer: number = 0;
     
+    // New abilities
+    public canDoubleJump: boolean = false;
+    public hasDoubleJumped: boolean = false;
+    public jumpCount: number = 0;
+    public maxJumps: number = 1;
+    
+    // Skin system
+    public equippedSkin: string = 'classic';
+    public ownedAbilities: string[] = [];
+    
     private game: Game;
     private jumpPressed: boolean = false;
     private dashDirection: number = 0;
@@ -44,10 +54,21 @@ export class Player implements PlayerEntity {
             }
         }
         
-        // Jump
-        if (input.jump && this.isGrounded && !this.jumpPressed) {
-            this.velocity.y = PHYSICS.JUMP_VELOCITY;
-            this.jumpPressed = true;
+        // Jump with double jump support
+        if (input.jump && !this.jumpPressed) {
+            if (this.isGrounded) {
+                // Ground jump
+                this.velocity.y = PHYSICS.JUMP_VELOCITY;
+                this.jumpCount = 1;
+                this.hasDoubleJumped = false;
+                this.jumpPressed = true;
+            } else if (this.canDoubleJump && this.jumpCount < this.maxJumps && !this.hasDoubleJumped) {
+                // Double jump
+                this.velocity.y = PHYSICS.JUMP_VELOCITY * 0.8; // Slightly weaker second jump
+                this.jumpCount++;
+                this.hasDoubleJumped = true;
+                this.jumpPressed = true;
+            }
         } else if (!input.jump) {
             this.jumpPressed = false;
             // Cut jump short if released early
@@ -101,8 +122,20 @@ export class Player implements PlayerEntity {
         // Update state
         this.updateState();
         
-        // Keep player in bounds
-        this.position.x = Math.max(0, Math.min(800 - this.size.x, this.position.x));
+        // Reset jump count when grounded
+        if (this.isGrounded) {
+            this.jumpCount = 0;
+            this.hasDoubleJumped = false;
+        }
+        
+        // Keep player in bounds - SENIOR DEV FIX: Use dynamic level width instead of hardcoded 800
+        const levelWidth = this.game.getLevelManager().getLevelWidth();
+        this.position.x = Math.max(0, Math.min(levelWidth - this.size.x, this.position.x));
+        
+        // Debug log only when near boundaries
+        if (this.position.x > levelWidth - this.size.x - 50) {
+            console.log(`🎯 Player near right boundary: x=${this.position.x.toFixed(1)}, levelWidth=${levelWidth}, maxX=${levelWidth - this.size.x}`);
+        }
     }
     
     private updateState() {
@@ -137,8 +170,10 @@ export class Player implements PlayerEntity {
     
 
     public render(ctx: CanvasRenderingContext2D, cameraX: number = 0) {
-
-        const asset = this.game.getAssetManager().getAsset(`player_${this.state}`);
+        // Get the correct skin asset
+        const skinSuffix = this.equippedSkin === 'classic' ? '' : `_${this.equippedSkin}`;
+        const assetName = `player_${this.state}${skinSuffix}`;
+        const asset = this.game.getAssetManager().getAsset(assetName);
         
         if (asset) {
             // Blink when invulnerable
@@ -146,16 +181,45 @@ export class Player implements PlayerEntity {
                 ctx.globalAlpha = 0.5;
             }
             
-
             ctx.drawImage(asset, this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
-
             ctx.globalAlpha = 1;
+            
+            // Add special effects for legendary skin
+            if (this.equippedSkin === 'timeLord') {
+                this.renderTimeLordEffects(ctx, cameraX);
+            }
         } else {
-            // Fallback rectangle
-            ctx.fillStyle = this.invulnerable ? 'rgba(255, 0, 0, 0.5)' : 'orange';
-
+            // Fallback rectangle with skin colors
+            const skinColors = {
+                classic: this.invulnerable ? 'rgba(255, 0, 0, 0.5)' : 'orange',
+                steampunk: this.invulnerable ? 'rgba(255, 0, 0, 0.5)' : '#8B4513',
+                neon: this.invulnerable ? 'rgba(255, 0, 0, 0.5)' : '#00FFFF',
+                golden: this.invulnerable ? 'rgba(255, 0, 0, 0.5)' : '#FFD700',
+                timeLord: this.invulnerable ? 'rgba(255, 0, 0, 0.5)' : '#4B0082'
+            };
+            
+            ctx.fillStyle = skinColors[this.equippedSkin as keyof typeof skinColors] || skinColors.classic;
             ctx.fillRect(this.position.x - cameraX, this.position.y, this.size.x, this.size.y);
-
+        }
+    }
+    
+    private renderTimeLordEffects(ctx: CanvasRenderingContext2D, cameraX: number) {
+        // Add floating time particles around the player
+        const time = Date.now() * 0.003;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        
+        for (let i = 0; i < 5; i++) {
+            const angle = time + i * 1.26;
+            const radius = 20 + Math.sin(time * 2 + i) * 5;
+            const x = this.position.x - cameraX + this.size.x / 2 + Math.cos(angle) * radius;
+            const y = this.position.y + this.size.y / 2 + Math.sin(angle) * radius;
+            
+            ctx.save();
+            ctx.globalAlpha = 0.6 + Math.sin(time * 3 + i) * 0.3;
+            ctx.beginPath();
+            ctx.arc(x, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
         }
     }
     
@@ -222,5 +286,35 @@ export class Player implements PlayerEntity {
         // Handle level completion
         console.log('Level completed!');
         this.game.levelComplete();
+    }
+    
+    // Skin and ability management
+    public equipSkin(skinId: string) {
+        this.equippedSkin = skinId;
+    }
+    
+    public addAbility(abilityId: string) {
+        if (!this.ownedAbilities.includes(abilityId)) {
+            this.ownedAbilities.push(abilityId);
+            this.updateAbilities();
+        }
+    }
+    
+    public hasAbility(abilityId: string): boolean {
+        return this.ownedAbilities.includes(abilityId);
+    }
+    
+    private updateAbilities() {
+        // Update player capabilities based on owned abilities
+        this.canDoubleJump = this.hasAbility('doubleJump');
+        this.maxJumps = this.canDoubleJump ? 2 : 1;
+    }
+    
+    public initializeFromProfile(profile: any) {
+        if (profile) {
+            this.equippedSkin = profile.equippedSkin || 'classic';
+            this.ownedAbilities = profile.ownedAbilities || [];
+            this.updateAbilities();
+        }
     }
 } 

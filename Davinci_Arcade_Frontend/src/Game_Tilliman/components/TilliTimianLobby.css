@@ -1,4 +1,6 @@
 /* === SHOP & SKINS OVERLAY CARDS (MATCH LOBBY SIZE) === */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 .shop-overlay-card, .skins-overlay-card {
   position: absolute;
   top: 50%;
@@ -14,7 +16,7 @@
   align-items: center;
   justify-content: center;
   z-index: 100;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Press Start 2P', cursive;
   color: #fff;
   padding: 2.5em 3em 2em 3em;
   overflow: hidden;
@@ -35,7 +37,7 @@
   align-items: center;
   justify-content: center;
   z-index: 100;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Press Start 2P', cursive;
   color: #fff;
   padding: 2.5em 3em 2em 3em;
   overflow: hidden;
@@ -53,10 +55,10 @@
   border: none;
   border-radius: 12px;
   color: #fff;
-  font-size: 2.2rem;
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 700;
-  padding: 0.5em 1.2em;
+  font-size: 1.2rem;
+  font-family: 'Press Start 2P', cursive;
+  font-weight: 400;
+  padding: 0.8em 1.5em;
   cursor: pointer;
   box-shadow: 0 4px 20px #0004;
   transition: background 0.2s, transform 0.2s;
@@ -71,9 +73,9 @@
 }
 
 .level-name {
-  font-size: 2.1rem;
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 900;
+  font-size: 1.1rem;
+  font-family: 'Press Start 2P', cursive;
+  font-weight: 400;
   color: #FFD700;
   text-shadow: 0 2px 12px #000a;
   min-width: 220px;
@@ -81,10 +83,11 @@
 }
 
 .level-index {
-  font-size: 1.2rem;
+  font-size: 0.8rem;
   color: #fffbe7;
   margin-top: 1.2rem;
   letter-spacing: 1.5px;
+  font-family: 'Press Start 2P', cursive;
 }
 /* === TITEL OBEN LINKS === */
 /* === ARCADE TITLE === */
@@ -99,19 +102,15 @@
   text-align: left;
 }
 
-
-@import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
-
-
 .arcade-title-main {
   font-size: 2.8rem;
-  font-family: 'Luckiest Guy', cursive, 'Arial Black', Arial, sans-serif;
+  font-family: 'Press Start 2P', cursive;
   background: linear-gradient(90deg, #ffb300 0%, #ffea00 50%, #ff6f00 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: 4px;
-  font-weight: 900;
+  font-weight: 400;
   text-shadow:
     0 2px 12px #000a,
     0 0 8px #ffb30088,
@@ -130,9 +129,9 @@
 }
 
 .arcade-title-sub {
-  font-size: 1.2rem;
+  font-size: 0.8rem;
   color: #FFD700;
-  font-family: 'Orbitron', 'Arial Black', Arial, sans-serif;
+  font-family: 'Press Start 2P', cursive;
   letter-spacing: 2px;
   text-shadow:
     0 0 6px #FFD700,
@@ -140,7 +139,7 @@
     2px 2px 0 #222;
   display: block;
   margin-top: 0.2em;
-  font-weight: 600;
+  font-weight: 400;
 }
 
 @keyframes arcade-glow {
@@ -163,7 +162,6 @@
     color: #00ffe7;
   }
 }
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
 /* === GLOBALE STYLES === */
 .top-row {
@@ -204,7 +202,7 @@
   justify-content: flex-start;
   padding: 2.5em 3em 2em 3em;
   z-index: 10;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Press Start 2P', cursive;
   color: #ffffff;
   overflow: hidden;
 }
@@ -233,19 +231,17 @@
   border-radius: 12px;
   padding: 0.8rem 1.5rem;
   color: white;
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 600;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-size: 1.1rem;
   min-width: 80px;
   height: 45px;
 }
-
 
 .top-btn:hover,
 .top-btn.selected {
@@ -284,8 +280,8 @@
 }
 
 .coin-amount {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
 }
 
@@ -309,8 +305,8 @@
   border-radius: 15px;
   padding: 1.2rem 2rem;
   color: white;
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 600;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -318,18 +314,19 @@
   justify-content: center;
   gap: 0.5rem;
   min-width: 220px;
-  font-size: 1.15rem;
 }
 
 .level-select-btn:hover, .level-select-btn.selected {
   background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
 }
 
 .level-select-btn.selected {
   border-color: #FFD700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(210, 105, 30, 0.1)) !important;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), 0 4px 15px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
 }
 
 .current-level-display {
@@ -349,7 +346,8 @@
 
 .level-label {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.5rem;
+  font-family: 'Press Start 2P', cursive;
   color: rgba(255, 255, 255, 0.8);
   margin-bottom: 0.5rem;
   text-transform: uppercase;
@@ -358,15 +356,16 @@
 
 .level-name {
   display: block;
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
   margin-bottom: 0.3rem;
 }
 
 .level-number {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.5rem;
+  font-family: 'Press Start 2P', cursive;
   color: rgba(255, 255, 255, 0.7);
 }
 
@@ -416,8 +415,8 @@
 }
 
 .skin-title {
-  font-size: 2.2rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-family: 'Press Start 2P', cursive;
   margin-top: 1.5rem;
   color: #FFD700;
   text-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
@@ -446,8 +445,8 @@
   border-radius: 15px;
   padding: 1.2rem 2rem;
   color: white;
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 600;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -455,13 +454,19 @@
   justify-content: center;
   gap: 0.5rem;
   min-width: 220px;
-  font-size: 1.15rem;
 }
 
 .leaderboard-btn:hover, .leaderboard-btn.selected {
   background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.leaderboard-btn.selected {
+  border-color: #FFD700;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(210, 105, 30, 0.1)) !important;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), 0 4px 15px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
 }
 
 .leaderboard-card {
@@ -479,8 +484,8 @@
 }
 
 .leaderboard-title {
-  font-size: 1.5rem;
-  font-weight: 900;
+  font-size: 1rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
   margin-bottom: 1.2rem;
   text-align: right;
@@ -495,8 +500,8 @@
 }
 
 .leaderboard-list li {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 0.6rem;
+  font-family: 'Press Start 2P', cursive;
   margin-bottom: 0.5rem;
   color: #fff;
   text-align: right;
@@ -507,8 +512,7 @@
 
 .leaderboard-list li.gold {
   color: #FFD700;
-  font-size: 1.25rem;
-  font-weight: 900;
+  font-size: 0.7rem;
   text-shadow: 0 2px 10px #FFD70088;
 }
 
@@ -520,8 +524,7 @@
 
 .leaderboard-list li.silver {
   color: #C0C0C0;
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: 0.6rem;
 }
 
 .leaderboard-list li.silver::before {
@@ -532,8 +535,7 @@
 
 .leaderboard-list li.bronze {
   color: #CD7F32;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 0.6rem;
 }
 
 .leaderboard-list li.bronze::before {
@@ -565,16 +567,20 @@
   text-align: center;
 }
 
-/* Exit-Button rot */
+/* Exit-Button Bronze/Kupfer Theme-passend */
 .lobby-navigation .nav-btn.exit-btn {
-  background: linear-gradient(135deg, #ff4d4f, #b71c1c) !important;
-  border: 2px solid #b71c1c !important;
-  color: #fff !important;
+  background: linear-gradient(135deg, #8B4513, #D2691E) !important;
+  border: 2px solid #CD853F !important;
+  color: #FFF8DC !important;
+  box-shadow: 0 4px 15px rgba(139, 69, 19, 0.4);
 }
 .lobby-navigation .nav-btn.exit-btn:hover, .lobby-navigation .nav-btn.exit-btn.selected {
-  background: linear-gradient(135deg, #b71c1c, #ff4d4f) !important;
-  color: #fff !important;
-  transform: translateY(-3px) scale(1.05);
+  background: linear-gradient(135deg, #D2691E, #F4A460) !important;
+  border: 2px solid #FFD700 !important;
+  color: #000 !important;
+  transform: translateY(-3px) scale(1.08);
+  box-shadow: 0 8px 25px rgba(210, 105, 30, 0.6), 0 0 20px rgba(255, 215, 0, 0.4);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 .nav-btn {
   background: rgba(255, 255, 255, 0.15);
@@ -583,8 +589,8 @@
   border-radius: 15px;
   padding: 1rem 1.5rem;
   color: white;
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 600;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -602,19 +608,46 @@
 
 .nav-btn.selected {
   border-color: #FFD700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-2px) scale(1.05);
 }
 
 .start-btn {
   background: linear-gradient(135deg, #4CAF50, #45a049) !important;
   border: 2px solid #4CAF50 !important;
-  font-size: 1.1rem;
+  font-size: 0.8rem;
   padding: 1.2rem 2rem !important;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .start-btn:hover, .start-btn.selected {
-  background: linear-gradient(135deg, #45a049, #4CAF50) !important;
-  transform: translateY(-3px) scale(1.05);
+  background: linear-gradient(135deg, #66BB6A, #4CAF50) !important;
+  border: 3px solid #FFD700 !important;
+  transform: translateY(-5px) scale(1.15) !important;
+  box-shadow: 
+    0 12px 35px rgba(76, 175, 80, 0.6),
+    0 0 25px rgba(255, 215, 0, 0.5),
+    0 0 40px rgba(102, 187, 106, 0.4) !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7) !important;
+  filter: brightness(1.2) !important;
+  animation: playButtonPulse 2s ease-in-out infinite !important;
+}
+
+@keyframes playButtonPulse {
+  0%, 100% { 
+    box-shadow: 
+      0 12px 35px rgba(76, 175, 80, 0.6),
+      0 0 25px rgba(255, 215, 0, 0.5),
+      0 0 40px rgba(102, 187, 106, 0.4);
+  }
+  50% { 
+    box-shadow: 
+      0 15px 45px rgba(76, 175, 80, 0.8),
+      0 0 35px rgba(255, 215, 0, 0.7),
+      0 0 50px rgba(102, 187, 106, 0.6);
+  }
 }
 
 .btn-icon {
@@ -628,7 +661,8 @@
   left: 50%;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.9rem;
+  font-size: 0.5rem;
+  font-family: 'Press Start 2P', cursive;
   background: rgba(0, 0, 0, 0.2);
   padding: 0.5rem 1rem;
   border-radius: 10px;
@@ -647,7 +681,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Press Start 2P', cursive;
   color: white;
 }
 
@@ -658,14 +692,16 @@
 }
 
 .level-map-header h1 {
-  font-size: 3rem;
+  font-size: 2rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
   margin-bottom: 1rem;
 }
 
 .map-controls {
   color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
+  font-size: 0.6rem;
+  font-family: 'Press Start 2P', cursive;
 }
 
 .level-map-scroll {
@@ -690,16 +726,19 @@
 
 .level-map-info h2 {
   color: #FFD700;
-  font-size: 2rem;
+  font-size: 1.2rem;
+  font-family: 'Press Start 2P', cursive;
   margin-bottom: 0.5rem;
 }
 
 .level-status .unlocked {
   color: #4CAF50;
+  font-family: 'Press Start 2P', cursive;
 }
 
 .level-status .locked {
   color: #ff6b6b;
+  font-family: 'Press Start 2P', cursive;
 }
 
 /* Shop Styles */
@@ -712,30 +751,38 @@
 }
 
 .shop-header h1 {
-  font-size: 3rem;
+  font-size: 2rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
 }
 
 .coins-info {
-  font-size: 2rem;
+  font-size: 1rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
 }
 
 .shop-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
+  width: 100%;
+  max-width: 1000px;
 }
 
 .shop-item {
   background: rgba(255, 255, 255, 0.1);
   border: 2px solid transparent;
   border-radius: 15px;
-  padding: 2rem;
+  padding: 1.5rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .shop-item.selected {
@@ -745,26 +792,34 @@
 
 .shop-item.owned {
   border-color: #4CAF50;
+  background: rgba(76, 175, 80, 0.1);
 }
 
 .shop-skin-img {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  margin-bottom: 1rem;
+  margin: 0 auto 1rem auto;
 }
 
 .shop-item h3 {
   color: white;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
   margin-bottom: 1rem;
+  line-height: 1.3;
 }
 
 .owned-text {
   color: #4CAF50;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
 }
 
 .price-text {
   color: #FFD700;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
 }
 
 .back-item {
@@ -774,7 +829,8 @@
 }
 
 .back-text {
-  font-size: 1.5rem;
+  font-size: 1rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
 }
 
@@ -784,7 +840,8 @@
 }
 
 .inventory-header h1 {
-  font-size: 3rem;
+  font-size: 2rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
 }
 
@@ -792,17 +849,22 @@
   display: flex;
   gap: 4rem;
   align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .inventory-section h2 {
   color: #FFD700;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
   margin-bottom: 2rem;
 }
 
 .inventory-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 1rem;
+  max-width: 400px;
 }
 
 .inventory-item {
@@ -810,6 +872,11 @@
   border-radius: 15px;
   padding: 1rem;
   text-align: center;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .inventory-skin-img {
@@ -820,12 +887,15 @@
 }
 
 .inventory-skin-name {
-  font-size: 0.9rem;
+  font-size: 0.5rem;
+  font-family: 'Press Start 2P', cursive;
   color: white;
+  line-height: 1.2;
 }
 
 .coin-display-large {
-  font-size: 3rem;
+  font-size: 2rem;
+  font-family: 'Press Start 2P', cursive;
   color: #FFD700;
   text-align: center;
 }
@@ -834,13 +904,14 @@
   position: absolute;
   bottom: 2rem;
   color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
+  font-size: 0.6rem;
+  font-family: 'Press Start 2P', cursive;
 }
 /* Level Status Styles */
 .level-status {
   margin: 1rem 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-family: 'Press Start 2P', cursive;
 }
 
 .level-status .completed {
@@ -888,14 +959,394 @@
 
 /* Level map info improvements */
 .level-map-info h2 {
-  font-size: 2rem;
+  font-size: 1rem;
   margin-bottom: 0.5rem;
   color: #FFD700;
+  font-family: 'Press Start 2P', cursive;
   text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
 }
 
 .level-map-info p {
-  font-size: 1.2rem;
+  font-size: 0.7rem;
+  font-family: 'Press Start 2P', cursive;
   color: rgba(255, 255, 255, 0.8);
   margin-bottom: 1rem;
+}
+
+/* Loading Screen */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Press Start 2P', cursive;
+  z-index: 1000;
+}
+
+.loading-content {
+  text-align: center;
+  color: white;
+}
+
+.loading-content h1 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.loading-spinner {
+  font-size: 4rem;
+  animation: spin 2s linear infinite;
+  margin: 2rem 0;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-content p {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-top: 1rem;
+}
+
+/* Enhanced Shop Styles */
+.shop-section {
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.shop-section h2 {
+  font-family: 'Press Start 2P', cursive;
+  color: #FFD700;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.shop-skin-preview {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin: 0 auto 1rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
+.skin-color-classic {
+  width: 40px;
+  height: 40px;
+  background: #FFA500;
+  border-radius: 50%;
+}
+
+.skin-color-steampunk {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, #8B4513, #D2691E);
+  border-radius: 50%;
+}
+
+.skin-color-neon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, #00FFFF, #FF00FF);
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00FFFF;
+}
+
+.skin-color-golden {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, #FFD700, #FFA500);
+  border-radius: 50%;
+  box-shadow: 0 0 10px #FFD700;
+}
+
+.skin-color-timeLord {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(45deg, #4B0082, #9400D3);
+  border-radius: 50%;
+  box-shadow: 0 0 15px #4B0082;
+  animation: timeLordGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes timeLordGlow {
+  from { box-shadow: 0 0 15px #4B0082; }
+  to { box-shadow: 0 0 25px #9400D3, 0 0 35px #4B0082; }
+}
+
+.ability-icon {
+  font-size: 2rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.ability-desc {
+  font-size: 0.5rem;
+  font-family: 'Press Start 2P', cursive;
+  color: #ccc;
+  margin: 0.5rem 0;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.rarity {
+  font-size: 0.4rem;
+  font-family: 'Press Start 2P', cursive;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+  text-align: center;
+  color: #888;
+}
+
+.message-display {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: #FFD700;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+  z-index: 1000;
+  border: 2px solid #FFD700;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Level unlock states */
+.level-circle.unlocked {
+  filter: brightness(1.2);
+}
+
+.level-circle.locked {
+  filter: grayscale(1) brightness(0.5);
+}
+
+.level-circle.completed {
+  filter: hue-rotate(120deg) brightness(1.3);
+}
+
+/* === PLAYER LOGIN MODAL === */
+.player-login-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.player-login-modal {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 3px solid #f39c12;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 0 30px rgba(243, 156, 18, 0.5);
+}
+
+.close-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  color: #f39c12;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.close-button:hover {
+  color: #e67e22;
+}
+
+.player-login-modal h2 {
+  color: #f39c12;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.current-player-info {
+  background: rgba(52, 152, 219, 0.1);
+  border: 2px solid #3498db;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.current-player-info h3 {
+  color: #3498db;
+  font-size: 10px;
+  margin-bottom: 10px;
+}
+
+.player-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.player-name {
+  color: #ecf0f1;
+  font-size: 10px;
+}
+
+.player-badge {
+  color: #95a5a6;
+  font-size: 8px;
+}
+
+.guest-badge {
+  color: #e74c3c;
+  font-size: 8px;
+}
+
+.logout-button {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px;
+}
+
+.logout-button:hover {
+  background: #c0392b;
+}
+
+.login-mode-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.mode-button {
+  flex: 1;
+  padding: 10px;
+  background: rgba(52, 73, 94, 0.5);
+  color: #ecf0f1;
+  border: 2px solid #34495e;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px;
+  transition: all 0.3s ease;
+}
+
+.mode-button.active {
+  background: rgba(243, 156, 18, 0.2);
+  border-color: #f39c12;
+  color: #f39c12;
+}
+
+.mode-button:hover {
+  background: rgba(52, 73, 94, 0.8);
+}
+
+.guest-login, .badge-login {
+  background: rgba(44, 62, 80, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.guest-login h3, .badge-login h3 {
+  color: #f39c12;
+  font-size: 10px;
+  margin-bottom: 10px;
+}
+
+.guest-login p, .badge-login p {
+  color: #bdc3c7;
+  font-size: 8px;
+  margin-bottom: 15px;
+}
+
+.guest-login input, .badge-login input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: rgba(52, 73, 94, 0.8);
+  border: 2px solid #34495e;
+  border-radius: 5px;
+  color: #ecf0f1;
+  box-sizing: border-box;
+}
+
+.guest-login input:focus, .badge-login input:focus {
+  outline: none;
+  border-color: #f39c12;
+}
+
+.login-submit-button {
+  width: 100%;
+  padding: 12px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 8px;
+  transition: all 0.3s ease;
+}
+
+.login-submit-button:hover:not(:disabled) {
+  background: #229954;
+}
+
+.login-submit-button:disabled {
+  background: #7f8c8d;
+  cursor: not-allowed;
+}
+
+.player-info {
+  background: rgba(52, 152, 219, 0.1);
+  border: 1px solid #3498db;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.player-info h4 {
+  color: #3498db;
+  font-size: 9px;
+  margin-bottom: 10px;
+}
+
+.player-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.player-info li {
+  color: #bdc3c7;
+  font-size: 7px;
+  margin-bottom: 5px;
+  padding-left: 10px;
 }

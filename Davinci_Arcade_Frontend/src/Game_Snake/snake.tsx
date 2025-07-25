@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./snake.css";
 import { useNavigate } from 'react-router-dom';
+import snakeApi from './snakeApi';
+import type { Player, SnakeHighscoreEntry, SnakePlayerStats, SnakeGameResult } from './snakeTypes';
 
 const canvasSize = { width: 700, height: 700 };
 const scale = 35;
@@ -87,7 +89,7 @@ const drawOptimizedApple = (ctx: CanvasRenderingContext2D, food: Coord[]) => {
   });
 };
 
-const SnakeGame: React.FC = () => {
+const SnakeGame: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const navigate = useNavigate();
   // Sound-Refs
@@ -147,8 +149,15 @@ const SnakeGame: React.FC = () => {
   const [paused, setPaused] = useState(false);
   const [pauseSelected, setPauseSelected] = useState(0);
   
+  // Backend integration state
+  const [highscores, setHighscores] = useState<SnakeHighscoreEntry[]>([]);
+  const [playerStats, setPlayerStats] = useState<SnakePlayerStats | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNewHighscore, setShowNewHighscore] = useState(false);
+  const [gameStartTime, setGameStartTime] = useState<number>(0);
+  
   const lastDirection = useRef(direction);
-  const gameLoopRef = useRef<number>();
+  const gameLoopRef = useRef<number>(0);
 
   const skinOptions = [
     { name: "Gelb", color: "yellow", price: 5 },
@@ -199,6 +208,8 @@ const SnakeGame: React.FC = () => {
     setGameOver(false);
     setScreen("game");
     setStarted(false);
+    setGameStartTime(Date.now()); // Track game start time
+    setShowNewHighscore(false);
   };
 
   const handleKeyNavigation = (optionsLength: number, actions: (() => void)[]) => {
@@ -288,6 +299,74 @@ const SnakeGame: React.FC = () => {
     setActiveAbility(c => (c === id ? "" : id));
   };
 
+  // Backend integration functions
+  const loadPlayerStats = async () => {
+    if (!currentPlayer) return;
+    
+    try {
+      const stats = await snakeApi.getPlayerStats(currentPlayer._id);
+      setPlayerStats(stats);
+      setFruits(stats.snakeFruits || 0);
+    } catch (error) {
+      console.error('Load player stats failed:', error);
+    }
+  };
+
+  const loadHighscores = async () => {
+    try {
+      const data = await snakeApi.getHighscores(10);
+      setHighscores(data);
+    } catch (error) {
+      console.error('Error loading highscores:', error);
+      setHighscores([]);
+    }
+  };
+
+  const submitGameResult = async (finalScore: number, finalLevel: number, finalDuration: number, gameData: any) => {
+    if (!currentPlayer || isSubmitting) return;
+    
+    setIsSubmitting(true);
+    try {
+      const gameResult: SnakeGameResult = {
+        playerId: currentPlayer._id,
+        gameName: 'snake',
+        score: finalScore,
+        level: finalLevel,
+        duration: finalDuration,
+        gameData
+      };
+
+      await snakeApi.submitGameResult(gameResult);
+      
+      // Check for new highscore
+      if (playerStats && finalScore > playerStats.snakeHighscore) {
+        setShowNewHighscore(true);
+        setTimeout(() => setShowNewHighscore(false), 5000);
+      }
+      
+      await loadPlayerStats();
+      
+    } catch (error) {
+      console.error('Error submitting score:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Load data on component mount and player change
+  useEffect(() => {
+    if (currentPlayer) {
+      loadPlayerStats();
+    }
+  }, [currentPlayer]);
+
+  // Load highscores when entering highscore screen
+  useEffect(() => {
+    if (screen === 'highscore') {
+      loadHighscores();
+    }
+  }, [screen]);
+
   // Optimiertes Canvas-Rendering mit requestAnimationFrame
   const renderGame = () => {
     const ctx = canvasRef.current?.getContext("2d");
@@ -345,6 +424,22 @@ const SnakeGame: React.FC = () => {
 
           if ((hitWall && activeAbility !== "wormhole") || hitSelf) {
             setGameOver(true);
+            
+            // Submit score to backend
+            const finalScore = Math.max(0, prev.length - 3); // Score = length - initial length
+            const gameDuration = Math.floor((Date.now() - gameStartTime) / 1000);
+            const gameData = {
+              fruitsEaten: fruits,
+              snakeLength: prev.length,
+              activeSkin,
+              activeAbility,
+              maxLength: prev.length
+            };
+            
+            if (currentPlayer && finalScore > 0) {
+              submitGameResult(finalScore, 1, gameDuration, gameData);
+            }
+            
             setTimeout(() => {
               setScreen("menu");
               setGameOver(false);
@@ -446,6 +541,16 @@ const SnakeGame: React.FC = () => {
       <div>🍏 {fruits}</div>
       <div>Skin: {activeSkin}</div>
       {activeAbility && <div>{activeAbility}</div>}
+      {currentPlayer && (
+        <div style={{ fontSize: '0.9em', color: '#4a7c59' }}>
+          Player: {currentPlayer.name}
+        </div>
+      )}
+      {playerStats && (
+        <div style={{ fontSize: '0.8em', color: '#666' }}>
+          Best: {playerStats.snakeHighscore}
+        </div>
+      )}
     </div>
   );
 
@@ -460,21 +565,50 @@ const SnakeGame: React.FC = () => {
   );
 
   // Highscore-Daten (Demo)
-  const [highscores, setHighscores] = useState<{ name: string; score: number }[]>([
-    { name: 'Livio', score: 22 },
-    { name: 'Gian', score: 18 },
-    { name: 'Philip', score: 15 },
-  ]);
+  // Removed: Static highscores now loaded from backend
 
   return (
     <>
       <div className="snake-root">
+        {/* 🎉 NEW HIGHSCORE NOTIFICATION */}
+        {showNewHighscore && (
+          <div className="snake-notification">
+            <div className="snake-notification-content">
+              🐍 NEW HIGHSCORE! 🐍
+            </div>
+          </div>
+        )}
+
         <div>{hud}</div>
       
         <div className="snake-area">
           {screen === "menu" && (
             <div className="snake-menu">
               <h1>Snake Game</h1>
+              
+              {currentPlayer && (
+                <div className="snake-welcome">
+                  Welcome, {currentPlayer.name}!
+                </div>
+              )}
+              
+              {playerStats && (
+                <div className="snake-stats">
+                  <div className="snake-stat-row">
+                    <span className="snake-label">FRUITS:</span>
+                    <span className="snake-value">{playerStats.snakeFruits}</span>
+                  </div>
+                  <div className="snake-stat-row">
+                    <span className="snake-label">HIGHSCORE:</span>
+                    <span className="snake-value">{playerStats.snakeHighscore}</span>
+                  </div>
+                  <div className="snake-stat-row">
+                    <span className="snake-label">GAMES PLAYED:</span>
+                    <span className="snake-value">{playerStats.snakeGamesPlayed}</span>
+                  </div>
+                </div>
+              )}
+              
               {renderArcadeButton("Start Game", 0, handleStart)}
               {renderArcadeButton("Shop", 1, () => setScreen("shopMenu"))}
               {renderArcadeButton("Highscore", 2, handleHighscore)}
@@ -492,7 +626,7 @@ const SnakeGame: React.FC = () => {
                 border: '2px solid #4a7c59' 
               }}>
                 {highscores.map((entry, i) => (
-                  <div key={i} style={{ 
+                  <div key={entry._id || i} style={{ 
                     fontSize: '1.4em', 
                     margin: '15px 0',
                     display: 'flex',
@@ -506,7 +640,7 @@ const SnakeGame: React.FC = () => {
                       fontWeight: 'bold', 
                       color: i === 0 ? '#ffd700' : '#4a7c59' 
                     }}>
-                      {i + 1}. {entry.name}
+                      {i + 1}. {entry.playerId?.name || 'Unknown Player'}
                     </span>
                     <span style={{ 
                       color: '#ff4444',
@@ -604,7 +738,15 @@ const SnakeGame: React.FC = () => {
                 <div className="snake-gameover">
                   <h2>Game Over</h2>
                   <p>Score: {score}</p>
-                  <p>Früchte: {fruits}</p>
+                  <p>Snake Length: {snake.length}</p>
+                  <p>Fruits Eaten: {fruits}</p>
+                  
+                  {isSubmitting && (
+                    <div className="snake-submitting">
+                      Saving score...
+                    </div>
+                  )}
+                  
                   {renderArcadeButton("Zurück zum Menü", 0, () => setScreen("menu"), 'exit')}
                 </div>
               )}
