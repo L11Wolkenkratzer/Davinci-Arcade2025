@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAudio } from '../SettingsContext.tsx';
 import './SpaceshipGame.css';
 import GameLobby from './components/GameLobby';
 import GamePlay from './components/GamePlay';
@@ -7,55 +8,70 @@ import Shop from './components/Shop';
 import ShipManager from './components/ShipManager';
 import Highscore from './components/Highscore';
 import Info from './components/Info';
-import type { GameScreen, Player } from './types/gametypes';
+import type {GameScreen, Ship, Upgrade, HighscoreEntry} from './types/gametypes.ts';
 import { useGameState } from './hooks/useGameState';
 
-interface SpaceshipGameProps {
-    currentPlayer?: Player | null;
-}
-
-const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
+const SpaceshipGame: React.FC = () => {
     const [currentScreen, setCurrentScreen] = useState<GameScreen>('lobby');
+    const [selectedMenuItem, setSelectedMenuItem] = useState(0);
     const navigate = useNavigate();
-    
-    // Hintergrundmusik-Ref
+
+    const { volume } = useAudio();
     const bgMusicRef = useRef<HTMLAudioElement | null>(null);
-    
-    // Enhanced useGameState with currentPlayer
+
     const {
         gameState,
         ships,
         upgrades,
         highscores,
-        playerStats,
-        isSubmitting,
-        showNewHighscore,
         buyShip,
         buyUpgrade,
         equipShip,
         startGame,
         resetGame,
-        submitGameResult,
-        trackGameEvent,
-    } = useGameState(currentPlayer);
+        addHighscore
+    } = useGameState();
 
-    // Hintergrundmusik-Logik
+    // Hintergrundmusik-Initialisierung
     useEffect(() => {
         if (!bgMusicRef.current) {
             bgMusicRef.current = new window.Audio('/Sounds/background.mp3');
             bgMusicRef.current.loop = true;
-            bgMusicRef.current.volume = 0.4;
+            bgMusicRef.current.volume = (volume / 100) * 0.4; // 40% der globalen Lautstärke
+
+            bgMusicRef.current.addEventListener('canplaythrough', () => {
+                console.log('🎵 Spaceship background music loaded');
+            });
+
+            bgMusicRef.current.addEventListener('error', (e) => {
+                console.error('❌ Error loading spaceship background music:', e);
+            });
         }
-        
+    }, [volume]);
+
+    // Lautstärke aktualisieren wenn sich globale Lautstärke ändert
+    useEffect(() => {
+        if (bgMusicRef.current) {
+            bgMusicRef.current.volume = (volume / 100) * 0.4;
+        }
+    }, [volume]);
+
+    // Hintergrundmusik-Steuerung basierend auf Screen
+    useEffect(() => {
+        if (!bgMusicRef.current) return;
+
         // Musik nur in Menüs, nicht im Spiel
         const menuScreens = ['lobby', 'shop', 'shipManager', 'highscore', 'info'];
+
         if (menuScreens.includes(currentScreen)) {
-            bgMusicRef.current.play().catch(() => {});
+            bgMusicRef.current.play().catch((error) => {
+                console.log('🔇 Background music autoplay blocked:', error);
+            });
         } else {
             bgMusicRef.current.pause();
         }
-        
-        // Stoppe Musik komplett beim Unmount
+
+        // Stoppe Musik komplett beim Unmount (z.B. Startseite)
         return () => {
             if (bgMusicRef.current) {
                 bgMusicRef.current.pause();
@@ -81,13 +97,6 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
         return () => window.removeEventListener('keydown', handleKeyPress);
     }, [handleKeyPress]);
 
-    const handleGameOver = useCallback(async (score: number, coins: number) => {
-        if (currentPlayer && score > 0) {
-            await submitGameResult(score, gameState.level);
-        }
-        setCurrentScreen('lobby');
-    }, [currentPlayer, submitGameResult, gameState.level]);
-
     const renderScreen = () => {
         switch (currentScreen) {
             case 'lobby':
@@ -101,12 +110,19 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
                         onExit={() => navigate('/')}
                         coins={gameState.coins}
                         currentShip={gameState.ship}
+                        upgrades={upgrades}
                     />
                 );
             case 'game':
                 return (
                     <GamePlay
-                        onGameOver={handleGameOver}
+                        gameState={gameState}
+                        onGameOver={(score) => {
+                            if (score > 0) {
+                                addHighscore('Player', score);
+                            }
+                            setCurrentScreen('lobby');
+                        }}
                         onPause={() => setCurrentScreen('lobby')}
                         onStart={startGame}
                         onReset={resetGame}
@@ -116,8 +132,10 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
                 return (
                     <Shop
                         ships={ships}
+                        upgrades={upgrades}
                         coins={gameState.coins}
-                        onBuyShip={(shipId: string) => { buyShip(shipId).catch(console.error); return true; }}
+                        onBuyShip={buyShip}
+                        onBuyUpgrade={buyUpgrade}
                         onBack={() => setCurrentScreen('lobby')}
                     />
                 );
@@ -150,17 +168,24 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
 
     return (
         <div className="spaceship-game">
-            {/* New Highscore Notification */}
-            {showNewHighscore && (
-                <div className="spaceship-notification">
-                    <div className="spaceship-notification-content">
-                        🚀 NEW HIGHSCORE! 🚀
-                    </div>
-                </div>
-            )}
-            
             <div className="game-container">
                 {renderScreen()}
+
+                {/* Debug-Info für Audio (optional - kannst du entfernen) */}
+                <div style={{
+                    position: 'fixed',
+                    bottom: 10,
+                    right: 10,
+                    background: 'rgba(0,0,0,0.7)',
+                    color: '#fff',
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    fontSize: '10px',
+                    zIndex: 9999,
+                    fontFamily: 'monospace'
+                }}>
+                    🎵 Volume: {volume}% | Screen: {currentScreen}
+                </div>
             </div>
         </div>
     );

@@ -1,0 +1,153 @@
+/* PacmanGame.css - Modern, arcade-style look */
+.pacman-hybrid-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #181c2b 0%, #232946 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Press Start 2P', 'Arial', monospace;
+  color: #fff;
+}
+.pacman-panel {
+  background: rgba(30, 34, 54, 0.98);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 #000a, 0 1.5px 0 #ff0 inset;
+  padding: 40px 32px 32px 32px;
+  min-width: 420px;
+  max-width: 95vw;
+  margin-bottom: 32px;
+  border: 2.5px solid #ffe066;
+  position: relative;
+}
+.pacman-title {
+  font-size: 1.12rem;
+  color: #ffe066;
+  letter-spacing: 0.04em;
+  margin-bottom: 1rem;
+  text-align: center;
+  text-shadow: 0 0.8px 0 #000, 0 0 3.2px #ffe06699;
+}
+.pacman-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.48rem;
+  margin: 0.8rem 0 0.6rem 0;
+}
+.pacman-btn {
+  font-size: 0.52rem;
+  padding: 0.44rem 0;
+  border-radius: 4.8px;
+  border: none;
+  background: #232946;
+  color: #ffe066;
+  font-family: inherit;
+  font-weight: bold;
+  letter-spacing: 0.032em;
+  cursor: pointer;
+  box-shadow: 0 0.8px 0 #000, 0 0 3.2px #ffe06633;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.pacman-btn.selected, .pacman-btn:focus {
+  background: #ffe066;
+  color: #232946;
+  box-shadow: 0 0 0 3px #ffe06699, 0 2px 0 #000;
+}
+/* Modern Pacman Layout */
+.pacman-hybrid-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  background: linear-gradient(135deg, #181818 60%, #1e3a8a 100%);
+}
+
+.pacman-panel {
+  background: #222;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px #0008;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.pacman-canvas-wrapper {
+  margin-top: 48px;
+  margin-bottom: 24px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.pacman-game-canvas {
+  display: block;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px #0006;
+  background: #181818;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
+.pacman-title {
+  color: #ffe066;
+  font-size: 56px;
+  font-weight: bold;
+  margin-bottom: 24px;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+.pacman-level, .pacman-score {
+  color: #ffe066;
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.pacman-btn {
+  background: #1e3a8a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 32px;
+  font-size: 20px;
+  margin: 12px 0;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px #0004;
+}
+.pacman-btn.selected, .pacman-btn:focus {
+  background: #2563eb;
+  outline: none;
+}
+.pacman-btn.disabled {
+  background: #444;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.pacman-gameover {
+  color: #ef4444;
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 8px #000a;
+}
+.pacman-win {
+  color: #22c55e;
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 8px #000a;
+}
+.pacman-hint {
+  color: #aaa;
+  font-size: 18px;
+  margin-top: 24px;
+  text-align: center;
+  letter-spacing: 1px;
+}

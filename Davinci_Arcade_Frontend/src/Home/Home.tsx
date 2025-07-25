@@ -4,11 +4,11 @@ import React, {
   useCallback,
   useMemo,
   useRef,
-  startTransition,
+  memo,
 } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
-import { unstable_batchedUpdates } from 'react-dom';
+import { useAudio } from "../SettingsContext";
 
 import "./Home.css";
 import Header from "./Header";
@@ -18,29 +18,28 @@ import SettingsModal from "./SettingsModal";
 import UserModal from "./UserModal";
 import InfoModal from "./InfoModal";
 
-import sonicVideo from '/Videos/sonic-preview2.mp4';
-import tetrisVideo from '/Videos/tetris.mp4';
-import spaceshipVideo from '/Videos/SpaceShip.mp4';
-import snakeVideo from '/Videos/Snake.mp4';
+import sonicVideo from "/Videos/sonic-preview2.mp4";
+import tetrisVideo from "/Videos/tetris.mp4";
+import spaceshipVideo from "/Videos/SpaceShip.mp4";
+import snakeVideo from "/Videos/Snake.mp4";
+import lobbyMusic from "/Sounds/LobbyMusic.mp3";
 
-// Types für Player aus App.tsx
+/* ---------- Typdefinitionen ---------- */
 export interface Player {
   _id: string;
   badgeId: string;
   name: string;
   totalScore: number;
   gamesPlayed: number;
-  lastPlayed: string; // ISO-Date
+  lastPlayed: string;
   updatedAt?: string;
   createdAt?: string;
   __v?: number;
 }
-
 interface HomeProps {
   currentPlayer: Player | null;
   setCurrentPlayer: Dispatch<SetStateAction<Player | null>>;
 }
-
 interface Game {
   id: number;
   title: string;
@@ -48,131 +47,97 @@ interface Game {
   color: string;
   video?: string;
 }
-
 type NavigationMode = "games" | "header";
 type HeaderButton = "settings" | "user" | "info";
+interface NavigationState {
+  selectedGameIndex: number;
+  isTransitioning: boolean;
+  videoVisible: boolean;
+  videoEnded: boolean;
+}
+interface ModalState {
+  showSettings: boolean;
+  showUser: boolean;
+  showInfo: boolean;
+}
 
-// Games Array mit Video-Support - Konstante Definition außerhalb der Komponente
+/* ---------- Daten ---------- */
 const GAMES: Game[] = [
-  { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b", video: tetrisVideo},
+  { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b", video: tetrisVideo },
   { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
-  { id: 3, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
-  { id: 4, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
-  { id: 5, title: "TILLIMAN", icon: "⏱️", color: "#f06c00" },
+  { id: 4, title: "SONIC", icon: "💨", color: "#96ceb4", video: sonicVideo },
+  { id: 5, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
+  { id: 6, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
+  { id: 7, title: "TILLIMAN", icon: "⏱️", color: "#f06c00" },
+
 ];
 
-const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
+/* ---------- Hauptkomponente ---------- */
+const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => {
+  /* ---------- Debug ---------- */
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  console.log(
+    `%c[HOME] Render #${renderCount.current}`,
+    "color:white;background:#007acc;padding:2px 4px;border-radius:2px;"
+  );
 
-  console.log("Home component rendered");
-
-  /* ------------------------------------------------------------------ */
-  /* State                                                              */
-  /* ------------------------------------------------------------------ */
-  const [selectedGameIndex, setSelectedGameIndex] = useState<number>(0);
+  /* --- States (danach, damit sie schon im Log auftauchen) --- */
+  const [navState, setNavState] = useState<NavigationState>({
+    selectedGameIndex: 0,
+    isTransitioning: false,
+    videoVisible: false,
+    videoEnded: false,
+  });
+  const [modalState, setModalState] = useState<ModalState>({
+    showSettings: false,
+    showUser: false,
+    showInfo: false,
+  });
   const [navigationMode, setNavigationMode] = useState<NavigationMode>("games");
   const [selectedHeaderButton, setSelectedHeaderButton] = useState<HeaderButton>("settings");
-  const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [showUser, setShowUser] = useState<boolean>(false);
-  const [showInfo, setShowInfo] = useState<boolean>(false);
   const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
-  const [videoVisible, setVideoVisible] = useState<boolean>(false);
-  const [videoEnded, setVideoEnded] = useState<boolean>(false);
-  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
 
+  /* Logs der wichtigsten States/Props */
+  console.log("[HOME] navState", navState);
+  console.log("[HOME] modalState", modalState);
+  console.log("[HOME] navigationMode", navigationMode);
+  console.log("[HOME] selectedHeaderButton", selectedHeaderButton);
+
+  /* --- Refs --- */
   const navigate = useNavigate();
-  const playerFetchInProgressRef = useRef<boolean>(false);
+  const navRef = useRef(navState);
+  navRef.current = navState;
+  const modeRef = useRef(navigationMode);
+  modeRef.current = navigationMode;
+  const headerBtnRef = useRef(selectedHeaderButton);
+  headerBtnRef.current = selectedHeaderButton;
+  const modalRef = useRef(modalState);
+  modalRef.current = modalState;
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  
-  // Refs for stable handleKeyPress
-  const selectedGameIndexRef = useRef<number>(selectedGameIndex);
-  selectedGameIndexRef.current = selectedGameIndex;
-  const navigationModeRef = useRef<NavigationMode>(navigationMode);
-  navigationModeRef.current = navigationMode;
-  const selectedHeaderButtonRef = useRef<HeaderButton>(selectedHeaderButton);
-  selectedHeaderButtonRef.current = selectedHeaderButton;
-  const modalsStateRef = useRef({ showSettings, showUser, showInfo });
-  modalsStateRef.current = { showSettings, showUser, showInfo };
+  const playerFetchLock = useRef(false);
 
+  /* --- Audio --- */
+  const { volume } = useAudio();
+  const lobbyMusicRef = useRef<HTMLAudioElement>();
+
+  /* ---------- Memoized Konstanten & Callbacks ---------- */
   const headerButtons: HeaderButton[] = useMemo(() => ["settings", "user", "info"], []);
 
-  /* ------------------------------------------------------------------ */
-  /* Memoized Functions                                                 */
-  /* ------------------------------------------------------------------ */
-  
-  const handleGameSelect = useCallback((game: Game): void => {
-
-    // Spezielle Behandlung für TILLIMAN -> führt zur Lobby
-    if (game.title === "TILLIMAN") {
-      navigate('/tillimanhome');
-    } else {
-      // Alle anderen Spiele verwenden die normale Route
-      const route = `/${game.title.toLowerCase()}`;
-      navigate(route);
-    }
-
-  }, [navigate]);
-
-  const handleHeaderButtonActivate = useCallback((button: HeaderButton): void => {
-    switch (button) {
-      case "settings":
-        setShowSettings(true);
-        break;
-      case "user":
-        setShowUser(true);
-        break;
-      case "info":
-        setShowInfo(true);
-        break;
-    }
-  }, []);
-
-
-  // OPTIMIZED: Use startTransition for smooth updates
-
-  const navigateToGame = useCallback((newIdx: number) => {
-    if (isTransitioning) return;
-    
-    setIsTransitioning(true);
-    startTransition(() => {
-      setSelectedGameIndex(newIdx);
-    });
-    
-    // Reset transition state after animation
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-    timerRef.current = setTimeout(() => setIsTransitioning(false), 400);
-  }, [isTransitioning]);
-
-
-  // Video Replay Function  
-
-  const replayVideo = useCallback(() => {
-    setVideoEnded(false);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play();
-    }
-  }, []);
-
-  /* ------------------------------------------------------------------ */
-  /* Helper Functions                                                   */
-  /* ------------------------------------------------------------------ */
-  const getCardDimensions = useCallback(() => {
-    if (containerWidth <= 1920) {
-      return { cardWidth: 280, gap: 200 };
-    }
-    return { cardWidth: 420, gap: 240 };
+  const cardDimensions = useMemo(() => {
+    return containerWidth <= 1920
+      ? { cardWidth: 280, gap: 200 }
+      : { cardWidth: 420, gap: 240 };
   }, [containerWidth]);
 
   const getCardTransform = useCallback(
-    (index: number) => {
+    (index: number, selected: number) => {
+      const { cardWidth, gap } = cardDimensions;
       const total = GAMES.length;
-      const { cardWidth, gap } = getCardDimensions();
       const spacing = cardWidth + gap;
-      let rel = index - selectedGameIndex;
 
+      let rel = index - selected;
       if (rel > total / 2) rel -= total;
       if (rel < -total / 2) rel += total;
 
@@ -180,257 +145,239 @@ const Home: React.FC<HomeProps> = ({ currentPlayer, setCurrentPlayer }) => {
       const abs = Math.abs(rel);
       let scale = 0.4,
         opacity = 0.2,
-        zIndex = 1;
+        z = 1;
+
       if (abs === 0) {
         scale = 1;
         opacity = 1;
-        zIndex = 10;
+        z = 10;
       } else if (abs === 1) {
         scale = 0.8;
         opacity = 0.7;
-        zIndex = 5;
+        z = 5;
       } else if (abs === 2) {
         scale = 0.6;
         opacity = 0.4;
-        zIndex = 2;
+        z = 2;
       }
-
-      return {
-        transform: `translateX(${translateX}px) scale(${scale})`,
-        opacity,
-        zIndex,
-      } as React.CSSProperties;
+      return { transform: `translateX(${translateX}px) scale(${scale})`, opacity, zIndex: z };
     },
-    [selectedGameIndex, getCardDimensions]
+    [cardDimensions]
   );
 
-  /* ------------------------------------------------------------------ */
-  /* Video Logic                                                        */
-  /* ------------------------------------------------------------------ */
-  useEffect(() => {
-    setVideoEnded(false);
-    const currentGame = GAMES[selectedGameIndex];
-    if (currentGame && currentGame.video) {
-      setVideoVisible(true);
-    } else {
-      setVideoVisible(false);
-    }
-  }, [selectedGameIndex]);
+  /* ---------- Navigation-Funktionen ---------- */
+  const slideToGame = useCallback((newIndex: number) => {
+    if (navRef.current.isTransitioning) return;
 
-  /* ------------------------------------------------------------------ */
-  /* Effects                                                            */
-  /* ------------------------------------------------------------------ */
+    setNavState(prev => ({
+      ...prev,
+      selectedGameIndex: newIndex,
+      isTransitioning: true,
+      videoVisible: !!GAMES[newIndex].video,
+      videoEnded: false,
+    }));
 
-  // Window resize
-  useEffect(() => {
-    const onResize = () => setContainerWidth(window.innerWidth);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setNavState(prev => ({ ...prev, isTransitioning: false }));
+    }, 400);
   }, []);
 
-  // OPTIMIZED: Keyboard handler with batched updates
-  const handleKeyPress = useCallback((event: KeyboardEvent): void => {
-    // Escape schließt immer alle Modals
-    if (event.key === "Escape") {
-      unstable_batchedUpdates(() => {
-        setShowSettings(false);
-        setShowUser(false);
-        setShowInfo(false);
+  const launchGame = useCallback(
+    (game: Game) => {
+      const route = game.title === "TILLIMAN" ? "/tillimanhome" : `/${game.title.toLowerCase()}`;
+      navigate(route);
+    },
+    [navigate]
+  );
+
+  const openHeaderModal = useCallback((btn: HeaderButton) => {
+    setModalState(prev => ({
+      ...prev,
+      [btn === "settings" ? "showSettings" : btn === "user" ? "showUser" : "showInfo"]: true,
+    }));
+  }, []);
+
+  /* ---------- Stabiler Keyboard-Handler ---------- */
+  const keyHandler = useCallback(
+    (e: KeyboardEvent) => {
+      /* ESC → alle Modals schließen */
+      if (e.key === "Escape") {
+        setModalState({ showSettings: false, showUser: false, showInfo: false });
         setNavigationMode("games");
-      });
-      return;
-    }
+        return;
+      }
 
-    // ⚠️ WICHTIG: Keyboard-Navigation nur wenn KEINE Modals offen sind
-    if (modalsStateRef.current.showSettings || modalsStateRef.current.showUser || modalsStateRef.current.showInfo) {
-      return; // Früh aussteigen wenn ein Modal offen ist
-    }
+      /* solange irgendein Modal offen ist: Tastatur ignorieren */
+      const { showSettings, showUser, showInfo } = modalRef.current;
+      if (showSettings || showUser || showInfo) return;
 
-    if (navigationModeRef.current === "games") {
-      switch (event.key) {
-        case "ArrowLeft":
-          event.preventDefault();
-          navigateToGame((selectedGameIndexRef.current - 1 + GAMES.length) % GAMES.length);
-          break;
-        case "ArrowRight":
-          event.preventDefault();
-          navigateToGame((selectedGameIndexRef.current + 1) % GAMES.length);
-          break;
-        case "ArrowUp":
-          event.preventDefault();
+      if (modeRef.current === "games") {
+        if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          slideToGame((navRef.current.selectedGameIndex - 1 + GAMES.length) % GAMES.length);
+        } else if (e.key === "ArrowRight") {
+          e.preventDefault();
+          slideToGame((navRef.current.selectedGameIndex + 1) % GAMES.length);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
           setNavigationMode("header");
-          break;
-        case "Enter":
-          event.preventDefault();
-          handleGameSelect(GAMES[selectedGameIndexRef.current]);
-          break;
-        case " ":
-          event.preventDefault();
-          if (videoVisible && videoEnded && GAMES[selectedGameIndexRef.current].video) {
-            replayVideo();
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          launchGame(GAMES[navRef.current.selectedGameIndex]);
+        } else if (e.key === " " && navRef.current.videoVisible && navRef.current.videoEnded) {
+          e.preventDefault();
+          setNavState(prev => ({ ...prev, videoEnded: false }));
+          if (videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play();
           }
-          break;
-      }
-    } else if (navigationModeRef.current === "header") {
-      switch (event.key) {
-        case "ArrowLeft": {
-          event.preventDefault();
-          const currentLeftIdx = headerButtons.indexOf(selectedHeaderButtonRef.current);
-          setSelectedHeaderButton(
-            headerButtons[(currentLeftIdx - 1 + headerButtons.length) % headerButtons.length]
-          );
-          break;
         }
-        case "ArrowRight": {
-          event.preventDefault();
-          const currentRightIdx = headerButtons.indexOf(selectedHeaderButtonRef.current);
-          setSelectedHeaderButton(
-            headerButtons[(currentRightIdx + 1) % headerButtons.length]
-          );
-          break;
-        }
-        case "ArrowDown":
-          event.preventDefault();
+      } else {
+        /* Header-Navigation */
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault();
+          const idx = headerButtons.indexOf(headerBtnRef.current);
+          const next =
+            e.key === "ArrowLeft"
+              ? (idx - 1 + headerButtons.length) % headerButtons.length
+              : (idx + 1) % headerButtons.length;
+          setSelectedHeaderButton(headerButtons[next]);
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
           setNavigationMode("games");
-          break;
-        case "Enter":
-          event.preventDefault();
-          handleHeaderButtonActivate(selectedHeaderButtonRef.current);
-          break;
-      }
-    }
-  }, [navigateToGame, handleGameSelect, handleHeaderButtonActivate, headerButtons, videoVisible, videoEnded, replayVideo]);
-
-  // Event listener registration
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyPress);
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [handleKeyPress]);
-
-  // Player details fetch - optimized version
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchPlayerDetails = async () => {
-      if (!currentPlayer?.badgeId) return;
-      if (currentPlayer.updatedAt && currentPlayer.createdAt) return;
-      if (playerFetchInProgressRef.current) return;
-      
-      playerFetchInProgressRef.current = true;
-      
-      try {
-        const res = await fetch(
-          `http://localhost:5000/api/players/badge/${currentPlayer.badgeId}`
-        );
-        const full: Player = await res.json();
-        
-        if (isMounted && full && (
-          full.totalScore !== currentPlayer.totalScore ||
-          full.gamesPlayed !== currentPlayer.gamesPlayed ||
-          !currentPlayer.updatedAt
-        )) {
-          setCurrentPlayer(full);
+        } else if (e.key === "Enter") {
+          e.preventDefault();
+          openHeaderModal(headerBtnRef.current);
         }
-      } catch (err) {
-        console.error("Player-Fetch error", err);
-      } finally {
-        playerFetchInProgressRef.current = false;
+      }
+    },
+    [headerButtons, slideToGame, launchGame, openHeaderModal]
+  );
+
+  /* ---------- useEffect-Blöcke ---------- */
+  /* 1. Keyboard-Listener einmalig */
+  useEffect(() => {
+    window.addEventListener("keydown", keyHandler);
+    return () => window.removeEventListener("keydown", keyHandler);
+  }, [keyHandler]);
+
+  /* 2. Resize-Listener (debounced) */
+  useEffect(() => {
+    let t: NodeJS.Timeout;
+    const onResize = () => {
+      clearTimeout(t);
+      t = setTimeout(() => setContainerWidth(window.innerWidth), 100);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      clearTimeout(t);
+    };
+  }, []);
+
+  /* 3. Audio einmalig initialisieren */
+  useEffect(() => {
+    lobbyMusicRef.current = new Audio(lobbyMusic);
+    lobbyMusicRef.current.loop = true;
+    lobbyMusicRef.current.volume = volume / 100;
+
+    const startAudio = async () => {
+      try {
+        await lobbyMusicRef.current!.play();
+      } catch {
+        const resume = () => {
+          lobbyMusicRef.current!.play().catch(() => {});
+          document.removeEventListener("click", resume);
+          document.removeEventListener("keydown", resume);
+        };
+        document.addEventListener("click", resume, { once: true });
+        document.addEventListener("keydown", resume, { once: true });
       }
     };
-    
-    const timeoutId = setTimeout(fetchPlayerDetails, 1000);
+    startAudio();
+
     return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
+      lobbyMusicRef.current?.pause();
+      lobbyMusicRef.current = undefined;
     };
+  }, []); // nur 1-mal
+
+  /* 4. Lautstärke-Updates */
+  useEffect(() => {
+    if (lobbyMusicRef.current) lobbyMusicRef.current.volume = volume / 100;
+  }, [volume]);
+
+  /* 5. Player-Daten nachladen */
+  useEffect(() => {
+    if (!currentPlayer?.badgeId || currentPlayer.updatedAt) return;
+    if (playerFetchLock.current) return;
+    playerFetchLock.current = true;
+
+    fetch(`http://localhost:5000/api/players/badge/${currentPlayer.badgeId}`)
+      .then(r => r.json())
+      .then((full: Player) => setCurrentPlayer(full))
+      .catch(console.error)
+      .finally(() => (playerFetchLock.current = false));
   }, [currentPlayer?.badgeId, currentPlayer?.updatedAt, setCurrentPlayer]);
 
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
-
-  /* ------------------------------------------------------------------ */
-  /* Handlers                                                           */
-  /* ------------------------------------------------------------------ */
-  
-  const handleGameClick = useCallback((index: number): void => {
-    navigateToGame(index);
-    setNavigationMode("games");
-
-    if (index === selectedGameIndex) {
-      handleGameSelect(GAMES[index]);
-    }
-  }, [navigateToGame, selectedGameIndex, handleGameSelect]);
-
-  const closeAllModals = useCallback((): void => {
-    unstable_batchedUpdates(() => {
-      setShowSettings(false);
-      setShowUser(false);
-      setShowInfo(false);
-      setNavigationMode("games");
-    });
-  }, []);
-
+  /* ---------- Render ---------- */
   return (
-    <div>
-      <div className="arcade-container">
-        <Header
-          navigationMode={navigationMode}
-          selectedHeaderButton={selectedHeaderButton}
-          onHeaderButtonActivate={handleHeaderButtonActivate}
-        />
+    <div className="arcade-container">
+      <Header
+        navigationMode={navigationMode}
+        selectedHeaderButton={selectedHeaderButton}
+        onHeaderButtonActivate={openHeaderModal}
+      />
 
-        {/* Navigation Indicator */}
-        <div className="navigation-indicator">
-          <span className={navigationMode === "games" ? "active" : ""}>
-            GAMES
-          </span>
-          <span className={navigationMode === "header" ? "active" : ""}>
-            MENÜ
-          </span>
-        </div>
-
-        <Carousel
-          games={GAMES}
-          selectedGameIndex={selectedGameIndex}
-          onGameClick={handleGameClick}
-          containerWidth={containerWidth}
-          videoVisible={videoVisible}
-          videoEnded={videoEnded}
-          onVideoReplay={replayVideo}
-          setVideoEnded={setVideoEnded}
-          getCardTransform={getCardTransform}
-          videoRef={videoRef}
-        />
-
-        <Footer />
+      <div className="navigation-indicator">
+        <span className={navigationMode === "games" ? "active" : ""}>GAMES</span>
+        <span className={navigationMode === "header" ? "active" : ""}>MENÜ</span>
       </div>
 
+      <Carousel
+        games={GAMES}
+        selectedGameIndex={navState.selectedGameIndex}
+        onGameClick={index => {
+          slideToGame(index);
+          setNavigationMode("games");
+          if (index === navState.selectedGameIndex) launchGame(GAMES[index]);
+        }}
+        containerWidth={containerWidth}
+        videoVisible={navState.videoVisible}
+        videoEnded={navState.videoEnded}
+        setVideoEnded={ended => setNavState(prev => ({ ...prev, videoEnded: ended }))}
+        onVideoReplay={() => {
+          setNavState(prev => ({ ...prev, videoEnded: false }));
+          videoRef.current?.play();
+        }}
+        getCardTransform={idx => getCardTransform(idx, navState.selectedGameIndex)}
+        videoRef={videoRef}
+      />
+
+      <Footer />
+
       {/* Modals */}
-      {showSettings && currentPlayer && (
+      {modalState.showSettings && currentPlayer && (
         <SettingsModal
-          onClose={closeAllModals}
+          onClose={() => setModalState({ ...modalState, showSettings: false })}
           currentPlayer={currentPlayer}
           setCurrentPlayer={setCurrentPlayer}
         />
       )}
-      {showUser && currentPlayer && (
+      {modalState.showUser && currentPlayer && (
         <UserModal
-          onClose={closeAllModals}
+          onClose={() => setModalState({ ...modalState, showUser: false })}
           currentPlayer={currentPlayer}
           setCurrentPlayer={setCurrentPlayer}
         />
       )}
-      {showInfo && <InfoModal onClose={closeAllModals} />}
+      {modalState.showInfo && (
+        <InfoModal onClose={() => setModalState({ ...modalState, showInfo: false })} />
+      )}
     </div>
   );
-};
+});
 
+Home.displayName = "Home";
 export default Home;
