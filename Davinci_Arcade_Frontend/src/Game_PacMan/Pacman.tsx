@@ -527,7 +527,8 @@ const PacMan: React.FC = () => {
                   scared: true,
                   scaredTimer: 15,
                 }))
-              );
+              )
+              ;
             }
             const newDots = [...dotsOld];
             newDots.splice(foundIndex, 1);

@@ -66,7 +66,7 @@ function App() {
     return null;
   });
 
-  // Stabiler Callback für das gesamte App-Leben
+  // stable callback
   const updateCurrentPlayer = useCallback((value: React.SetStateAction<Player>) => {
     setCurrentPlayer(value);
   }, []);
@@ -85,7 +85,10 @@ function App() {
             path="/"
             element={
               currentPlayer ? (
-                <Home currentPlayer={currentPlayer} setCurrentPlayer={updateCurrentPlayer} />
+                <Home
+                  currentPlayer={currentPlayer}
+                  setCurrentPlayer={updateCurrentPlayer}
+                />
               ) : (
                 <Login setCurrentPlayer={updateCurrentPlayer} />
               )
@@ -183,7 +186,10 @@ function App() {
             }
           />
 
-          <Route path="/login" element={<Login setCurrentPlayer={updateCurrentPlayer} />} />
+          <Route
+            path="/login"
+            element={<Login setCurrentPlayer={updateCurrentPlayer} />}
+          />
         </Routes>
       </BrowserRouter>
     </SettingsProvider>
