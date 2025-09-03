@@ -65,6 +65,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         }
     }, [volume]);
 
+    
     // Sound-Funktionen
     const playNavigateSound = useCallback(() => {
         if (soundsRef.current.menuNavigate) {
