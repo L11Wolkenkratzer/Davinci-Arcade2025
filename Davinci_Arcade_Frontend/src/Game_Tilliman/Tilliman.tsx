@@ -40,12 +40,14 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
     
     // Keyboard navigation for Game Over screen
     const [gameOverSelectedOption, setGameOverSelectedOption] = useState(0); // 0 = restart, 1 = home
+
     
     // Space-Hold für Hauptmenü (2 Sekunden)
     const [spaceHoldProgress, setSpaceHoldProgress] = useState(0); // 0-100 Progress
     const [spaceHoldActive, setSpaceHoldActive] = useState(false);
     const spaceHoldStartTime = useRef<number | null>(null);
     const spaceHoldInterval = useRef<NodeJS.Timeout | null>(null);
+
 
 
     // Smart navigation handler für Game Over
@@ -82,7 +84,9 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                 alert('Spielstand konnte nicht gespeichert werden. Bitte versuche es erneut.');
             }
         } else {
+
             console.bewarn('⚠️ No currentPlayer - game over without saving');
+
         }
     };
     
@@ -179,6 +183,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
     };
 
 
+
     // SENIOR DEV APPROACH: Separate concerns and fix race conditions
     
     // 1. Initialize localStorage sync (run once per currentPlayer)
@@ -189,6 +194,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
             navigate('/login');
             return;
         }
+
 
         // Sync currentPlayer with localStorage for playerManager compatibility
         console.log('🔄 Syncing currentPlayer with localStorage:', currentPlayer.badgeId);
@@ -307,6 +313,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
         };
     }, [gameState, gameOverSelectedOption]);
 
+
     // Space-Hold für Hauptmenü (2 Sekunden) - nur während des Spiels
     useEffect(() => {
         if (gameState !== 'playing') return;
@@ -363,6 +370,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
             resetSpaceHold();
         };
     }, [gameState, navigate]);
+
 
     const startGame = () => {
        

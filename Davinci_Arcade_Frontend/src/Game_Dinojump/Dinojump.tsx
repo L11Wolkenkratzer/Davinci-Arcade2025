@@ -1,6 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
+import { useSettings } from "../SettingsContext";
 import "./DinojumpGame.css";
 import dinoImg from './dino.png';
+// Sounds aus Public-Ordner
+const lobbyMusicUrl = "/Sounds/dinojump/dinojump_lobby_music.mp3";
+const gameMusicUrl = "/Sounds/dinojump/dinojump_gameMusic.mp3";
+const deathSoundUrl = "/Sounds/dinojump/dinojump_death.mp3";
 import cactusImg from './cactus.png';
 import birdImg from './bird.png';
 
@@ -36,6 +41,20 @@ function getRandomObstacle() {
 }
 
 const Dinojump: React.FC = () => {
+  // Debug Logs
+  const renderCount = useRef(0);
+  renderCount.current += 1;
+  console.log(
+    `%c[DINOJUMP] Render #${renderCount.current}`,
+    "color:white;background:#22c55e;padding:2px 4px;border-radius:2px;"
+  );
+
+  const { isMuted, volume } = useSettings();
+  // ALLE AUDIO REFS
+  const lobbyMusicRef = useRef<HTMLAudioElement | null>(null);
+  const gameMusicRef = useRef<HTMLAudioElement | null>(null);
+  const deathSoundRef = useRef<HTMLAudioElement | null>(null);
+  
   const [gameState, setGameState] = useState<GameState>("start");
   const [dinoY, setDinoY] = useState(GROUND_Y);
   const [dinoVY, setDinoVY] = useState(0);
@@ -43,25 +62,166 @@ const Dinojump: React.FC = () => {
   const [score, setScore] = useState(0);
   const [highscores, setHighscores] = useState<HighscoreEntry[]>([]);
   const [menuIndex, setMenuIndex] = useState(0);
-  const [gameoverIndex, setGameoverIndex] = useState(0);
   const [isJumping, setIsJumping] = useState(false);
   const [playerName, setPlayerName] = useState("PLAYER");
-  const requestRef = useRef<number>();
-  // For restart fix
-  const [restartFlag, setRestartFlag] = useState(0);
+  const requestRef = useRef<number>(0);
+
+  console.log("[DINOJUMP] gameState:", gameState);
+  console.log("[DINOJUMP] score:", score);
+
+  // ALLE AUDIO-OBJEKTE INITIALISIEREN
+  useEffect(() => {
+    // Lobby Music
+    if (!lobbyMusicRef.current) {
+      console.log("[DINOJUMP] Initializing lobby music...");
+      lobbyMusicRef.current = new Audio(lobbyMusicUrl);
+      lobbyMusicRef.current.loop = true;
+      lobbyMusicRef.current.volume = volume / 100;
+    }
+
+    // Game Music
+    if (!gameMusicRef.current) {
+      console.log("[DINOJUMP] Initializing game music...");
+      gameMusicRef.current = new Audio(gameMusicUrl);
+      gameMusicRef.current.loop = true;
+      gameMusicRef.current.volume = volume / 100;
+    }
+
+    // Death Sound
+    if (!deathSoundRef.current) {
+      console.log("[DINOJUMP] Initializing death sound...");
+      deathSoundRef.current = new Audio(deathSoundUrl);
+      deathSoundRef.current.volume = volume / 100;
+    }
+
+    // AUTO-UNLOCK FÜR ALLE AUDIO-OBJEKTE
+    const attemptAutoPlay = () => {
+      if (!isMuted) {
+        // Versuche lobby music zu starten (falls im richtigen State)
+        if ((gameState === "start" || gameState === "highscores") && lobbyMusicRef.current) {
+          lobbyMusicRef.current.play().then(() => {
+            console.log("[DINOJUMP] Lobby music auto-play successful!");
+          }).catch(() => {
+            console.log("[DINOJUMP] Auto-play blocked, setting up user interaction listeners...");
+            setupAutoUnlock();
+          });
+        }
+      }
+    };
+
+    // Setup für automatisches Unlock bei jeder Benutzerinteraktion
+    const setupAutoUnlock = () => {
+      const unlockAudio = async () => {
+        console.log("[DINOJUMP] Attempting to unlock all audio...");
+        try {
+          // Versuche alle Audio-Objekte nur zu entsperren, wenn src gesetzt ist
+          if (lobbyMusicRef.current && lobbyMusicRef.current.src) {
+            await lobbyMusicRef.current.play();
+            lobbyMusicRef.current.pause();
+            lobbyMusicRef.current.currentTime = 0;
+          }
+          if (gameMusicRef.current && gameMusicRef.current.src) {
+            await gameMusicRef.current.play();
+            gameMusicRef.current.pause();
+            gameMusicRef.current.currentTime = 0;
+          }
+          if (deathSoundRef.current && deathSoundRef.current.src) {
+            await deathSoundRef.current.play();
+            deathSoundRef.current.pause();
+            deathSoundRef.current.currentTime = 0;
+          }
+          console.log("[DINOJUMP] All audio unlocked!");
+          
+          // Entferne Event Listener nach erfolgreichem Unlock
+          document.removeEventListener('click', unlockAudio);
+          document.removeEventListener('keydown', unlockAudio);
+          document.removeEventListener('touchstart', unlockAudio);
+          document.removeEventListener('mousemove', unlockAudio);
+        } catch (error) {
+          console.log("[DINOJUMP] Audio unlock failed:", error);
+        }
+      };
+
+      // Füge Event Listener für verschiedene Benutzerinteraktionen hinzu
+      document.addEventListener('click', unlockAudio, { once: true, passive: true });
+      document.addEventListener('keydown', unlockAudio, { once: true, passive: true });
+      document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+      document.addEventListener('mousemove', unlockAudio, { once: true, passive: true });
+    };
+
+    // Versuche sofort beim Laden
+    attemptAutoPlay();
+
+    return () => {
+      // Cleanup: Alle Audio-Objekte stoppen
+      lobbyMusicRef.current?.pause();
+      lobbyMusicRef.current && (lobbyMusicRef.current.currentTime = 0);
+      gameMusicRef.current?.pause();
+      gameMusicRef.current && (gameMusicRef.current.currentTime = 0);
+      deathSoundRef.current?.pause();
+      deathSoundRef.current && (deathSoundRef.current.currentTime = 0);
+    };
+  }, [volume]); // Neu initialisieren wenn Lautstärke sich ändert
+    // Lautstärke dynamisch anpassen
+    if (lobbyMusicRef.current) lobbyMusicRef.current.volume = volume / 100;
+    if (gameMusicRef.current) gameMusicRef.current.volume = volume / 100;
+    if (deathSoundRef.current) deathSoundRef.current.volume = volume / 100;
+
+  // ERWEITERTE MUSIK-STEUERUNG basierend auf gameState
+  useEffect(() => {
+    if (isMuted) {
+      lobbyMusicRef.current?.pause();
+      gameMusicRef.current?.pause();
+      return;
+    }
+
+    // Musiksteuerung nach State
+    if (gameState === "start" || gameState === "highscores") {
+      // Lobby Musik an, Game Musik aus
+      if (gameMusicRef.current) {
+        gameMusicRef.current.pause();
+        gameMusicRef.current.currentTime = 0;
+      }
+      if (lobbyMusicRef.current) {
+        // Nur abspielen, wenn nicht schon läuft
+        if (lobbyMusicRef.current.paused) {
+          lobbyMusicRef.current.currentTime = 0;
+          lobbyMusicRef.current.play().catch(() => {});
+        }
+      }
+    } else if (gameState === "playing") {
+      // Game Musik an, Lobby Musik aus
+      if (lobbyMusicRef.current) {
+        lobbyMusicRef.current.pause();
+        lobbyMusicRef.current.currentTime = 0;
+      }
+      if (gameMusicRef.current) {
+        // Nur abspielen, wenn nicht schon läuft
+        if (gameMusicRef.current.paused) {
+          gameMusicRef.current.currentTime = 0;
+          gameMusicRef.current.play().catch(() => {});
+        }
+      }
+    } else if (gameState === "gameover") {
+      // Beide Musik stoppen
+      lobbyMusicRef.current?.pause();
+      lobbyMusicRef.current && (lobbyMusicRef.current.currentTime = 0);
+      gameMusicRef.current?.pause();
+      gameMusicRef.current && (gameMusicRef.current.currentTime = 0);
+    }
+  }, [gameState, isMuted]);
 
   // Startscreen: Enter Name, Start, Highscores, Exit
   useEffect(() => {
-    if (gameState === "start" || restartFlag > 0) {
+    if (gameState === "start") {
+      console.log("[DINOJUMP] Resetting game state");
       setDinoY(GROUND_Y);
       setDinoVY(0);
       setObstacles([]);
       setScore(0);
       setIsJumping(false);
-      // Only reset restartFlag if we are not in gameover
-      if (restartFlag > 0 && gameState !== "gameover") setRestartFlag(0);
     }
-  }, [gameState, restartFlag]);
+  }, [gameState]);
 
   // Game Loop
   useEffect(() => {
@@ -115,6 +275,17 @@ const Dinojump: React.FC = () => {
           dinoBox.y < obsBox.y + obsBox.h &&
           dinoBox.y + dinoBox.h > obsBox.y
         ) {
+          console.log("[DINOJUMP] Game Over - Collision detected");
+          
+          // DEATH SOUND ABSPIELEN
+          if (deathSoundRef.current && !isMuted) {
+            console.log("[DINOJUMP] Playing death sound...");
+            deathSoundRef.current.currentTime = 0;
+            deathSoundRef.current.play().catch((error) => {
+              console.log("[DINOJUMP] Death sound play failed:", error);
+            });
+          }
+          
           setGameState("gameover");
           return;
         }
@@ -129,7 +300,7 @@ const Dinojump: React.FC = () => {
     requestRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(requestRef.current!);
     // eslint-disable-next-line
-  }, [gameState, dinoY, dinoVY, obstacles, restartFlag]);
+  }, [gameState, dinoY, dinoVY, obstacles, isMuted]);
 
   // Keyboard Controls
   useEffect(() => {
@@ -141,7 +312,7 @@ const Dinojump: React.FC = () => {
             setIsJumping(true);
           }
         }
-        if (e.key === "Escape" || e.key === " ") {
+        if (e.key === "Escape") {
           setGameState("start");
         }
       } else if (gameState === "start") {
@@ -173,17 +344,11 @@ const Dinojump: React.FC = () => {
           if (menuItems[menuIndex]) menuItems[menuIndex]!();
         }
       } else if (gameState === "gameover") {
-        const menuItems = [
-          () => setGameState("playing"),
-          () => setGameState("start")
-        ];
-        if (["ArrowDown", "ArrowUp"].includes(e.key)) {
+        // Nur noch BACK TO MENU - kein RESTART mehr
+        if (e.key === "Enter" || e.key === "Escape") {
           e.preventDefault();
-          setGameoverIndex((idx) => (idx + (e.key === "ArrowDown" ? 1 : -1) + menuItems.length) % menuItems.length);
-        }
-        if (e.key === "Enter") {
-          e.preventDefault();
-          menuItems[gameoverIndex]!();
+          console.log("[DINOJUMP] Back to menu via keyboard");
+          setGameState("start");
         }
       } else if (gameState === "highscores") {
         if (e.key === "Escape" || e.key === "Enter") {
@@ -195,7 +360,7 @@ const Dinojump: React.FC = () => {
     window.addEventListener("keydown", handle);
     return () => window.removeEventListener("keydown", handle);
     // eslint-disable-next-line
-  }, [gameState, menuIndex, gameoverIndex, dinoY, isJumping]);
+  }, [gameState, menuIndex, dinoY, isJumping]);
 
   // Highscore speichern
   useEffect(() => {
@@ -245,10 +410,9 @@ const Dinojump: React.FC = () => {
           <div className="dino-hint">
             Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
           </div>
-            <img src={dinoImg} alt="Dino" width={DINO_SIZE} height={DINO_SIZE} />
-          </div>
-          </div>
-       
+          <img src={dinoImg} alt="Dino" width={DINO_SIZE} height={DINO_SIZE} />
+        </div>
+      </div>
     );
   }
 
@@ -282,7 +446,7 @@ const Dinojump: React.FC = () => {
     );
   }
 
-  // Gameover Screen
+  // Gameover Screen - NUR NOCH BACK TO MENU
   if (gameState === "gameover") {
     return (
       <div className="dino-arcade-bg">
@@ -292,36 +456,19 @@ const Dinojump: React.FC = () => {
             <div>Score: {score}</div>
           </div>
           <div className="dino-menu">
-              <button
-                className={`dino-menu-btn${gameoverIndex === 0 ? " selected" : ""}`}
-                tabIndex={-1}
-                onClick={() => {
-                  // Reset all game variables and go to start screen
-                  setDinoY(GROUND_Y);
-                  setDinoVY(0);
-                  setObstacles([]);
-                  setScore(0);
-                  setIsJumping(false);
-                  setMenuIndex(0);
-                  setGameoverIndex(0);
-                  // Optionally reset playerName if you want a true fresh start
-                  // setPlayerName("PLAYER");
-                  setRestartFlag(0);
-                  setGameState("start");
-                }}
-              >
-                RESTART
-              </button>
             <button
-              className={`dino-menu-btn${gameoverIndex === 1 ? " selected" : ""}`}
+              className="dino-menu-btn selected"
               tabIndex={-1}
-              onClick={() => setGameState("start")}
+              onClick={() => {
+                console.log("[DINOJUMP] Back to menu via mouse");
+                setGameState("start");
+              }}
             >
               BACK TO MENU
             </button>
           </div>
           <div className="dino-hint">
-            Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
+            Press <span>ENTER</span> or <span>ESC</span> to continue
           </div>
         </div>
       </div>
@@ -396,7 +543,7 @@ const Dinojump: React.FC = () => {
           <div className="dino-score-display">{score}</div>
         </div>
         <div className="dino-hint" style={{ marginTop: "1.2rem", fontSize: "1.1rem", opacity: 0.7 }}>
-          Hold <span>Space</span> To Exit
+          Press <span>ESC</span> to Exit
         </div>
       </div>
     </div>

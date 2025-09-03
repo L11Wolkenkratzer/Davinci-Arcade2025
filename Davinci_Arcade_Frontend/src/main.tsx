@@ -8,9 +8,9 @@ const root = createRoot(document.getElementById('root')!);
 // Only use StrictMode in development
 if (import.meta.env.DEV) {
   root.render(
-    <StrictMode>
+   // <StrictMode>
       <App />
-    </StrictMode>
+    // </StrictMode>
   );
 } else {
   root.render(<App />);

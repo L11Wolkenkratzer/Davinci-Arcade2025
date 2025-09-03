@@ -43,11 +43,17 @@ const levelNames = [
 
 interface TilliTimianLobbyProps {
   currentPlayer: Player;
+
+  onOpenHighscore: () => void;
+
   onOpenInfo: () => void;
 }
 
 const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({ 
   currentPlayer,
+
+  onOpenHighscore, 
+
   onOpenInfo 
 }) => {
   const navigate = useNavigate();
@@ -61,6 +67,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
   const [loading, setLoading] = useState(true);
   
   // Leaderboard System (integrated in lobby)
+
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   
@@ -90,6 +97,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   // Load leaderboard data for integrated display
+
   const loadLeaderboard = async () => {
     try {
       setLeaderboardLoading(true);
@@ -175,6 +183,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         setShopItems(items);
         
         // Load leaderboard for integrated display
+
         await loadLeaderboard();
         
         setMessage('Profil erfolgreich geladen!');
@@ -352,7 +361,12 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
           setMapSelection(currentLevel);
           setLevelMapFocus('level');
           break;
-        // Removed case 4 (highscore)
+        case 4: 
+          // Refresh leaderboard when viewing
+          loadLeaderboard();
+          onOpenHighscore(); 
+          break;
+
         case 5: setShowShop(true); setShopSelection(0); break;
         case 6: setShowInventory(true); break;
       }

@@ -27,7 +27,10 @@ const TilliTimianGame: React.FC<TilliTimianGameProps> = ({ currentPlayer }) => {
   const renderScreen = () => {
     switch (screen) {
       case 'lobby':
-        return <TilliTimianLobby currentPlayer={currentPlayer} onOpenInfo={() => setScreen('info')} />;
+
+    
+        return <TilliTimianLobby currentPlayer={currentPlayer} onOpenHighscore={() => setScreen('highscore')} onOpenInfo={() => setScreen('info')} />;
+
       case 'game':
         return <div>Game component would go here</div>;
       case 'highscore':

@@ -17,6 +17,8 @@ interface CarouselProps {
   videoEnded: boolean;
   onVideoReplay: () => void;
   setVideoEnded: (ended: boolean) => void;
+  getCardTransform?: (index: number) => React.CSSProperties;
+  videoRef?: React.RefObject<HTMLVideoElement>;
 }
 
 const CarouselCard = memo(({ 

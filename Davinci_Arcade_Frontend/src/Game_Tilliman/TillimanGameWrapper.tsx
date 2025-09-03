@@ -78,6 +78,7 @@ const TillimanGameWrapper: React.FC = () => {
         </button>
       </div>
 
+
               <TilliTimianLobby 
           currentPlayer={playerLoggedIn ? {
             _id: 'mock-id',
@@ -89,6 +90,7 @@ const TillimanGameWrapper: React.FC = () => {
           } : null}
           onOpenInfo={() => console.log('Info opened')}
         />
+
 
       {showLoginModal && (
         <PlayerLoginModal
