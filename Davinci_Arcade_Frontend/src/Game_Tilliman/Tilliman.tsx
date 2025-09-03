@@ -40,6 +40,12 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
     
     // Keyboard navigation for Game Over screen
     const [gameOverSelectedOption, setGameOverSelectedOption] = useState(0); // 0 = restart, 1 = home
+    
+    // Space-Hold für Hauptmenü (2 Sekunden)
+    const [spaceHoldProgress, setSpaceHoldProgress] = useState(0); // 0-100 Progress
+    const [spaceHoldActive, setSpaceHoldActive] = useState(false);
+    const spaceHoldStartTime = useRef<number | null>(null);
+    const spaceHoldInterval = useRef<NodeJS.Timeout | null>(null);
 
 
     // Smart navigation handler für Game Over
@@ -76,7 +82,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                 alert('Spielstand konnte nicht gespeichert werden. Bitte versuche es erneut.');
             }
         } else {
-            console.warn('⚠️ No currentPlayer - game over without saving');
+            console.bewarn('⚠️ No currentPlayer - game over without saving');
         }
     };
     
@@ -301,6 +307,63 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
         };
     }, [gameState, gameOverSelectedOption]);
 
+    // Space-Hold für Hauptmenü (2 Sekunden) - nur während des Spiels
+    useEffect(() => {
+        if (gameState !== 'playing') return;
+
+        const handleSpaceHold = (event: KeyboardEvent) => {
+            if (event.key === ' ' && event.type === 'keydown' && !event.repeat) {
+                // Space gedrückt - Start Hold Timer
+                event.preventDefault();
+                setSpaceHoldActive(true);
+                spaceHoldStartTime.current = Date.now();
+                
+                // Progress Update Interval (alle 50ms)
+                spaceHoldInterval.current = setInterval(() => {
+                    if (spaceHoldStartTime.current) {
+                        const elapsed = Date.now() - spaceHoldStartTime.current;
+                        const progress = Math.min((elapsed / 2000) * 100, 100); // 2000ms = 2 Sekunden
+                        setSpaceHoldProgress(progress);
+                        
+                        // Nach 2 Sekunden -> Hauptmenü
+                        if (elapsed >= 2000) {
+                            console.log('🚀 Space Hold complete - navigating to main menu');
+                            navigate('/');
+                        }
+                    }
+                }, 50);
+            }
+        };
+
+        const handleSpaceRelease = (event: KeyboardEvent) => {
+            if (event.key === ' ' && event.type === 'keyup') {
+                // Space losgelassen - Reset
+                event.preventDefault();
+                resetSpaceHold();
+            }
+        };
+
+        const resetSpaceHold = () => {
+            setSpaceHoldActive(false);
+            setSpaceHoldProgress(0);
+            spaceHoldStartTime.current = null;
+            if (spaceHoldInterval.current) {
+                clearInterval(spaceHoldInterval.current);
+                spaceHoldInterval.current = null;
+            }
+        };
+
+        window.addEventListener('keydown', handleSpaceHold);
+        window.addEventListener('keyup', handleSpaceRelease);
+
+        // Cleanup bei unmount oder gameState change
+        return () => {
+            window.removeEventListener('keydown', handleSpaceHold);
+            window.removeEventListener('keyup', handleSpaceRelease);
+            resetSpaceHold();
+        };
+    }, [gameState, navigate]);
+
     const startGame = () => {
        
 
@@ -373,6 +436,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                                     <li>Leertaste - Springen</li>
                                     <li>Shift - Dash</li>
                                     <li>P - Pause</li>
+                                    <li style={{ color: '#FFD700', fontWeight: 'bold' }}>Space halten (2s) - Hauptmenü</li>
                                 </ul>
                             </div>
                             <button onClick={startGame} className="game-button" style={{ fontFamily: 'Press Start 2P, cursive' }}>
@@ -462,15 +526,75 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
 
             {gameState === 'playing' && (
                 <div className="game-controls">
-
                     <button
                         className="control-button"
                         style={{ fontFamily: 'Press Start 2P, cursive' }}
                         disabled
                     >
-
                         Pause
                     </button>
+                </div>
+            )}
+
+            {/* Space-Hold Progress Indicator */}
+            {gameState === 'playing' && spaceHoldActive && (
+                <div className="space-hold-indicator" style={{
+                    position: 'fixed',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'rgba(0, 0, 0, 0.85)',
+                    padding: '20px',
+                    borderRadius: '15px',
+                    border: '3px solid #0ff',
+                    boxShadow: '0 0 30px #0ff',
+                    fontFamily: 'Press Start 2P, cursive',
+                    fontSize: '14px',
+                    color: '#0ff',
+                    textAlign: 'center',
+                    zIndex: 1000,
+                    minWidth: '300px'
+                }}>
+                    <div style={{ marginBottom: '15px', fontSize: '12px' }}>
+                        Space halten für Hauptmenü
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div style={{
+                        width: '100%',
+                        height: '20px',
+                        background: 'rgba(0, 255, 255, 0.2)',
+                        border: '2px solid #0ff',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        position: 'relative'
+                    }}>
+                        <div style={{
+                            width: `${spaceHoldProgress}%`,
+                            height: '100%',
+                            background: 'linear-gradient(90deg, #0ff, #00ffff, #40e0d0)',
+                            transition: 'width 0.05s ease',
+                            boxShadow: '0 0 15px #0ff'
+                        }} />
+                        
+                        {/* Progress Text */}
+                        <div style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            color: spaceHoldProgress > 50 ? '#000' : '#0ff',
+                            textShadow: spaceHoldProgress > 50 ? '1px 1px 2px #0ff' : '1px 1px 2px #000'
+                        }}>
+                            {Math.round(spaceHoldProgress)}%
+                        </div>
+                    </div>
+                    
+                    <div style={{ marginTop: '10px', fontSize: '10px', opacity: 0.8 }}>
+                        Loslassen zum Abbrechen
+                    </div>
                 </div>
             )}
         </div>

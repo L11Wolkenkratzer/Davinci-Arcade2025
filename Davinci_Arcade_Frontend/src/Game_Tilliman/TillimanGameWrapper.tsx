@@ -78,10 +78,17 @@ const TillimanGameWrapper: React.FC = () => {
         </button>
       </div>
 
-      <TilliTimianLobby 
-        onOpenHighscore={() => console.log('Highscore opened')}
-        onOpenInfo={() => console.log('Info opened')}
-      />
+              <TilliTimianLobby 
+          currentPlayer={playerLoggedIn ? {
+            _id: 'mock-id',
+            badgeId: playerInfo.badgeId,
+            name: playerInfo.name,
+            totalScore: 0,
+            gamesPlayed: 0,
+            lastPlayed: new Date().toISOString()
+          } : null}
+          onOpenInfo={() => console.log('Info opened')}
+        />
 
       {showLoginModal && (
         <PlayerLoginModal
