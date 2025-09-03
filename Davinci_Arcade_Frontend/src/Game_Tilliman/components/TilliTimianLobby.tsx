@@ -43,13 +43,17 @@ const levelNames = [
 
 interface TilliTimianLobbyProps {
   currentPlayer: Player;
+
   onOpenHighscore: () => void;
+
   onOpenInfo: () => void;
 }
 
 const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({ 
   currentPlayer,
+
   onOpenHighscore, 
+
   onOpenInfo 
 }) => {
   const navigate = useNavigate();
@@ -62,7 +66,8 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
   const [profile, setProfile] = useState<TilliProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Leaderboard System
+  // Leaderboard System (integrated in lobby)
+
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   
@@ -91,7 +96,8 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
-  // Load leaderboard data
+  // Load leaderboard data for integrated display
+
   const loadLeaderboard = async () => {
     try {
       setLeaderboardLoading(true);
@@ -176,7 +182,8 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         const items = tilliApi.getShopItems();
         setShopItems(items);
         
-        // Load leaderboard
+        // Load leaderboard for integrated display
+
         await loadLeaderboard();
         
         setMessage('Profil erfolgreich geladen!');
@@ -256,12 +263,20 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       }
     } else if (e.key === 'Escape') {
       setShowShop(false);
+    } else if (e.key === ' ') { // Space key shortcut to main menu
+      e.preventDefault();
+      console.log('Space pressed in shop - navigating to main menu');
+      navigate('/');
     }
   };
 
   const handleInventoryNavigation = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       setShowInventory(false);
+    } else if (e.key === ' ') { // Space key shortcut to main menu
+      e.preventDefault();
+      console.log('Space pressed in inventory - navigating to main menu');
+      navigate('/');
     }
   };
 
@@ -302,6 +317,11 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       next = navMap[currentSelection][2];
     } else if (e.key === 'ArrowRight') {
       next = navMap[currentSelection][3];
+    } else if (e.key === ' ') { // Space key shortcut to main menu
+      e.preventDefault(); // Prevent page scrolling
+      console.log('Space pressed - navigating to main menu');
+      navigate('/');
+      return; // Exit early to avoid setting selection
     } else if (e.key === 'Enter') {
       console.log('Enter pressed, currentSelection:', currentSelection);
       switch (currentSelection) {
@@ -346,6 +366,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
           loadLeaderboard();
           onOpenHighscore(); 
           break;
+
         case 5: setShowShop(true); setShopSelection(0); break;
         case 6: setShowInventory(true); break;
       }
@@ -382,6 +403,10 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         }
       } else if (e.key === 'Escape') {
         setShowLevelMap(false);
+      } else if (e.key === ' ') { // Space key shortcut to main menu
+        e.preventDefault();
+        console.log('Space pressed in level map - navigating to main menu');
+        navigate('/');
       }
     } else if (levelMapFocus === 'exit') {
       if (e.key === 'ArrowUp') {
@@ -390,6 +415,10 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         setShowLevelMap(false);
       } else if (e.key === 'Escape') {
         setShowLevelMap(false);
+      } else if (e.key === ' ') { // Space key shortcut to main menu
+        e.preventDefault();
+        console.log('Space pressed on exit - navigating to main menu');
+        navigate('/');
       }
     }
   };
@@ -695,6 +724,9 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
           >
             Exit
           </button>
+          <div className="controls-info" style={{ marginTop: '1rem', textAlign: 'center' }}>
+            ← → Level Navigation • ↑ ↓ Focus • Enter Auswählen • ESC Zurück • Space Hauptmenü
+          </div>
         </div>
       </div>
     );
@@ -782,7 +814,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         )}
         
         <div className="controls-info">
-          <span>↑ ↓ = Navigation | Enter = Kaufen/Ausrüsten | ESC = Zurück</span>
+          <span>↑ ↓ Navigation • Enter Kaufen/Ausrüsten • ESC Zurück • Space Hauptmenü</span>
         </div>
       </div>
     );
@@ -838,7 +870,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         </div>
         
         <div className="controls-info">
-          <span>ESC = Zurück</span>
+          <span>ESC Zurück • Space Hauptmenü</span>
         </div>
       </div>
     );
@@ -910,16 +942,6 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       </div>
 
       <div className="right-leaderboard-area" style={{ top: '55%', right: '2.5rem', transform: 'translateY(-50%)', minWidth: '220px' }}>
-        <button 
-          className={`leaderboard-btn ${currentSelection === 4 ? 'selected' : ''}`} 
-          style={{marginTop: '1.2rem'}} 
-          onClick={() => {
-            setCurrentSelection(4);
-            onOpenHighscore();
-          }}
-        >
-          Highscore ansehen
-        </button>
         <div className="leaderboard-card" style={{ minWidth: '220px', padding: '1.2rem 1.5rem' }}>
           <div className="leaderboard-title">
             {leaderboardLoading ? 'Lade...' : 'Leaderboard'}
@@ -976,6 +998,11 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         >
           <span className="btn-icon">Exit</span>
         </button>
+      </div>
+      
+      {/* Controls Description */}
+      <div className="controls-hint">
+        ← → ↑ ↓ Navigation • Enter Auswählen • Space Hauptmenü
       </div>
     </div>
   );
