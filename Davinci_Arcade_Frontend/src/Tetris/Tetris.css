@@ -280,24 +280,6 @@
   animation: none;
 }
 
-/* 💡 HINTS */
-.tetris-hint {
-  font-size: 0.9rem;
-  color: #00DDFF;
-  text-shadow: 0 0 10px #00DDFF;
-  margin-top: 2rem;
-  opacity: 0.8;
-  animation: hintBlink 3s ease-in-out infinite alternate;
-}
-
-.tetris-hint span {
-  color: #FFFF00;
-  text-shadow: 0 0 10px #FFFF00;
-  margin: 0 0.3em;
-  padding: 0.2em 0.5em;
-  background: rgba(255, 255, 0, 0.1);
-  border-radius: 4px;
-}
 
 @keyframes hintBlink {
   0% { opacity: 0.6; }

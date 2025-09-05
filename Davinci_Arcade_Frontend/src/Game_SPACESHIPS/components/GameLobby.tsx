@@ -176,15 +176,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                     ))}
                 </div>
 
-                <div className="lobby-footer">
-                    <p style={{ fontSize: '0.8rem', color: '#0ff', textAlign: 'center' }}>
-                        Use Joystick arrows to navigate, bottom Button to select
-                        {/* Debug-Info für Audio (optional - kannst du entfernen) */}
-                        <span style={{ fontSize: '0.6rem', color: '#666', display: 'block', marginTop: '0.2rem' }}>
-                            Audio Volume: {volume}%
-                        </span>
-                    </p>
-                </div>
+            
             </div>
         </div>
     );

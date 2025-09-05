@@ -158,6 +158,7 @@ const Shop: React.FC<ShopProps> = ({
                         cursor: 'pointer',
                         outline: selectedIndex === -1 ? '2px solid #d85156ff' : 'none',
                         margin: '0 auto',
+                        marginBottom: '1rem',
                         display: 'block',
                         boxShadow: selectedIndex === -1 ? '0 0 20px #ca4449ff' : 'none',
                         transition: 'all 0.2s',
