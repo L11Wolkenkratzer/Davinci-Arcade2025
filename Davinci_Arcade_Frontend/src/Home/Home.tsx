@@ -22,9 +22,16 @@ import sonicVideo from "/Videos/sonic-preview2.mp4";
 import tetrisVideo from "/Videos/tetris.mp4";
 import spaceshipVideo from "/Videos/SpaceShip.mp4";
 import snakeVideo from "/Videos/Snake.mp4";
+import pacmanVideo from "/Videos/Pacman.mp4";
 import lobbyMusic from "/Sounds/LobbyMusic.mp3";
 
-/* ---------- Typdefinitionen ---------- */
+// Bilder importieren - DAS MUSST DU HINZUFÜGEN
+import tetrisImage from "/Images/tetris-preview.png";
+import pacmanImage from "/Images/pacman-preview.png";
+import spaceshipImage from "/Images/spaceships-preview.png";
+import snakeImage from "/Images/snake-preview.png";
+import tillimanImage from "/Images/tilliman-preview.png";
+
 export interface Player {
   _id: string;
   badgeId: string;
@@ -36,44 +43,75 @@ export interface Player {
   createdAt?: string;
   __v?: number;
 }
+
 interface HomeProps {
   currentPlayer: Player | null;
   setCurrentPlayer: Dispatch<SetStateAction<Player | null>>;
 }
+
 interface Game {
   id: number;
   title: string;
-  icon: string;
   color: string;
   video?: string;
+  image: string; // Bild ist jetzt required, icon entfernt
 }
+
 type NavigationMode = "games" | "header";
 type HeaderButton = "settings" | "user" | "info";
+
 interface NavigationState {
   selectedGameIndex: number;
   isTransitioning: boolean;
   videoVisible: boolean;
   videoEnded: boolean;
 }
+
 interface ModalState {
   showSettings: boolean;
   showUser: boolean;
   showInfo: boolean;
 }
 
-/* ---------- Daten ---------- */
+// GAMES Array - Icons entfernt, nur Bilder
 const GAMES: Game[] = [
-  { id: 1, title: "TETRIS", icon: "🎮", color: "#ff6b6b", video: tetrisVideo },
-  { id: 2, title: "PACMAN", icon: "👻", color: "#4ecdc4" },
-  { id: 3, title: "SPACESHIPS", icon: "🚀", color: "#feca57", video: spaceshipVideo },
-  { id: 4, title: "Snake", icon: "💀", color: "#2cea22", video: snakeVideo },
-  { id: 5, title: "TILLIMAN", icon: "⏱️", color: "#f06c00" },
-
+  { 
+    id: 1, 
+    title: "TETRIS", 
+    color: "#ff6b6b", 
+    video: tetrisVideo,
+    image: tetrisImage 
+  },
+  { 
+    id: 2, 
+    title: "PACMAN", 
+    color: "#4ecdc4", 
+    video: pacmanVideo,
+    image: pacmanImage 
+  },
+  { 
+    id: 3, 
+    title: "SPACESHIPS", 
+    color: "#feca57", 
+    video: spaceshipVideo,
+    image: spaceshipImage 
+  },
+  { 
+    id: 4, 
+    title: "Snake", 
+    color: "#2cea22", 
+    video: snakeVideo,
+    image: snakeImage 
+  },
+  { 
+    id: 5, 
+    title: "TILLIMAN", 
+    color: "#f06c00",
+    image: tillimanImage 
+  },
 ];
 
-/* ---------- Hauptkomponente ---------- */
 const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => {
-  /* ---------- Debug ---------- */
   const renderCount = useRef(0);
   renderCount.current += 1;
   console.log(
@@ -81,7 +119,6 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
     "color:white;background:#007acc;padding:2px 4px;border-radius:2px;"
   );
 
-  /* --- States (danach, damit sie schon im Log auftauchen) --- */
   const [navState, setNavState] = useState<NavigationState>({
     selectedGameIndex: 0,
     isTransitioning: false,
@@ -97,13 +134,11 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
   const [selectedHeaderButton, setSelectedHeaderButton] = useState<HeaderButton>("settings");
   const [containerWidth, setContainerWidth] = useState<number>(window.innerWidth);
 
-  /* Logs der wichtigsten States/Props */
   console.log("[HOME] navState", navState);
   console.log("[HOME] modalState", modalState);
   console.log("[HOME] navigationMode", navigationMode);
   console.log("[HOME] selectedHeaderButton", selectedHeaderButton);
 
-  /* --- Refs --- */
   const navigate = useNavigate();
   const navRef = useRef(navState);
   navRef.current = navState;
@@ -117,11 +152,9 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerFetchLock = useRef(false);
 
-  /* --- Audio --- */
   const { volume } = useAudio();
   const lobbyMusicRef = useRef<HTMLAudioElement>();
 
-  /* ---------- Memoized Konstanten & Callbacks ---------- */
   const headerButtons: HeaderButton[] = useMemo(() => ["settings", "user", "info"], []);
 
   const cardDimensions = useMemo(() => {
@@ -164,7 +197,6 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
     [cardDimensions]
   );
 
-  /* ---------- Navigation-Funktionen ---------- */
   const slideToGame = useCallback((newIndex: number) => {
     if (navRef.current.isTransitioning) return;
 
@@ -197,17 +229,14 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
     }));
   }, []);
 
-  /* ---------- Stabiler Keyboard-Handler ---------- */
   const keyHandler = useCallback(
     (e: KeyboardEvent) => {
-      /* ESC → alle Modals schließen */
       if (e.key === "Escape") {
         setModalState({ showSettings: false, showUser: false, showInfo: false });
         setNavigationMode("games");
         return;
       }
 
-      /* solange irgendein Modal offen ist: Tastatur ignorieren */
       const { showSettings, showUser, showInfo } = modalRef.current;
       if (showSettings || showUser || showInfo) return;
 
@@ -233,7 +262,6 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
           }
         }
       } else {
-        /* Header-Navigation */
         if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
           e.preventDefault();
           const idx = headerButtons.indexOf(headerBtnRef.current);
@@ -254,14 +282,11 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
     [headerButtons, slideToGame, launchGame, openHeaderModal]
   );
 
-  /* ---------- useEffect-Blöcke ---------- */
-  /* 1. Keyboard-Listener einmalig */
   useEffect(() => {
     window.addEventListener("keydown", keyHandler);
     return () => window.removeEventListener("keydown", keyHandler);
   }, [keyHandler]);
 
-  /* 2. Resize-Listener (debounced) */
   useEffect(() => {
     let t: NodeJS.Timeout;
     const onResize = () => {
@@ -275,7 +300,6 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
     };
   }, []);
 
-  /* 3. Audio einmalig initialisieren */
   useEffect(() => {
     lobbyMusicRef.current = new Audio(lobbyMusic);
     lobbyMusicRef.current.loop = true;
@@ -300,14 +324,12 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
       lobbyMusicRef.current?.pause();
       lobbyMusicRef.current = undefined;
     };
-  }, []); // nur 1-mal
+  }, []);
 
-  /* 4. Lautstärke-Updates */
   useEffect(() => {
     if (lobbyMusicRef.current) lobbyMusicRef.current.volume = volume / 100;
   }, [volume]);
 
-  /* 5. Player-Daten nachladen */
   useEffect(() => {
     if (!currentPlayer?.badgeId || currentPlayer.updatedAt) return;
     if (playerFetchLock.current) return;
@@ -320,7 +342,6 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
       .finally(() => (playerFetchLock.current = false));
   }, [currentPlayer?.badgeId, currentPlayer?.updatedAt, setCurrentPlayer]);
 
-  /* ---------- Render ---------- */
   return (
     <div className="arcade-container">
       <Header
@@ -356,7 +377,6 @@ const Home: React.FC<HomeProps> = memo(({ currentPlayer, setCurrentPlayer }) => 
 
       <Footer />
 
-      {/* Modals */}
       {modalState.showSettings && currentPlayer && (
         <SettingsModal
           onClose={() => setModalState({ ...modalState, showSettings: false })}

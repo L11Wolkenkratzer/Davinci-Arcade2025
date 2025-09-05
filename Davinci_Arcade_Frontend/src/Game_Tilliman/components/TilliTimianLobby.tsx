@@ -724,9 +724,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
           >
             Exit
           </button>
-          <div className="controls-info" style={{ marginTop: '1rem', textAlign: 'center' }}>
-            ← → Level Navigation • ↑ ↓ Focus • Enter Auswählen • ESC Zurück • Space Hauptmenü
-          </div>
+          
         </div>
       </div>
     );
@@ -1001,9 +999,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       </div>
       
       {/* Controls Description */}
-      <div className="controls-hint">
-        ← → ↑ ↓ Navigation • Enter Auswählen • Space Hauptmenü
-      </div>
+     
     </div>
   );
 };

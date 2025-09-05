@@ -536,9 +536,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
                     </div>
                 </div>
 
-                <div className="controls-info">
-                    <span>↑ ↓ = Navigation | Enter = Kaufen/Ausrüsten | ESC = Zurück</span>
-                </div>
+            
             </div>
         );
     }

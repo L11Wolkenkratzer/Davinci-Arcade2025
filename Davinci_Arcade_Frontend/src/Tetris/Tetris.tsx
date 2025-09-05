@@ -884,10 +884,7 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
                 EXIT
               </button>
             </div>
-            
-            <div className="tetris-hint">
-              Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
-            </div>
+          
           </div>
         </div>
       )}
@@ -936,9 +933,7 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
               </button>
             </div>
             
-            <div className="tetris-hint">
-              Use <span>↑↓</span> arrows to navigate, <span>ENTER</span> to select
-            </div>
+          
           </div>
         </div>
       )}
@@ -976,9 +971,7 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
               BACK
             </button>
             
-            <div className="tetris-hint">
-              Press <span>ESC</span> or <span>ENTER</span> to go back
-            </div>
+           
           </div>
         </div>
       )}

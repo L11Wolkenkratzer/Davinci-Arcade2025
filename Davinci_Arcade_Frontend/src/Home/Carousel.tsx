@@ -3,9 +3,9 @@ import React, { memo, useMemo, useRef, useCallback } from 'react';
 interface Game {
   id: number;
   title: string;
-  icon: string;
   color: string;
   video?: string;
+  image: string; // Bild ist jetzt required, icon entfernt
 }
 
 interface CarouselProps {
@@ -15,7 +15,7 @@ interface CarouselProps {
   containerWidth: number;
   videoVisible: boolean;
   videoEnded: boolean;
-  onVideoReplay: () => void;
+  onVideoReplay: () => void; // kann entfernt werden, wird nicht mehr genutzt
   setVideoEnded: (ended: boolean) => void;
   getCardTransform?: (index: number) => React.CSSProperties;
   videoRef?: React.RefObject<HTMLVideoElement>;
@@ -29,7 +29,7 @@ const CarouselCard = memo(({
   onClick,
   videoVisible,
   videoEnded,
-  onVideoReplay,
+  onVideoReplay, // wird nicht mehr verwendet
   setVideoEnded
 }: {
   game: Game;
@@ -43,7 +43,8 @@ const CarouselCard = memo(({
   setVideoEnded: (ended: boolean) => void;
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const shouldShowVideo = isSelected && videoVisible && game.video;
+  // Video wird nur gezeigt wenn selected, visible UND noch nicht beendet
+  const shouldShowVideo = isSelected && videoVisible && game.video && !videoEnded;
 
   return (
     <div
@@ -56,62 +57,42 @@ const CarouselCard = memo(({
     >
       <div className="game-content">
         {shouldShowVideo ? (
-          <>
-            <video
-              ref={videoRef}
-              src={game.video}
-              autoPlay
-              muted
-              playsInline
-              controls={false}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                zIndex: 1,
-                borderRadius: '32px',
-                pointerEvents: 'none',
-                background: 'black',
-                opacity: 1,
-                transition: 'opacity 0.9s cubic-bezier(0.4,0,0.2,1)',
-              }}
-              onEnded={() => setVideoEnded(true)}
-            />
-            {videoEnded && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                  color: '#0ff',
-                  padding: '10px 20px',
-                  borderRadius: '10px',
-                  fontSize: '14px',
-                  fontFamily: 'Press Start 2P',
-                  textAlign: 'center',
-                  border: '1px solid #0ff',
-                  cursor: 'pointer',
-                  zIndex: 2,
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onVideoReplay();
-                }}
-              >
-                ↻ REPLAY<br />
-                <span style={{ fontSize: '10px' }}>LEERTASTE</span>
-              </div>
-            )}
-          </>
+          <video
+            ref={videoRef}
+            src={game.video}
+            autoPlay
+            muted
+            playsInline
+            controls={false}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              zIndex: 1,
+              borderRadius: '32px',
+              pointerEvents: 'none',
+              background: 'black',
+              opacity: 1,
+              transition: 'opacity 0.9s cubic-bezier(0.4,0,0.2,1)',
+            }}
+            onEnded={() => setVideoEnded(true)}
+          />
         ) : (
-          <div className="game-icon-carousel">{game.icon}</div>
+          // Bild wird gezeigt wenn kein Video läuft oder Video beendet ist
+          <img 
+            src={game.image} 
+            alt={game.title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: '32px',
+            }}
+          />
         )}
-        <div className="game-title-carousel">{game.title}</div>
         <div
           className="game-glow"
           style={{ "--game-color": game.color } as React.CSSProperties}
@@ -130,7 +111,7 @@ const Carousel: React.FC<CarouselProps> = memo(({
   containerWidth,
   videoVisible,
   videoEnded,
-  onVideoReplay,
+  onVideoReplay, // wird nicht mehr verwendet
   setVideoEnded
 }) => {
   const cardDimensions = useMemo(() => ({
@@ -180,7 +161,7 @@ const Carousel: React.FC<CarouselProps> = memo(({
               onClick={() => handleGameClick(index)}
               videoVisible={videoVisible}
               videoEnded={videoEnded}
-              onVideoReplay={onVideoReplay}
+              onVideoReplay={() => {}} // leere Funktion, da nicht mehr verwendet
               setVideoEnded={setVideoEnded}
             />
           ))}
@@ -212,4 +193,4 @@ const Carousel: React.FC<CarouselProps> = memo(({
 
 Carousel.displayName = 'Carousel';
 
-export default Carousel; 
+export default Carousel;

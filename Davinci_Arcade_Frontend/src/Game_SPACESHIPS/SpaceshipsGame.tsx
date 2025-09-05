@@ -203,24 +203,6 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
 
       <div className="game-container">
         {renderScreen()}
-
-        {/* Debug-Info für Audio (optional) */}
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 10,
-            right: 10,
-            background: 'rgba(0,0,0,0.7)',
-            color: '#fff',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '10px',
-            zIndex: 9999,
-            fontFamily: 'monospace',
-          }}
-        >
-          🎵 Volume: {volume}% | Screen: {currentScreen}
-        </div>
       </div>
     </div>
   );
