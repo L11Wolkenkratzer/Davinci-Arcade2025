@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { tilliApi, getCurrentPlayerData } from '../api/tilliApi';
-import { playerManager } from '../api/playerManager';
-import type { TilliProfile, ShopItem } from '../api/tilliApi';
-import type { PlayerData } from '../api/playerManager';
-import PlayerLoginModal from './PlayerLoginModal';
+import { tilliApi } from '../api/tilliApi';
+import type { TilliProfile, LeaderboardEntry } from '../api/tilliApi';
 import './TilliTimianLobby.css';
 
 // Player type definition (matching App.tsx)
@@ -20,13 +17,6 @@ type Player = {
   __v?: number;
 } | null;
 
-const skins = [
-  { name: 'Klassischer Tilli', img: '/assets/tilli/classic.png', price: 0 },
-  { name: 'Steampunk Tilli', img: '/assets/tilli/steampunk.png', price: 150 },
-  { name: 'Neon Tilli', img: '/assets/tilli/neon.png', price: 250 },
-  { name: 'Golden Tilli', img: '/assets/tilli/golden.png', price: 400 },
-  { name: 'Zeit-Herrscher Tilli', img: '/assets/tilli/timeLord.png', price: 1000 }
-];
 
 const levelNames = [
   'Die Anfänge der Zeit',
@@ -44,50 +34,32 @@ const levelNames = [
 interface TilliTimianLobbyProps {
   currentPlayer: Player;
 
-  onOpenHighscore: () => void;
-
   onOpenInfo: () => void;
 }
 
 const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({ 
   currentPlayer,
 
-  onOpenHighscore, 
-
   onOpenInfo 
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Player Management - Use prop instead of localStorage
-  const [playerNotFound, setPlayerNotFound] = useState(false);
-  
   // Profile System
   const [profile, setProfile] = useState<TilliProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Leaderboard System (integrated in lobby)
-
-  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+  // Leaderboard System
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   
   // Legacy compatibility
-  const [selectedSkin, setSelectedSkin] = useState(0);
   const [currentLevel, setCurrentLevel] = useState(1);
   const [coins, setCoins] = useState(42);
-  const [ownedSkins, setOwnedSkins] = useState([0]);
-  const [unlockedLevels, setUnlockedLevels] = useState(1);
-  
-  // Shop System
-  const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   
   const [currentSelection, setCurrentSelection] = useState(0);
   
   const [showLevelMap, setShowLevelMap] = useState(false);
-  const [showShop, setShowShop] = useState(false);
-  const [showInventory, setShowInventory] = useState(false);
-  
-  const [shopSelection, setShopSelection] = useState(0);
   const [mapSelection, setMapSelection] = useState(1);
   const [levelMapFocus, setLevelMapFocus] = useState<'level' | 'exit'>('level');
   
@@ -96,37 +68,33 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
-  // Load leaderboard data for integrated display
-
+  // Load leaderboard data
   const loadLeaderboard = async () => {
     try {
       setLeaderboardLoading(true);
       const leaderboard = await tilliApi.getLeaderboard();
-      setLeaderboardData(leaderboard);
+      console.log('📊 Leaderboard geladen:', leaderboard);
+      
+      if (leaderboard && leaderboard.length > 0) {
+        setLeaderboardData(leaderboard);
+        console.log('✅ Top 3 Spieler:', leaderboard.slice(0, 3).map(e => 
+          `${e.name} - Level ${e.highestLevel} (${e.bestScore} Punkte)`
+        ));
+      } else {
+        console.warn('⚠️ Leaderboard ist leer');
+        setLeaderboardData([]);
+      }
     } catch (error) {
-      console.error('Failed to load leaderboard:', error);
-      // Fallback to mock data on error
-      setLeaderboardData([
-        { name: 'Lade...', badgeId: 'loading', bestScore: 0, highestLevel: 1 },
-        { name: 'Daten...', badgeId: 'loading2', bestScore: 0, highestLevel: 1 },
-        { name: 'Fehler!', badgeId: 'error', bestScore: 0, highestLevel: 1 }
-      ]);
+      console.error('❌ Failed to load leaderboard:', error);
+      // Fallback to empty array - cleaner than mock data
+      setLeaderboardData([]);
     } finally {
       setLeaderboardLoading(false);
     }
   };
 
-  // Check if player is available and sync with localStorage
+  // Sync currentPlayer with localStorage for playerManager compatibility
   useEffect(() => {
-    console.log('🏠 TilliTimianLobby currentPlayer check:', {
-      hasCurrentPlayer: !!currentPlayer,
-      badgeId: currentPlayer?.badgeId,
-      name: currentPlayer?.name
-    });
-    
-    setPlayerNotFound(!currentPlayer);
-    
-    // Sync currentPlayer with localStorage for playerManager compatibility
     if (currentPlayer) {
       console.log('🔄 Lobby syncing currentPlayer with localStorage');
       localStorage.setItem('currentPlayer', JSON.stringify(currentPlayer));
@@ -142,14 +110,12 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
   useEffect(() => {
     const loadProfile = async () => {
       if (!currentPlayer) {
-        setPlayerNotFound(true);
         setLoading(false);
         return;
       }
       
       try {
         setLoading(true);
-        setPlayerNotFound(false);
         
         // Check if profile is passed from navigation state (e.g., from game)
         const stateData = location.state as any;
@@ -159,7 +125,6 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
           // Update legacy state for compatibility
           setCoins(stateData.profile.coins);
           setCurrentLevel(Math.max(0, stateData.profile.highestLevelReached - 1));
-          setUnlockedLevels(stateData.profile.unlockedLevels.length);
           setMapSelection(Math.max(0, stateData.profile.highestLevelReached - 1));
           
           setMessage('Profil vom Spiel übernommen!');
@@ -175,15 +140,9 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         // Update legacy state for compatibility
         setCoins(profileData.coins);
         setCurrentLevel(Math.max(0, profileData.highestLevelReached - 1)); // Convert to 0-based indexing
-        setUnlockedLevels(profileData.unlockedLevels.length);
         setMapSelection(Math.max(0, profileData.highestLevelReached - 1));
         
-        // Load shop items
-        const items = tilliApi.getShopItems();
-        setShopItems(items);
-        
-        // Load leaderboard for integrated display
-
+        // Load leaderboard
         await loadLeaderboard();
         
         setMessage('Profil erfolgreich geladen!');
@@ -191,7 +150,6 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         
       } catch (error) {
         console.error('Failed to load profile:', error);
-        setPlayerNotFound(true);
         
         if (error instanceof Error) {
           setMessage(`Fehler: ${error.message}`);
@@ -236,75 +194,25 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
     }
   }, [mapSelection, showLevelMap]);
 
-  // Shop-Navigation
-  const handleShopNavigation = (e: KeyboardEvent) => {
-    const totalItems = shopItems.length + 1; // +1 for back button
-    
-    if (e.key === 'ArrowUp') {
-      setShopSelection(prev => Math.max(0, prev - 1));
-    } else if (e.key === 'ArrowDown') {
-      setShopSelection(prev => Math.min(totalItems - 1, prev + 1));
-    } else if (e.key === 'Enter') {
-      if (shopSelection < shopItems.length) {
-        const item = shopItems[shopSelection];
-        if (item.type === 'skin') {
-          const skinIndex = ['classic', 'steampunk', 'neon', 'golden', 'timeLord'].indexOf(item.id);
-          const isOwned = profile?.ownedSkins.includes(item.id);
-          if (isOwned) {
-            equipSkin(skinIndex);
-          } else {
-            buySkin(skinIndex);
-          }
-        } else if (item.type === 'ability') {
-          buyAbility(item.id);
-        }
-      } else {
-        setShowShop(false);
-      }
-    } else if (e.key === 'Escape') {
-      setShowShop(false);
-    } else if (e.key === ' ') { // Space key shortcut to main menu
-      e.preventDefault();
-      console.log('Space pressed in shop - navigating to main menu');
-      navigate('/');
-    }
-  };
-
-  const handleInventoryNavigation = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setShowInventory(false);
-    } else if (e.key === ' ') { // Space key shortcut to main menu
-      e.preventDefault();
-      console.log('Space pressed in inventory - navigating to main menu');
-      navigate('/');
-    }
-  };
 
   // Tastatur-Navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (showLevelMap) {
         handleLevelMapNavigation(e);
-      } else if (showShop) {
-        handleShopNavigation(e);
-      } else if (showInventory) {
-        handleInventoryNavigation(e);
       } else {
         handleLobbyNavigation(e);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showLevelMap, showShop, showInventory, currentSelection, shopSelection, mapSelection]);
+  }, [showLevelMap, currentSelection, mapSelection]);
 
   const navMap = [
-    [1, 0, 0, 0],
-    [2, 0, 1, 1],
-    [3, 1, 2, 2],
-    [5, 2, 3, 4],
-    [6, 4, 3, 4],
-    [5, 3, 5, 6],
-    [6, 4, 5, 6],
+    [1, 0, 0, 0],  // 0 = Exit
+    [2, 0, 1, 1],  // 1 = Info
+    [3, 1, 2, 2],  // 2 = Start
+    [3, 2, 3, 3],  // 3 = Level Select
   ];
 
   const handleLobbyNavigation = (e: KeyboardEvent) => {
@@ -317,11 +225,10 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       next = navMap[currentSelection][2];
     } else if (e.key === 'ArrowRight') {
       next = navMap[currentSelection][3];
-    } else if (e.key === ' ') { // Space key shortcut to main menu
+    } else if (e.key === ' ') { // Space key does nothing in lobby (reserved for game)
       e.preventDefault(); // Prevent page scrolling
-      console.log('Space pressed - navigating to main menu');
-      navigate('/');
-      return; // Exit early to avoid setting selection
+      console.log('Space pressed in lobby - no action');
+      return; // Exit early
     } else if (e.key === 'Enter') {
       console.log('Enter pressed, currentSelection:', currentSelection);
       switch (currentSelection) {
@@ -361,14 +268,6 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
           setMapSelection(currentLevel);
           setLevelMapFocus('level');
           break;
-        case 4: 
-          // Refresh leaderboard when viewing
-          loadLeaderboard();
-          onOpenHighscore(); 
-          break;
-
-        case 5: setShowShop(true); setShopSelection(0); break;
-        case 6: setShowInventory(true); break;
       }
     }
     setCurrentSelection(next);
@@ -403,10 +302,10 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         }
       } else if (e.key === 'Escape') {
         setShowLevelMap(false);
-      } else if (e.key === ' ') { // Space key shortcut to main menu
+      } else if (e.key === ' ') { // Space key closes level map
         e.preventDefault();
-        console.log('Space pressed in level map - navigating to main menu');
-        navigate('/');
+        console.log('Space pressed in level map - closing map');
+        setShowLevelMap(false);
       }
     } else if (levelMapFocus === 'exit') {
       if (e.key === 'ArrowUp') {
@@ -415,90 +314,14 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         setShowLevelMap(false);
       } else if (e.key === 'Escape') {
         setShowLevelMap(false);
-      } else if (e.key === ' ') { // Space key shortcut to main menu
+      } else if (e.key === ' ') { // Space key closes level map
         e.preventDefault();
-        console.log('Space pressed on exit - navigating to main menu');
-        navigate('/');
+        console.log('Space pressed on exit - closing map');
+        setShowLevelMap(false);
       }
     }
   };
 
-  const buySkin = async (skinIndex: number) => {
-    if (!profile) return;
-    
-    const skinIds = ['classic', 'steampunk', 'neon', 'golden', 'timeLord'];
-    const skinId = skinIds[skinIndex];
-    const shopItem = shopItems.find(item => item.id === skinId);
-    
-    if (!shopItem) return;
-    
-    try {
-      const result = await tilliApi.purchaseSkin(skinId, shopItem.cost);
-      
-      if (result.success && result.profile) {
-        setProfile(result.profile);
-        setCoins(result.profile.coins);
-        setSelectedSkin(skinIndex);
-        setMessage(`${shopItem.name} gekauft!`);
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        const errorMessage = result.reason === 'insufficient_coins' ? 'Nicht genug Coins!' : 'Bereits besessen!';
-        setMessage(errorMessage);
-        setTimeout(() => setMessage(''), 3000);
-      }
-    } catch (error) {
-      console.error('Failed to buy skin:', error);
-      setMessage('Fehler beim Kauf!');
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
-  
-  const buyAbility = async (abilityId: string) => {
-    if (!profile) return;
-    
-    const abilityItem = shopItems.find(item => item.id === abilityId);
-    if (!abilityItem) return;
-    
-    try {
-      const result = await tilliApi.purchaseAbility(abilityId, abilityItem.cost);
-      
-      if (result.success && result.profile) {
-        setProfile(result.profile);
-        setCoins(result.profile.coins);
-        setMessage(`${abilityItem.name} gekauft!`);
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        const errorMessage = result.reason === 'insufficient_coins' ? 'Nicht genug Coins!' : 'Bereits besessen!';
-        setMessage(errorMessage);
-        setTimeout(() => setMessage(''), 3000);
-      }
-    } catch (error) {
-      console.error('Failed to buy ability:', error);
-      setMessage('Fehler beim Kauf!');
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
-  
-  const equipSkin = async (skinIndex: number) => {
-    if (!profile) return;
-    
-    const skinIds = ['classic', 'steampunk', 'neon', 'golden', 'timeLord'];
-    const skinId = skinIds[skinIndex];
-    
-    if (!profile.ownedSkins.includes(skinId)) return;
-    
-    try {
-      const updatedProfile = await tilliApi.equipSkin(skinId);
-      setProfile(updatedProfile);
-      setSelectedSkin(skinIndex);
-      setMessage(`${tilliApi.getSkinInfo(skinId).name} ausgerüstet!`);
-      setTimeout(() => setMessage(''), 3000);
-    } catch (error) {
-      console.error('Failed to equip skin:', error);
-      setMessage('Fehler beim Ausrüsten!');
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
 
   const generateLevelPath = () => {
     const pathElements = [];
@@ -730,149 +553,6 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
     );
   }
 
-  if (showShop) {
-    return (
-      <div className="fullscreen-overlay">
-        <div className="shop-header">
-          <h1>Shop</h1>
-          <div className="coins-info">🪙 {profile?.coins || 0}</div>
-        </div>
-        
-        <div className="shop-grid">
-          {/* Skins Section */}
-          <div className="shop-section">
-            <h2>Skins</h2>
-            {shopItems.filter(item => item.type === 'skin').map((item, index) => {
-              const skinIndex = ['classic', 'steampunk', 'neon', 'golden', 'timeLord'].indexOf(item.id);
-              const isOwned = profile?.ownedSkins.includes(item.id);
-              const isEquipped = profile?.equippedSkin === item.id;
-              
-              return (
-                <div 
-                  key={item.id}
-                  className={`shop-item ${index === shopSelection && shopSelection < 5 ? 'selected' : ''} ${isOwned ? 'owned' : ''}`}
-                  onClick={() => isOwned ? equipSkin(skinIndex) : buySkin(skinIndex)}
-                >
-                  <div className="shop-skin-preview">
-                    <div className={`skin-color-${item.id}`}></div>
-                  </div>
-                  <h3>{item.name}</h3>
-                  <div className="shop-price">
-                    {isOwned ? (
-                      <span className="owned-text">
-                        {isEquipped ? 'Ausgerüstet' : 'Besessen'}
-                      </span>
-                    ) : (
-                      <span className="price-text">🪙 {item.cost}</span>
-                    )}
-                  </div>
-                  <div className="rarity">{item.rarity}</div>
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Abilities Section */}
-          <div className="shop-section">
-            <h2>Fähigkeiten</h2>
-            {shopItems.filter(item => item.type === 'ability').map((item, index) => {
-              const isOwned = profile?.ownedAbilities.includes(item.id);
-              
-              return (
-                <div 
-                  key={item.id}
-                  className={`shop-item ${index + 5 === shopSelection ? 'selected' : ''} ${isOwned ? 'owned' : ''}`}
-                  onClick={() => !isOwned && buyAbility(item.id)}
-                >
-                  <div className="ability-icon">⬆️</div>
-                  <h3>{item.name}</h3>
-                  <p className="ability-desc">{item.description}</p>
-                  <div className="shop-price">
-                    {isOwned ? (
-                      <span className="owned-text">Besessen</span>
-                    ) : (
-                      <span className="price-text">🪙 {item.cost}</span>
-                    )}
-                  </div>
-                  <div className="rarity">{item.rarity}</div>
-                </div>
-              );
-            })}
-          </div>
-          
-          <div className={`shop-item back-item ${shopSelection === shopItems.length ? 'selected' : ''}`}>
-            <div className="back-text">← Zurück</div>
-          </div>
-        </div>
-        
-        {message && (
-          <div className="message-display">
-            {message}
-          </div>
-        )}
-        
-        <div className="controls-info">
-          <span>↑ ↓ Navigation • Enter Kaufen/Ausrüsten • ESC Zurück • Space Hauptmenü</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (showInventory) {
-    return (
-      <div className="fullscreen-overlay">
-        <div className="inventory-header">
-          <h1>Inventar</h1>
-        </div>
-        
-        <div className="inventory-content">
-          <div className="inventory-section">
-            <h2>Skins ({profile?.ownedSkins.length || 1})</h2>
-            <div className="inventory-grid">
-              {profile?.ownedSkins.map((skinId) => {
-                const skinInfo = tilliApi.getSkinInfo(skinId);
-                return (
-                  <div key={skinId} className="inventory-item">
-                    <div className="inventory-skin-img">
-                      <div className={`skin-color-${skinId}`}></div>
-                    </div>
-                    <div className="inventory-skin-name">{skinInfo?.name || skinId}</div>
-                    {profile.equippedSkin === skinId && (
-                      <div className="equipped-badge">✨</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
-          <div className="inventory-section">
-            <h2>Fähigkeiten ({profile?.ownedAbilities.length || 0})</h2>
-            <div className="inventory-grid">
-              {profile?.ownedAbilities.map((abilityId) => {
-                const abilityInfo = tilliApi.getAbilityInfo(abilityId);
-                return (
-                  <div key={abilityId} className="inventory-item">
-                    <div className="ability-icon">{abilityInfo?.icon || '⚡'}</div>
-                    <div className="inventory-skin-name">{abilityInfo?.name || abilityId}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
-          <div className="inventory-section">
-            <h2>Münzen</h2>
-            <div className="coin-display-large">🪙 {profile?.coins || 0}</div>
-          </div>
-        </div>
-        
-        <div className="controls-info">
-          <span>ESC Zurück • Space Hauptmenü</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="tilli-lobby">
@@ -884,25 +564,6 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       
       <div className="top-right-area">
         <div className="top-row">
-          <button 
-            className={`top-btn shop-btn${currentSelection === 5 ? ' selected' : ''}`} 
-            onClick={() => {
-              setCurrentSelection(5);
-              setShowShop(true);
-              setShopSelection(0);
-            }}
-          >
-            Shop
-          </button>
-          <button 
-            className={`top-btn skins-btn${currentSelection === 6 ? ' selected' : ''}`} 
-            onClick={() => {
-              setCurrentSelection(6);
-              setShowInventory(true);
-            }}
-          >
-            Skins
-          </button>
           <div className="coins-display">
             <span className="coin-icon">🪙</span>
             <span className="coin-amount">{coins}</span>
@@ -934,27 +595,44 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       <div className="lobby-center">
         <div className="selected-skin-showcase">
           <div className="skin-glow"></div>
-          <img src={skins[selectedSkin].img} alt={skins[selectedSkin].name} className="main-skin-image" />
-          <div className="skin-title">{skins[selectedSkin].name}</div>
+         
+          <div className="skin-title">Klassischer Tilli</div>
         </div>
       </div>
 
-      <div className="right-leaderboard-area" style={{ top: '55%', right: '2.5rem', transform: 'translateY(-50%)', minWidth: '220px' }}>
-        <div className="leaderboard-card" style={{ minWidth: '220px', padding: '1.2rem 1.5rem' }}>
+      <div className="right-leaderboard-area" style={{ top: '55%', right: '2.5rem', transform: 'translateY(-50%)', minWidth: '260px' }}>
+        <div className="leaderboard-card" style={{ minWidth: '260px', padding: '1.2rem 1.5rem' }}>
           <div className="leaderboard-title">
-            {leaderboardLoading ? 'Lade...' : 'Leaderboard'}
+            {leaderboardLoading ? 'Lade...' : '🏆 Top Spieler'}
           </div>
           <ul className="leaderboard-list">
             {leaderboardData.slice(0, 3).map((entry, index) => {
               const className = index === 0 ? 'gold' : index === 1 ? 'silver' : 'bronze';
+              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
               return (
-                <li key={entry.badgeId} className={className}>
-                  {entry.name} – {entry.bestScore}
+                <li key={entry.badgeId} className={className} style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'flex-start',
+                  marginBottom: '0.5rem',
+                  padding: '0.5rem',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '0.3rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginBottom: '0.2rem' }}>
+                    <span style={{ marginRight: '0.5rem' }}>{medal}</span>
+                    <span style={{ fontWeight: 'bold', flex: 1 }}>{entry.name}</span>
+                  </div>
+                  <div style={{ fontSize: '0.8em', opacity: 0.9, paddingLeft: '1.5rem' }}>
+                    Level {entry.highestLevel} • {entry.bestScore} Punkte
+                  </div>
                 </li>
               );
             })}
             {leaderboardData.length === 0 && !leaderboardLoading && (
-              <li style={{ fontSize: '0.5rem', opacity: 0.7 }}>Keine Daten</li>
+              <li style={{ fontSize: '0.75rem', opacity: 0.7, textAlign: 'center', padding: '1rem' }}>
+                Noch keine Spieler 🎮
+              </li>
             )}
           </ul>
         </div>
@@ -998,8 +676,26 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
         </button>
       </div>
       
-      {/* Controls Description */}
-     
+      {/* Message Display */}
+      {message && (
+        <div className="message-display" style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(0, 0, 0, 0.9)',
+          color: '#0ff',
+          padding: '15px 30px',
+          borderRadius: '10px',
+          border: '2px solid #0ff',
+          boxShadow: '0 0 20px #0ff',
+          fontFamily: 'Press Start 2P, cursive',
+          fontSize: '12px',
+          zIndex: 10000
+        }}>
+          {message}
+        </div>
+      )}
     </div>
   );
 };

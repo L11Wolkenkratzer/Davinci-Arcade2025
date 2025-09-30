@@ -17,10 +17,6 @@ const UserModal: React.FC<UserModalProps> = ({
 
   const fields = [
     "CLOSE" as const,
-    "NAME" as const,
-    "HIGHSCORE" as const,
-    "GAMES_PLAYED" as const,
-    "LAST_PLAYED" as const,
     "LOGOUT" as const,
   ];
 
@@ -82,30 +78,22 @@ const UserModal: React.FC<UserModalProps> = ({
           </button>
         </div>
         <div className="modal-body">
-          <div
-            className={`user-info ${focusedIndex === 1 ? "keyboard-selected" : ""}`}
-          >
+          <div className="user-info">
             <p>Name: {currentPlayer.name}</p>
           </div>
-          <div
-            className={`user-info ${focusedIndex === 2 ? "keyboard-selected" : ""}`}
-          >
+          <div className="user-info">
             <p>Highscore: {currentPlayer.totalScore}</p>
           </div>
-          <div
-            className={`user-info ${focusedIndex === 3 ? "keyboard-selected" : ""}`}
-          >
+          <div className="user-info">
             <p>Games Played: {currentPlayer.gamesPlayed}</p>
           </div>
-          <div
-            className={`user-info ${focusedIndex === 4 ? "keyboard-selected" : ""}`}
-          >
+          <div className="user-info">
             <p>
               Last Played: {new Date(currentPlayer.lastPlayed).toLocaleString()}
             </p>
           </div>
           <button
-            className={`logout-button ${focusedIndex === 5 ? "keyboard-selected" : ""}`}
+            className={`logout-button ${focusedIndex === 1 ? "keyboard-selected" : ""}`}
             onClick={logout}
           >
             Log Out

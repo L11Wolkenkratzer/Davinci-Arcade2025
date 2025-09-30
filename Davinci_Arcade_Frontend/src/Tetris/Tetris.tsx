@@ -82,7 +82,7 @@ type Piece = {
   y: number;
 };
 
-type GameState = "start" | "playing" | "gameover" | "highscores";
+type GameState = "start" | "playing" | "gameover" | "highscores" | "info";
 
 type HighscoreEntry = {
   _id: string;
@@ -443,7 +443,7 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
     ctx.shadowColor = "#00DDFF";
     ctx.shadowBlur = 8;
     ctx.fillStyle = "#00DDFF";
-    ctx.fillText("Hold Space To Exit", canvas.width / 2, boardY + BOARD_HEIGHT * BLOCK_SIZE + 45);
+    ctx.fillText("Hold bottom Button To Exit", canvas.width / 2, boardY + BOARD_HEIGHT * BLOCK_SIZE + 45);
     ctx.shadowBlur = 0;
   };
 
@@ -757,7 +757,7 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
         const menuItems = [
           () => startGame(),
           () => { loadHighscores(); setGameState("highscores"); },
-          null,
+          () => setGameState("info"),
           () => window.location.href = "/"
         ];
         
@@ -765,16 +765,8 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
           e.preventDefault();
           setMenuIndex((idx) => {
             let next = idx + (e.key === "ArrowDown" ? 1 : -1);
-            while (next >= 0 && next < menuItems.length && menuItems[next] === null) {
-              next += (e.key === "ArrowDown" ? 1 : -1);
-            }
             if (next < 0) next = menuItems.length - 1;
             if (next >= menuItems.length) next = 0;
-            while (menuItems[next] === null) {
-              next += (e.key === "ArrowDown" ? 1 : -1);
-              if (next < 0) next = menuItems.length - 1;
-              if (next >= menuItems.length) next = 0;
-            }
             return next;
           });
         }
@@ -803,7 +795,14 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
       }
       
       if (gameState === "highscores") {
-        if (e.key === "Escape" || e.key === "Enter") {
+        if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setGameState("start");
+        }
+      }
+      
+      if (gameState === "info") {
+        if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           setGameState("start");
         }
@@ -874,7 +873,10 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
               >
                 HIGHSCORES
               </button>
-              <button className="tetris-btn disabled" disabled>
+              <button 
+                className={`tetris-btn ${menuIndex === 2 ? 'selected' : ''}`}
+                onClick={() => setGameState("info")}
+              >
                 INFO
               </button>
               <button 
@@ -972,6 +974,66 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
             </button>
             
            
+          </div>
+        </div>
+      )}
+
+      {/* ℹ️ INFO SCREEN - HTML */}
+      {gameState === "info" && (
+        <div className="tetris-screen tetris-info-screen">
+          <div className="tetris-panel info">
+            <h2 className="tetris-title cyan">GAME INFO</h2>
+            
+            <div className="tetris-info-content">
+              <div className="tetris-info-section">
+                <h3 className="tetris-info-heading">OBJECTIVE</h3>
+                <p className="tetris-info-text">
+                  Stack falling blocks to create complete horizontal lines. Clear lines to earn points and level up!
+                </p>
+              </div>
+              
+              <div className="tetris-info-section">
+                <h3 className="tetris-info-heading">CONTROLS</h3>
+                <div className="tetris-controls-grid">
+                  <div className="tetris-control-item">
+                    <span className="tetris-control-key">JOYSTICK ←→</span>
+                    <span className="tetris-control-desc">Move Left/Right</span>
+                  </div>
+                  <div className="tetris-control-item">
+                    <span className="tetris-control-key">JOYSTICK ↓</span>
+                    <span className="tetris-control-desc">Soft Drop</span>
+                  </div>
+                  <div className="tetris-control-item">
+                    <span className="tetris-control-key">JOYSTICK ↑</span>
+                    <span className="tetris-control-desc">Rotate Piece</span>
+                  </div>
+                  <div className="tetris-control-item">
+                    <span className="tetris-control-key">BOTTOM BUTTON</span>
+                    <span className="tetris-control-desc">Hard Drop</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="tetris-info-section">
+                <h3 className="tetris-info-heading">SCORING</h3>
+                <div className="tetris-scoring-grid">
+                  <div>1 Line: <span className="tetris-highlight">40 pts</span></div>
+                  <div>2 Lines: <span className="tetris-highlight">100 pts</span></div>
+                  <div>3 Lines: <span className="tetris-highlight">300 pts</span></div>
+                  <div>4 Lines: <span className="tetris-highlight">1200 pts</span></div>
+                </div>
+                <p className="tetris-info-text" style={{marginTop: '1rem'}}>
+                  Earn 1 coin per 100 points!
+                </p>
+              </div>
+            </div>
+            
+            <button 
+              className="tetris-btn"
+              onClick={() => setGameState("start")}
+            >
+              BACK
+            </button>
           </div>
         </div>
       )}

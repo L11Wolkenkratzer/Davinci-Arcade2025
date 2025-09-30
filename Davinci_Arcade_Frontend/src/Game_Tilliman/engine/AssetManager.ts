@@ -22,35 +22,30 @@ export class AssetManager {
         this.createPlayerSprite('player_idle', '#FFA500', 'classic'); // Orange
         this.createPlayerSprite('player_jump', '#FFB347', 'classic'); // Light orange
         this.createPlayerSprite('player_fall', '#FF8C00', 'classic'); // Dark orange
-        this.createPlayerSprite('player_dash', '#FF6347', 'classic'); // Tomato
         this.createPlayerSprite('player_hit', '#FF0000', 'classic'); // Red
         
         // Steampunk skin
         this.createPlayerSprite('player_idle_steampunk', '#8B4513', 'steampunk'); // Brown/Bronze
         this.createPlayerSprite('player_jump_steampunk', '#A0522D', 'steampunk'); 
         this.createPlayerSprite('player_fall_steampunk', '#654321', 'steampunk');
-        this.createPlayerSprite('player_dash_steampunk', '#D2691E', 'steampunk');
         this.createPlayerSprite('player_hit_steampunk', '#B22222', 'steampunk');
         
         // Neon skin
         this.createPlayerSprite('player_idle_neon', '#00FFFF', 'neon'); // Cyan
         this.createPlayerSprite('player_jump_neon', '#FF00FF', 'neon'); // Magenta
         this.createPlayerSprite('player_fall_neon', '#FFFF00', 'neon'); // Yellow
-        this.createPlayerSprite('player_dash_neon', '#FF1493', 'neon'); // Deep pink
         this.createPlayerSprite('player_hit_neon', '#FF4500', 'neon'); // Red orange
         
         // Golden skin
         this.createPlayerSprite('player_idle_golden', '#FFD700', 'golden'); // Gold
         this.createPlayerSprite('player_jump_golden', '#FFA500', 'golden'); // Orange gold
         this.createPlayerSprite('player_fall_golden', '#FF8C00', 'golden'); // Dark orange
-        this.createPlayerSprite('player_dash_golden', '#DAA520', 'golden'); // Goldenrod
         this.createPlayerSprite('player_hit_golden', '#B8860B', 'golden'); // Dark goldenrod
         
         // Time Lord skin (legendary)
         this.createPlayerSprite('player_idle_timeLord', '#4B0082', 'timeLord'); // Indigo
         this.createPlayerSprite('player_jump_timeLord', '#9400D3', 'timeLord'); // Violet
         this.createPlayerSprite('player_fall_timeLord', '#8A2BE2', 'timeLord'); // Blue violet
-        this.createPlayerSprite('player_dash_timeLord', '#6A5ACD', 'timeLord'); // Slate blue
         this.createPlayerSprite('player_hit_timeLord', '#483D8B', 'timeLord'); // Dark slate blue
         
         // Platform sprites

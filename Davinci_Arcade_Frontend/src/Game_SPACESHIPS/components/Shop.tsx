@@ -54,6 +54,7 @@ const Shop: React.FC<ShopProps> = ({
                     onBuyShip(item.id);
                 }
                 break;
+            case ' ':
             case 'Escape':
                 event.preventDefault();
                 onBack();

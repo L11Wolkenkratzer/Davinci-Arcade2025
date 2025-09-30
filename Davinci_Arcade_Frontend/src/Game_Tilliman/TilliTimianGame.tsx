@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import TilliTimianLobby from './components/TilliTimianLobby.tsx';
+import TilliTimianInfo from './components/TilliTimianInfo.tsx';
 import './TilliTimianGame.css';
 
 // Player type definition (matching App.tsx)
@@ -27,16 +28,13 @@ const TilliTimianGame: React.FC<TilliTimianGameProps> = ({ currentPlayer }) => {
   const renderScreen = () => {
     switch (screen) {
       case 'lobby':
-
-    
         return <TilliTimianLobby currentPlayer={currentPlayer} onOpenHighscore={() => setScreen('highscore')} onOpenInfo={() => setScreen('info')} />;
-
       case 'game':
         return <div>Game component would go here</div>;
       case 'highscore':
         return <div>Highscore component would go here</div>;
       case 'info':
-        return <div>Info component would go here</div>;
+        return <TilliTimianInfo onBack={() => setScreen('lobby')} />;
       default:
         return null;
     }

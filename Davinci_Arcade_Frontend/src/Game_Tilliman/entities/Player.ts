@@ -14,7 +14,7 @@ export class Player implements PlayerEntity {
     public lives: number = 3;
     public score: number = 0;
     public isGrounded: boolean = false;
-    public canDash: boolean = true;
+    public canDash: boolean = false; // Dash entfernt
     public dashCooldown: number = 0;
     public invulnerable: boolean = false;
     public invulnerabilityTimer: number = 0;
@@ -31,8 +31,6 @@ export class Player implements PlayerEntity {
     
     private game: Game;
     private jumpPressed: boolean = false;
-    private dashDirection: number = 0;
-    private dashTimer: number = 0;
     private checkpointPosition: Vector2D;
     private collectedGears: number = 0;
     
@@ -44,14 +42,12 @@ export class Player implements PlayerEntity {
     
     public handleInput(input: InputState) {
         // Horizontal movement
-        if (!this.isDashing()) {
-            if (input.left) {
-                this.velocity.x = -PHYSICS.PLAYER_SPEED;
-            } else if (input.right) {
-                this.velocity.x = PHYSICS.PLAYER_SPEED;
-            } else {
-                this.velocity.x *= PHYSICS.FRICTION;
-            }
+        if (input.left) {
+            this.velocity.x = -PHYSICS.PLAYER_SPEED;
+        } else if (input.right) {
+            this.velocity.x = PHYSICS.PLAYER_SPEED;
+        } else {
+            this.velocity.x *= PHYSICS.FRICTION;
         }
         
         // Jump with double jump support
@@ -76,40 +72,16 @@ export class Player implements PlayerEntity {
                 this.velocity.y = -200;
             }
         }
-        
-        // Dash
-        if (input.dash && this.canDash && !this.isDashing()) {
-            this.startDash(input.left ? -1 : 1);
-        }
     }
     
     public update(deltaTime: number) {
-        // Update dash
-        if (this.isDashing()) {
-            this.dashTimer -= deltaTime;
-            this.velocity.x = this.dashDirection * PHYSICS.DASH_SPEED;
-            this.velocity.y = 0;
-            
-            if (this.dashTimer <= 0) {
-                this.endDash();
-            }
-        } else {
-            // Apply gravity
-            this.velocity.y += PHYSICS.GRAVITY * deltaTime;
-            this.velocity.y = Math.min(this.velocity.y, PHYSICS.MAX_FALL_SPEED);
-        }
+        // Apply gravity
+        this.velocity.y += PHYSICS.GRAVITY * deltaTime;
+        this.velocity.y = Math.min(this.velocity.y, PHYSICS.MAX_FALL_SPEED);
         
         // Update position
         this.position.x += this.velocity.x * deltaTime;
         this.position.y += this.velocity.y * deltaTime;
-        
-        // Update dash cooldown
-        if (!this.canDash) {
-            this.dashCooldown -= deltaTime;
-            if (this.dashCooldown <= 0) {
-                this.canDash = true;
-            }
-        }
         
         // Update invulnerability
         if (this.invulnerable) {
@@ -141,8 +113,6 @@ export class Player implements PlayerEntity {
     private updateState() {
         if (this.invulnerable && this.invulnerabilityTimer > 0) {
             this.state = 'hit';
-        } else if (this.isDashing()) {
-            this.state = 'dash';
         } else if (this.velocity.y < -50) {
             this.state = 'jump';
         } else if (this.velocity.y > 50) {
@@ -150,22 +120,6 @@ export class Player implements PlayerEntity {
         } else {
             this.state = 'idle';
         }
-    }
-    
-    private startDash(direction: number) {
-        this.dashDirection = direction;
-        this.dashTimer = PHYSICS.DASH_DURATION;
-        this.canDash = false;
-        this.dashCooldown = PHYSICS.DASH_COOLDOWN;
-    }
-    
-    private endDash() {
-        this.dashTimer = 0;
-        this.velocity.x = this.dashDirection * PHYSICS.PLAYER_SPEED;
-    }
-    
-    private isDashing(): boolean {
-        return this.dashTimer > 0;
     }
     
 
@@ -276,7 +230,7 @@ export class Player implements PlayerEntity {
         this.collectedGears = 0;
         this.velocity = { x: 0, y: 0 };
         this.state = 'idle';
-        this.canDash = true;
+        this.canDash = false;
         this.dashCooldown = 0;
         this.invulnerable = false;
         this.invulnerabilityTimer = 0;

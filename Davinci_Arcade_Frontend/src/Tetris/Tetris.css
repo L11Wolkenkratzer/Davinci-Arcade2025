@@ -546,3 +546,106 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+/* ℹ️ INFO SCREEN STYLES */
+.tetris-panel.info {
+  border-color: #00FFFF;
+  background: linear-gradient(145deg, #1a1a3a 80%, #0d0d1f 100%);
+  box-shadow: 
+    0 0 32px #00FFFF66,
+    0 0 64px #00FFFF33,
+    inset 0 0 32px #00FFFF1a;
+  animation: panelGlow 3s ease-in-out infinite alternate;
+  min-width: 700px;
+  max-width: 800px;
+}
+
+.tetris-title.cyan {
+  color: #00FFFF;
+  text-shadow: 
+    0 0 10px #00FFFF,
+    0 0 20px #00FFFF,
+    0 0 30px #00FFFF;
+}
+
+.tetris-info-content {
+  margin: 2rem 0;
+  text-align: left;
+}
+
+.tetris-info-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(0, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 2px solid rgba(0, 255, 255, 0.2);
+}
+
+.tetris-info-heading {
+  font-size: 1rem;
+  color: #FFD700;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 8px #FFD700;
+  text-align: center;
+}
+
+.tetris-info-text {
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: #FFFFFF;
+  text-align: center;
+}
+
+.tetris-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.tetris-control-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.tetris-control-key {
+  font-size: 0.7rem;
+  color: #00FFFF;
+  font-weight: bold;
+  text-shadow: 0 0 5px #00FFFF;
+}
+
+.tetris-control-desc {
+  font-size: 0.6rem;
+  color: #FFFFFF;
+  text-align: center;
+}
+
+.tetris-scoring-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  margin-top: 1rem;
+  font-size: 0.7rem;
+  color: #FFFFFF;
+  text-align: center;
+}
+
+.tetris-scoring-grid > div {
+  padding: 0.6rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.tetris-highlight {
+  color: #FFD700;
+  font-weight: bold;
+  text-shadow: 0 0 5px #FFD700;
+}

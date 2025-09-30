@@ -22,6 +22,7 @@ const Highscore: React.FC<HighscoreProps> = ({ highscores, onBack }) => {
                 setSelectedIndex((prev) => (prev + 1) % 1); // only one button, stays 0
                 break;
             case 'Enter':
+            case ' ':
                 event.preventDefault();
                 onBack();
                 break;
