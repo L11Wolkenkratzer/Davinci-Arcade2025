@@ -100,7 +100,7 @@ function App() {
             element={
               currentPlayer ? (
                 <Suspense fallback={<GameLoading />}>
-                  <SpaceshipGame />
+                  <SpaceshipGame currentPlayer={currentPlayer} />
                 </Suspense>
               ) : (
                 <Login setCurrentPlayer={updateCurrentPlayer} />
@@ -113,7 +113,7 @@ function App() {
             element={
               currentPlayer ? (
                 <Suspense fallback={<GameLoading />}>
-                  <PacMan />
+                  <PacMan currentPlayer={currentPlayer}/>
                 </Suspense>
               ) : (
                 <Login setCurrentPlayer={updateCurrentPlayer} />
@@ -139,7 +139,7 @@ function App() {
             element={
               currentPlayer ? (
                 <Suspense fallback={<GameLoading />}>
-                  <Snake />
+                  <Snake currentPlayer={currentPlayer}/>
                 </Suspense>
               ) : (
                 <Login setCurrentPlayer={updateCurrentPlayer} />

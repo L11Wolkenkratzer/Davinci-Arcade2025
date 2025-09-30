@@ -25,17 +25,16 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
   const { volume } = useAudio();
   const bgMusicRef = useRef<HTMLAudioElement | null>(null);
 
-  // Game State (erweiterte Variante mit currentPlayer und Submit/Tracking)
+  // ✅ Game State mit currentPlayer
   const {
     gameState,
     ships,
     upgrades,
+    currentShip,    // ✅ Ship-Objekt
     highscores,
-    // optionale erweiterte Felder
     playerStats,
     isSubmitting,
     showNewHighscore,
-    // Aktionen
     buyShip,
     buyUpgrade,
     equipShip,
@@ -43,8 +42,7 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
     resetGame,
     submitGameResult,
     trackGameEvent,
-    // Fallback-Aktion, falls in Hook vorhanden (keine Pflicht):
-    addHighscore,
+    loadHighscores
   } = useGameState(currentPlayer);
 
   // Hintergrundmusik-Initialisierung
@@ -52,7 +50,7 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
     if (!bgMusicRef.current) {
       bgMusicRef.current = new window.Audio('/Sounds/background.mp3');
       bgMusicRef.current.loop = true;
-      bgMusicRef.current.volume = (volume / 100) * 0.4; // 40% der globalen Lautstärke
+      bgMusicRef.current.volume = (volume / 100) * 0.4;
       bgMusicRef.current.addEventListener('canplaythrough', () => {
         console.log('🎵 Spaceship background music loaded');
       });
@@ -62,18 +60,15 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
     }
   }, [volume]);
 
-  // Lautstärke aktualisieren wenn sich globale Lautstärke ändert
   useEffect(() => {
     if (bgMusicRef.current) {
       bgMusicRef.current.volume = (volume / 100) * 0.4;
     }
   }, [volume]);
 
-  // Hintergrundmusik-Steuerung basierend auf Screen
   useEffect(() => {
     if (!bgMusicRef.current) return;
 
-    // Musik nur in Menüs, nicht im Spiel
     const menuScreens: GameScreen[] = ['lobby', 'shop', 'shipManager', 'highscore', 'info'];
     if (menuScreens.includes(currentScreen)) {
       bgMusicRef.current.play().catch((error) => {
@@ -83,7 +78,6 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
       bgMusicRef.current.pause();
     }
 
-    // Stoppe Musik komplett beim Unmount
     return () => {
       if (bgMusicRef.current) {
         bgMusicRef.current.pause();
@@ -91,6 +85,7 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
       }
     };
   }, [currentScreen]);
+
 
   // Globaler ESC/SPACE-Handler
   const handleKeyPress = useCallback(
@@ -102,10 +97,10 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
           setCurrentScreen('lobby');
         } else {
           navigate('/');
+
         }
-      }
-    },
-    [currentScreen, navigate]
+      },
+      [currentScreen, navigate]
   );
 
   useEffect(() => {
@@ -113,75 +108,79 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [handleKeyPress]);
 
-  // Game Over: optionales Submit + zurück zur Lobby
   const handleGameOver = useCallback(
-    async (score: number, coins: number) => {
-      try {
-        if (currentPlayer && score > 0 && typeof submitGameResult === 'function') {
-          await submitGameResult(score, gameState.level);
-        } else if (typeof addHighscore === 'function') {
-          // Fallback falls submitGameResult nicht existiert
-          addHighscore?.({ name: currentPlayer?.name ?? 'Player', score });
+      async (score: number, coins: number) => {
+        try {
+          console.log('🚀 Spaceship Game Over:', { score, coins, level: gameState.level });
+
+          if (currentPlayer && score > 0) {
+            await submitGameResult(score, gameState.level);
+          }
+
+          trackGameEvent?.('game_over', { score, coins, level: gameState.level });
+        } catch (err) {
+          console.error('Failed to submit spaceship game result:', err);
+        } finally {
+          setCurrentScreen('lobby');
         }
-        trackGameEvent?.('game_over', { score, coins, level: gameState.level });
-      } catch (err) {
-        console.error('Failed to submit game result:', err);
-      } finally {
-        setCurrentScreen('lobby');
-      }
-    },
-    [currentPlayer, submitGameResult, addHighscore, trackGameEvent, gameState.level]
+      },
+      [currentPlayer, submitGameResult, trackGameEvent, gameState.level]
   );
+
+  const handleOpenHighscore = useCallback(() => {
+    loadHighscores();
+    setCurrentScreen('highscore');
+  }, [loadHighscores]);
 
   const renderScreen = () => {
     switch (currentScreen) {
       case 'lobby':
         return (
-          <GameLobby
-            onStartGame={() => setCurrentScreen('game')}
-            onOpenShop={() => setCurrentScreen('shop')}
-            onOpenShipManager={() => setCurrentScreen('shipManager')}
-            onOpenHighscore={() => setCurrentScreen('highscore')}
-            onOpenInfo={() => setCurrentScreen('info')}
-            onExit={() => navigate('/')}
-            coins={gameState.coins}
-            currentShip={gameState.ship}
-            upgrades={upgrades}
-          />
+            <GameLobby
+                onStartGame={() => setCurrentScreen('game')}
+                onOpenShop={() => setCurrentScreen('shop')}
+                onOpenShipManager={() => setCurrentScreen('shipManager')}
+                onOpenHighscore={handleOpenHighscore}
+                onOpenInfo={() => setCurrentScreen('info')}
+                onExit={() => navigate('/')}
+                coins={gameState.coins}
+                currentShip={currentShip} // ✅ Ship-Objekt
+                upgrades={upgrades}
+            />
         );
       case 'game':
         return (
-          <GamePlay
-            onGameOver={handleGameOver}
-            onPause={() => setCurrentScreen('lobby')}
-            onStart={startGame}
-            onReset={resetGame}
-          />
+            <GamePlay
+                onGameOver={handleGameOver}
+                onPause={() => setCurrentScreen('lobby')}
+                onStart={startGame}
+                onReset={resetGame}
+            />
         );
       case 'shop':
         return (
-          <Shop
-            ships={ships}
-            coins={gameState.coins}
-            onBuyShip={(shipId: string) => {
-              buyShip(shipId).catch(console.error);
-              return true;
-            }}
-            onBuyUpgrade={(upgradeId: string) => {
-              buyUpgrade(upgradeId).catch(console.error);
-              return true;
-            }}
-            onBack={() => setCurrentScreen('lobby')}
-          />
+            <Shop
+                ships={ships}
+                coins={gameState.coins}
+                onBuyShip={(shipId: string) => {
+                  buyShip(shipId).catch(console.error);
+                  return true;
+                }}
+                onBuyUpgrade={(upgradeId: string) => {
+                  buyUpgrade(upgradeId).catch(console.error);
+                  return true;
+                }}
+                onBack={() => setCurrentScreen('lobby')}
+            />
         );
       case 'shipManager':
         return (
-          <ShipManager
-            ships={ships}
-            currentShip={gameState.ship}
-            onEquipShip={equipShip}
-            onBack={() => setCurrentScreen('lobby')}
-          />
+            <ShipManager
+                ships={ships}
+                currentShip={currentShip} // ✅ Ship-Objekt
+                onEquipShip={equipShip}
+                onBack={() => setCurrentScreen('lobby')}
+            />
         );
       case 'highscore':
         return <Highscore highscores={highscores} onBack={() => setCurrentScreen('lobby')} />;
@@ -193,18 +192,17 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
   };
 
   return (
-    <div className="spaceship-game">
-      {/* New Highscore Notification */}
-      {showNewHighscore && (
-        <div className="spaceship-notification">
-          <div className="spaceship-notification-content">🚀 NEW HIGHSCORE! 🚀</div>
-        </div>
-      )}
+      <div className="spaceship-game">
+        {showNewHighscore && (
+            <div className="spaceship-notification">
+              <div className="spaceship-notification-content">🚀 NEW GALACTIC RECORD! 🚀</div>
+            </div>
+        )}
 
-      <div className="game-container">
-        {renderScreen()}
+        <div className="game-container">
+          {renderScreen()}
+        </div>
       </div>
-    </div>
   );
 };
 
