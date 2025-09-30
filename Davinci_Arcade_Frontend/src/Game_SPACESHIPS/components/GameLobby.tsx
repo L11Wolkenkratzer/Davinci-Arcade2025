@@ -1,7 +1,6 @@
-// components/GameLobby.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAudio } from '../../SettingsContext.tsx';
-import type {Ship} from '../types/gametypes.ts';
+import type { Ship, Upgrade } from '../types/gametypes.ts';
 
 interface GameLobbyProps {
     onStartGame: () => void;
@@ -12,7 +11,7 @@ interface GameLobbyProps {
     onExit: () => void;
     coins: number;
     currentShip: Ship;
-    upgrades?: import('../types/gametypes').Upgrade[];
+    upgrades?: Upgrade[];
 }
 
 const GameLobby: React.FC<GameLobbyProps> = ({
@@ -43,7 +42,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 
     // Audio-Initialisierung
     useEffect(() => {
-        // Pacman-Lobby-Sounds
         let menuNavigate: HTMLAudioElement | undefined;
         let menuSelect: HTMLAudioElement | undefined;
         try {
@@ -55,7 +53,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         soundsRef.current = { menuNavigate, menuSelect };
     }, [volume]);
 
-    // Lautstärke aktualisieren wenn sich globale Lautstärke ändert
     useEffect(() => {
         if (soundsRef.current.menuNavigate) {
             soundsRef.current.menuNavigate.volume = (volume / 100) * 0.3;
@@ -65,8 +62,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         }
     }, [volume]);
 
-    
-    // Sound-Funktionen
     const playNavigateSound = useCallback(() => {
         if (soundsRef.current.menuNavigate) {
             soundsRef.current.menuNavigate.currentTime = 0;
@@ -99,16 +94,14 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 break;
             case 'Enter':
                 event.preventDefault();
-                playSelectSound(); // Sound bei Auswahl
-                // Kurze Verzögerung damit der Sound abgespielt wird bevor die Aktion ausgeführt wird
+                playSelectSound();
                 setTimeout(() => {
                     menuItems[selectedIndex].action();
                 }, 150);
                 break;
         }
-    }, [selectedIndex, menuItems, playNavigateSound, playSelectSound]);
+    }, [selectedIndex, menuItems, playSelectSound]);
 
-    // Click-Handler für Mouse-Interaktion mit Sound
     const handleMenuItemClick = useCallback((action: () => void) => {
         playSelectSound();
         setTimeout(() => {
@@ -120,7 +113,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         if (index !== selectedIndex) {
             setSelectedIndex(index);
         }
-    }, [selectedIndex, playNavigateSound]);
+    }, [selectedIndex]);
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyPress);
@@ -133,9 +126,13 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 <div className="lobby-header">
                     <h1 className="game-title">SPACESHIPS</h1>
                     <div className="ship-preview">
-                        <img src={currentShip.icon} alt={currentShip.name} className="ship-icon" />
-                        <div className="ship-name">{currentShip.name}</div>
-                        {/* Upgrades anzeigen */}
+                        <img
+                            src={currentShip?.icon}
+                            alt={currentShip?.name}
+                            className="ship-icon"
+                        />
+                        <div className="ship-name">{currentShip?.name}</div>
+
                         {Array.isArray(upgrades) && upgrades.filter(u => u.owned).length > 0 && (
                             <div style={{ marginTop: '0.7rem', display: 'flex', flexWrap: 'wrap', gap: '0.4rem', justifyContent: 'center' }}>
                                 {upgrades.filter(u => u.owned).map(u => (
@@ -175,8 +172,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                         </button>
                     ))}
                 </div>
-
-            
             </div>
         </div>
     );

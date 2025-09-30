@@ -151,3 +151,387 @@
   text-align: center;
   letter-spacing: 1px;
 }
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* Bestehende Pacman CSS bleibt unverändert... */
+
+/* ✅ PACMAN HIGHSCORE - TETRIS-STYLE FENSTER */
+.pacman-highscore-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #1a1a00 0%, #0a0a00 70%, #040400 100%);
+  font-family: 'Press Start 2P', cursive;
+  color: #ffe066;
+  overflow: hidden;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.pacman-highscore-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.pacman-highscore-panel {
+  background: linear-gradient(145deg, #3a3a1a 80%, #1f1f0d 100%);
+  border: 4px solid #ffe066;
+  border-radius: 32px;
+  box-shadow:
+          0 0 32px #ffe06666,
+          0 0 64px #ffe06633,
+          inset 0 0 32px #ffe0661a;
+  padding: 3rem 2.5rem;
+  min-width: 640px;
+  min-height: 720px;
+  max-width: 90vw;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  animation: pacmanPanelGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pacmanPanelGlow {
+  0% { box-shadow: 0 0 32px #ffe06666, 0 0 64px #ffe06633, inset 0 0 32px #ffe0661a; }
+  100% { box-shadow: 0 0 48px #ffe06699, 0 0 96px #ffe06644, inset 0 0 48px #ffe0662a; }
+}
+
+/* ✅ TITEL */
+.pacman-highscore-title {
+  font-size: 3rem;
+  color: #ffe066;
+  text-shadow:
+          0 0 20px #ffe066,
+          0 0 40px #ffe06666,
+          0 0 60px #ffe06633;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.2em;
+  animation: pacmanTitlePulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes pacmanTitlePulse {
+  0% {
+    transform: scale(1);
+    text-shadow: 0 0 20px #ffe066, 0 0 40px #ffe066, 0 0 60px #ffe066;
+  }
+  100% {
+    transform: scale(1.05);
+    text-shadow: 0 0 30px #ffe066, 0 0 60px #ffe066, 0 0 90px #ffe066;
+  }
+}
+
+.pacman-highscore-subtitle {
+  font-size: 1.1rem;
+  color: #ffd700;
+  text-shadow: 0 0 15px #ffd700;
+  margin-bottom: 1.5rem;
+  animation: pacmanWelcome 2s ease-in-out infinite alternate;
+}
+
+@keyframes pacmanWelcome {
+  0% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+/* ✅ HIGHSCORE LISTE */
+.pacman-highscore-list {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 10px;
+  scroll-behavior: smooth;
+}
+
+.pacman-highscore-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pacman-highscore-list::-webkit-scrollbar-track {
+  background: rgba(255, 224, 102, 0.2);
+  border-radius: 4px;
+}
+
+.pacman-highscore-list::-webkit-scrollbar-thumb {
+  background: #ffe066;
+  border-radius: 4px;
+  box-shadow: 0 0 10px #ffe066;
+}
+
+.pacman-highscore-entry {
+  display: grid;
+  grid-template-columns: 60px 1fr 100px 60px;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(145deg, #4a4a2a, #2a2a1a);
+  border: 2px solid #ffe066;
+  border-radius: 12px;
+  box-shadow: 0 0 15px #ffe06633, inset 0 0 15px #ffe0661a;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  animation: pacmanEntrySlide 0.5s ease-out;
+}
+
+.pacman-highscore-entry:hover {
+  background: linear-gradient(145deg, #5a5a3a, #3a3a2a);
+  border-color: #ffd700;
+  box-shadow: 0 0 25px #ffd70044, inset 0 0 25px #ffd7002a;
+  transform: translateY(-2px);
+}
+
+@keyframes pacmanEntrySlide {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ✅ RANKING COLORS */
+.pacman-highscore-entry.position-1 .pacman-rank {
+  color: #FFD700;
+  text-shadow: 0 0 15px #FFD700;
+}
+.pacman-highscore-entry.position-2 .pacman-rank {
+  color: #C0C0C0;
+  text-shadow: 0 0 15px #C0C0C0;
+}
+.pacman-highscore-entry.position-3 .pacman-rank {
+  color: #CD7F32;
+  text-shadow: 0 0 15px #CD7F32;
+}
+.pacman-highscore-entry:not(.position-1):not(.position-2):not(.position-3) .pacman-rank {
+  color: #ffe066;
+  text-shadow: 0 0 12px #ffe066;
+}
+
+.pacman-rank {
+  font-weight: bold;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.pacman-name {
+  color: #FFFFFF;
+  text-shadow: 0 0 10px #FFFFFF;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pacman-score {
+  color: #ffe066;
+  text-shadow: 0 0 12px #ffe066;
+  text-align: right;
+  font-weight: bold;
+}
+
+.pacman-level {
+  color: #ffd700;
+  text-shadow: 0 0 10px #ffd700;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.pacman-no-scores {
+  text-align: center;
+  color: #888;
+  font-size: 1.2rem;
+  margin: 3rem 0;
+  animation: pacmanFadeIn 1s ease-out;
+}
+
+@keyframes pacmanFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ✅ BACK BUTTON */
+.pacman-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.1rem;
+  background: linear-gradient(145deg, #3a3a2a, #2a2a1a);
+  color: #ffe066;
+  border: 3px solid #ffe066;
+  border-radius: 16px;
+  padding: 1.2rem 2.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  outline: none;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px #ffe066;
+  box-shadow:
+          0 0 20px #ffe06633,
+          inset 0 0 20px #ffe0661a;
+  min-width: 320px;
+  position: relative;
+  overflow: hidden;
+  margin-top: 2rem;
+}
+
+.pacman-btn::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, #ffe066, transparent);
+  border-radius: 16px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.pacman-btn:hover::before,
+.pacman-btn.selected::before,
+.pacman-btn.keyboard-selected::before {
+  opacity: 1;
+}
+
+.pacman-btn:hover,
+.pacman-btn.selected,
+.pacman-btn.keyboard-selected {
+  background: linear-gradient(145deg, #ffd700, #ffb700);
+  color: #1a1a00;
+  border-color: #ffffff;
+  text-shadow: 0 0 15px #ffffff;
+  box-shadow:
+          0 0 40px #ffffff66,
+          0 0 80px #ffffff33,
+          inset 0 0 20px #ffffff1a;
+  transform: scale(1.05);
+  animation: pacmanSelectedPulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pacmanSelectedPulse {
+  0% { box-shadow: 0 0 40px #ffffff66, 0 0 80px #ffffff33, inset 0 0 20px #ffffff1a; }
+  100% { box-shadow: 0 0 60px #ffffff88, 0 0 120px #ffffff44, inset 0 0 30px #ffffff2a; }
+}
+
+/* ✅ KEYBOARD NAVIGATION */
+.pacman-highscore-entry.keyboard-selected {
+  transform: translateX(5px) scale(1.02) !important;
+  background: rgba(255, 224, 102, 0.3) !important;
+  border-left: 4px solid #ffe066 !important;
+  box-shadow: 0 0 15px rgba(255, 224, 102, 0.5) !important;
+}
+
+.pacman-navigation-hint {
+  color: #888888;
+  font-size: 0.8rem;
+  margin-top: 1rem;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* 🎉 NEW HIGHSCORE NOTIFICATION */
+.pacman-notification {
+  position: fixed;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.pacman-notification-content {
+  font-size: 2rem;
+  color: #ffe066;
+  text-shadow:
+          0 0 20px #ffe066,
+          0 0 40px #ffe06666,
+          0 0 60px #ffe06633;
+  background: linear-gradient(45deg, #ffe066, #ffd700, #ffb700, #ffe066);
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation:
+          pacmanRainbow 2s ease-in-out infinite,
+          pacmanBounce 1s ease-in-out infinite,
+          pacmanGlow 1.5s ease-in-out infinite alternate;
+  padding: 1rem 2rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes pacmanRainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pacmanBounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+@keyframes pacmanGlow {
+  0% { filter: drop-shadow(0 0 20px #ffe066); }
+  100% { filter: drop-shadow(0 0 40px #ffe066); }
+}
+
+/* 📱 MOBILE OPTIMIZATIONS */
+@media (max-width: 768px) {
+  .pacman-highscore-panel {
+    min-width: 90vw;
+    min-height: 80vh;
+    padding: 2rem 1.5rem;
+  }
+
+  .pacman-highscore-title {
+    font-size: 2.5rem;
+  }
+
+  .pacman-btn {
+    min-width: 280px;
+    font-size: 1rem;
+    padding: 1rem 2rem;
+  }
+
+  .pacman-highscore-entry {
+    grid-template-columns: 50px 1fr 80px 50px;
+    gap: 0.5rem;
+    padding: 0.8rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .pacman-notification-content {
+    font-size: 1.5rem;
+    padding: 0.8rem 1.5rem;
+  }
+}
+
+/* 🚀 PERFORMANCE OPTIMIZATIONS */
+.pacman-highscore-container {
+  contain: layout style paint;
+  will-change: contents;
+}
+
+.pacman-highscore-screen {
+  contain: layout style;
+}
+
+/* 🎯 PREVENT OVERSCROLL */
+html, body {
+  overscroll-behavior: none;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
