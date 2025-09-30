@@ -1,163 +1,125 @@
-// Snake API Service - Backend Integration
-import type { 
-    Player, 
-    SnakeGameResult, 
-    SnakeHighscoreEntry, 
-    SnakePlayerStats,
-    ApiResponse 
-} from './snakeTypes';
+// snakeApi.ts - API für Snake Highscores
+const apiCall = async (url: string, options?: RequestInit) => {
+  const origin5000 = window.location.origin.replace(/:5173$/, ':5000');
+  const fullUrl = `${origin5000}${url}`;
 
-class SnakeApiService {
-    private baseUrl: string;
+  try {
+    const response = await fetch(fullUrl, options);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Snake API Error:', error);
+    throw error;
+  }
+};
 
-    constructor() {
-        this.baseUrl = window.location.origin.replace(/:5173$/, ':5000');
+const snakeApi = {
+  // Player Stats laden
+  async getPlayerStats(playerId: string) {
+    try {
+      console.log('🐍 Loading Snake player stats for:', playerId);
+
+      const [playerData, scoresData] = await Promise.all([
+        apiCall(`/api/players/${playerId}`),
+        apiCall('/api/scores/game/snake')
+      ]);
+
+      console.log('🐍 Snake scores data:', scoresData);
+
+      const snakeScores = scoresData.filter((score: any) =>
+          score.playerId._id === playerId
+      );
+
+      const snakeHighscore = snakeScores.length > 0
+          ? Math.max(...snakeScores.map((s: any) => s.score))
+          : 0;
+
+      // ✅ KUMULIERTE COINS BERECHNUNG
+      const totalEarnedCoins = snakeScores.reduce((total: number, score: any) => {
+        return total + Math.floor(score.score / 10); // 1 Coin pro 10 Punkte
+      }, 0);
+
+      const stats = {
+        totalScore: playerData.totalScore || 0,
+        gamesPlayed: playerData.gamesPlayed || 0,
+        snakeHighscore,
+        snakeCoins: 400 + totalEarnedCoins, // ✅ Base 400 + alle verdienten Coins
+        snakeGamesPlayed: snakeScores.length
+      };
+
+      console.log('🐍 Snake player stats:', stats);
+      return stats;
+
+    } catch (error) {
+      console.error('❌ Load Snake player stats failed:', error);
+      return {
+        totalScore: 0,
+        gamesPlayed: 0,
+        snakeHighscore: 0,
+        snakeCoins: 400, // ✅ Fallback auf 400
+        snakeGamesPlayed: 0
+      };
     }
+  },
 
-    private async apiCall<T>(url: string, options?: RequestInit): Promise<T> {
-        const fullUrl = `${this.baseUrl}${url}`;
-        
-        try {
-            const response = await fetch(fullUrl, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options?.headers,
-                },
-                ...options,
-            });
+  // ✅ KORRIGIERTE HIGHSCORES (nur beste pro Spieler)
+  async getHighscores(limit = 10) {
+    try {
+      console.log('🐍 Loading Snake highscores...');
+      const data = await apiCall('/api/scores/game/snake');
+      console.log('🐍 Raw snake scores:', data);
 
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+      // ✅ FILTER: Nur bester Score pro Spieler
+      const bestScoresPerPlayer = new Map<string, any>();
 
-            return await response.json();
-        } catch (error) {
-            console.error('Snake API Error:', error);
-            throw error;
+      data.forEach((score: any) => {
+        const playerId = score.playerId._id;
+        const existingBest = bestScoresPerPlayer.get(playerId);
+
+        // Wenn kein Score für diesen Spieler existiert ODER neuer Score ist besser
+        if (!existingBest || score.score > existingBest.score) {
+          bestScoresPerPlayer.set(playerId, score);
         }
+      });
+
+      // ✅ Konvertiere Map zu Array und sortiere nach Score (absteigend)
+      const uniqueHighscores = Array.from(bestScoresPerPlayer.values())
+          .sort((a, b) => b.score - a.score)
+          .slice(0, limit);
+
+      console.log('🐍 Filtered unique snake highscores:', uniqueHighscores);
+      return uniqueHighscores;
+
+    } catch (error) {
+      console.error('❌ Error loading Snake highscores:', error);
+      return [];
     }
+  },
 
-    // Score and Game Result Management
-    async submitGameResult(gameResult: SnakeGameResult): Promise<ApiResponse> {
-        return this.apiCall('/api/scores', {
-            method: 'POST',
-            body: JSON.stringify(gameResult),
-        });
+  // Score direkt submittieren
+  async submitScore(playerId: string, score: number, level: number, duration: number) {
+    try {
+      console.log('🐍 Submitting Snake score...', { playerId, score, level, duration });
+
+      const response = await apiCall('/api/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId,
+          gameName: 'snake', // ✅ WICHTIG: 'snake'
+          score,
+          level,
+          duration
+        })
+      });
+
+      console.log('✅ Snake score submitted successfully:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error submitting Snake score:', error);
+      throw error;
     }
+  }
+};
 
-    async getHighscores(limit: number = 10): Promise<SnakeHighscoreEntry[]> {
-        return this.apiCall(`/api/scores/game/snake?limit=${limit}`);
-    }
-
-    async getPlayerHighscores(playerId: string, limit: number = 5): Promise<SnakeHighscoreEntry[]> {
-        try {
-            return await this.apiCall(`/api/scores/player/${playerId}/snake?limit=${limit}`);
-        } catch (error) {
-            console.warn('Player highscores not available:', error);
-            return [];
-        }
-    }
-
-    // Player Statistics
-    async getPlayerStats(playerId: string): Promise<SnakePlayerStats> {
-        try {
-            const [playerData, highscores] = await Promise.all([
-                this.apiCall<any>(`/api/players/${playerId}`),
-                this.getHighscores(50), // Get larger set to find player
-            ]);
-
-            // Find player's best score from highscores
-            const playerHighscore = highscores.find(entry => 
-                entry.playerId._id === playerId || entry.playerId.name === playerData.name
-            );
-
-            const snakeHighscore = playerHighscore?.score || 0;
-            const snakeGamesPlayed = highscores.filter(entry => 
-                entry.playerId._id === playerId
-            ).length;
-
-            // Calculate fruits earned (score = snake length - initial length, fruits = score)
-            const snakeFruits = snakeHighscore;
-
-            return {
-                totalScore: playerData.totalScore || 0,
-                gamesPlayed: playerData.gamesPlayed || 0,
-                snakeHighscore,
-                snakeFruits,
-                snakeGamesPlayed,
-            };
-        } catch (error) {
-            console.error('Failed to get player stats:', error);
-            // Return fallback data
-            return {
-                totalScore: 0,
-                gamesPlayed: 0,
-                snakeHighscore: 0,
-                snakeFruits: 0,
-                snakeGamesPlayed: 0,
-            };
-        }
-    }
-
-    // Player Profile Management
-    async getPlayerProfile(playerId: string): Promise<any> {
-        try {
-            return await this.apiCall(`/api/players/${playerId}`);
-        } catch (error) {
-            console.error('Failed to get player profile:', error);
-            return null;
-        }
-    }
-
-    // Game Analytics
-    async getGameAnalytics(playerId: string): Promise<any> {
-        try {
-            const scores = await this.apiCall<SnakeHighscoreEntry[]>(`/api/scores/game/snake`);
-            const playerScores = scores.filter((score: SnakeHighscoreEntry) => 
-                score.playerId._id === playerId
-            );
-
-            return {
-                totalGames: playerScores.length,
-                averageScore: playerScores.length > 0 
-                    ? Math.round(playerScores.reduce((sum: number, s: SnakeHighscoreEntry) => sum + s.score, 0) / playerScores.length)
-                    : 0,
-                bestScore: playerScores.length > 0 
-                    ? Math.max(...playerScores.map((s: SnakeHighscoreEntry) => s.score))
-                    : 0,
-                recentGames: playerScores.slice(0, 5),
-                improvement: playerScores.length >= 2 
-                    ? playerScores[0].score - playerScores[playerScores.length - 1].score 
-                    : 0
-            };
-        } catch (error) {
-            console.error('Analytics not available:', error);
-            return {
-                totalGames: 0,
-                averageScore: 0,
-                bestScore: 0,
-                recentGames: [],
-                improvement: 0
-            };
-        }
-    }
-
-    // Leaderboard
-    async getLeaderboard(limit: number = 10): Promise<SnakeHighscoreEntry[]> {
-        return this.getHighscores(limit);
-    }
-
-    // Health Check
-    async checkBackendConnection(): Promise<boolean> {
-        try {
-            await this.apiCall('/api/health');
-            return true;
-        } catch (error) {
-            console.error('Backend connection failed:', error);
-            return false;
-        }
-    }
-}
-
-export const snakeApi = new SnakeApiService();
-export default snakeApi; 
+export default snakeApi;

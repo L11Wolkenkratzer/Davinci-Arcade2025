@@ -78,7 +78,6 @@
     justify-content: center;
     position: relative;
     background: rgba(0, 0, 0, 0.3);
-    border: 2px solid #0ff;
     border-radius: 15px;
     box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
     backdrop-filter: blur(10px);
@@ -945,4 +944,251 @@
 
 .particle {
     transition: none;
+}/* 🚀 SPACESHIP HIGHSCORE STYLING - 1.4x VERGRÖSSERT */
+.spaceship-highscore {
+    background: linear-gradient(135deg, rgba(0,4,40,0.95) 0%, rgba(0,78,146,0.98) 100%);
+    border: 3px solid #00FFFF;
+    border-radius: 20px;
+    box-shadow:
+            0 0 50px #00FFFF,
+            inset 0 0 30px rgba(0, 255, 255, 0.1);
+    padding: 2.8rem;
+    color: #fff;
+    font-family: 'Press Start 2P', cursive;
+    min-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 30;
+}
+
+.spaceship-highscore-title {
+    color: #00FFFF;
+    text-align: center;
+    margin-bottom: 42px;
+    font-size: 2.52rem;
+    text-shadow: 0 0 20px #00FFFF;
+    animation: titleGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    from { text-shadow: 0 0 20px #00FFFF; }
+    to { text-shadow: 0 0 30px #00FFFF, 0 0 40px #0099FF; }
+}
+
+.spaceship-highscore-list {
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+    margin-bottom: 42px;
+    max-height: 560px;
+    overflow-y: auto;
+    padding-right: 14px;
+}
+
+.spaceship-highscore-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 21px 28px;
+    border-radius: 17px;
+    font-size: 1.4rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Rang-spezifische Farben für Spaceship Theme */
+.spaceship-highscore-entry.rank-1 {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.spaceship-highscore-entry.rank-2 {
+    background: linear-gradient(90deg, rgba(192, 192, 192, 0.2) 0%, rgba(169, 169, 169, 0.1) 100%);
+    border: 2px solid #c0c0c0;
+    box-shadow: 0 0 15px rgba(192, 192, 192, 0.3);
+}
+
+.spaceship-highscore-entry.rank-3 {
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.2) 0%, rgba(184, 115, 51, 0.1) 100%);
+    border: 2px solid #cd7f32;
+    box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
+}
+
+.spaceship-highscore-entry:not(.rank-1):not(.rank-2):not(.rank-3) {
+    background: linear-gradient(90deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 153, 255, 0.05) 100%);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.spaceship-highscore-entry:hover {
+    transform: translateX(7px);
+    box-shadow:
+            0 0 35px rgba(0, 255, 255, 0.5),
+            -7px 0 21px rgba(0, 255, 255, 0.2);
+}
+
+.spaceship-rank {
+    font-weight: bold;
+    min-width: 70px;
+    text-align: left;
+}
+
+.spaceship-highscore-entry.rank-1 .spaceship-rank { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+.spaceship-highscore-entry.rank-2 .spaceship-rank { color: #c0c0c0; text-shadow: 0 0 10px #c0c0c0; }
+.spaceship-highscore-entry.rank-3 .spaceship-rank { color: #cd7f32; text-shadow: 0 0 10px #cd7f32; }
+
+.spaceship-name {
+    flex: 1;
+    text-align: left;
+    margin: 0 28px;
+    color: #fff;
+    font-size: 1.26rem;
+}
+
+.spaceship-score {
+    color: #00FFFF;
+    font-weight: bold;
+    font-size: 1.54rem;
+    text-shadow: 0 0 8px #00FFFF;
+    min-width: 112px;
+    text-align: right;
+}
+
+.spaceship-level {
+    color: #ff6b6b;
+    font-size: 1.12rem;
+    min-width: 56px;
+    text-align: right;
+    margin-left: 21px;
+}
+
+.spaceship-no-scores {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.68rem;
+    padding: 56px 28px;
+    border: 2px dashed rgba(0, 255, 255, 0.3);
+    border-radius: 17px;
+    background: rgba(0, 255, 255, 0.05);
+}
+
+.spaceship-highscore-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 28px;
+}
+
+/* Menu Item Button auch vergrössern */
+.spaceship-highscore-controls .menu-item {
+    font-size: 1.26rem;
+    padding: 1.4rem 2.8rem;
+}
+
+/* Scrollbar für Highscore-Liste */
+.spaceship-highscore-list::-webkit-scrollbar {
+    width: 11px;
+}
+
+.spaceship-highscore-list::-webkit-scrollbar-track {
+    background: rgba(0, 255, 255, 0.1);
+    border-radius: 6px;
+}
+
+.spaceship-highscore-list::-webkit-scrollbar-thumb {
+    background: #00FFFF;
+    border-radius: 6px;
+}
+
+.spaceship-highscore-list::-webkit-scrollbar-thumb:hover {
+    background: #0099FF;
+}
+
+/* 🚀 SPACESHIP HIGHSCORE KEYBOARD NAVIGATION - VERGRÖSSERT */
+.spaceship-highscore-entry.keyboard-selected {
+    transform: translateX(7px) scale(1.02) !important;
+    background: rgba(0, 78, 146, 0.3) !important;
+    border-left: 6px solid #004e92 !important;
+    box-shadow: 0 0 21px rgba(0, 78, 146, 0.5) !important;
+}
+
+.spaceship-btn.keyboard-selected {
+    background: #004e92 !important;
+    color: #fff !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 11px 28px rgba(0, 78, 146, 0.6) !important;
+}
+
+.spaceship-highscore-list {
+    scroll-behavior: smooth;
+}
+
+.spaceship-date {
+    font-family: 'Press Start 2P', cursive;
+    text-align: right;
+    opacity: 0.7;
+    font-size: 0.98rem;
+}
+
+/* Spaceship notification - VERGRÖSSERT */
+.spaceship-notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: linear-gradient(135deg, #000428 0%, #004e92 100%);
+    color: #ffffff;
+    padding: 21px 42px;
+    border-radius: 11px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1.54rem;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+    border: 2px solid #00FFFF;
+    animation: slideDown 0.5s ease-out;
+    min-width: 420px;
+}
+
+.spaceship-notification-content {
+    animation: none;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateX(-50%) translateY(-100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0px);
+        opacity: 1;
+    }
+}
+
+/* Responsive Design - ANGEPASST */
+@media (max-width: 768px) {
+    .spaceship-highscore {
+        min-width: 90vw;
+        max-width: 630px;
+        padding: 2.1rem;
+    }
+
+    .spaceship-highscore-title {
+        font-size: 1.96rem;
+    }
+
+    .spaceship-highscore-entry {
+        padding: 14px 21px;
+        font-size: 1.12rem;
+    }
+
+    .spaceship-notification {
+        font-size: 1.4rem;
+        padding: 14px 28px;
+    }
 }

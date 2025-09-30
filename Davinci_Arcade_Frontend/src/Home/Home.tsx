@@ -18,7 +18,6 @@ import SettingsModal from "./SettingsModal";
 import UserModal from "./UserModal";
 import InfoModal from "./InfoModal";
 
-import sonicVideo from "/Videos/sonic-preview2.mp4";
 import tetrisVideo from "/Videos/tetris.mp4";
 import spaceshipVideo from "/Videos/SpaceShip.mp4";
 import snakeVideo from "/Videos/Snake.mp4";
