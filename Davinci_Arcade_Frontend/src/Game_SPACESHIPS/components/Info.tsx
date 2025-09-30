@@ -34,6 +34,7 @@ const Info: React.FC<InfoProps> = ({ onBack }) => {
                 setSelectedIndex((prev) => (prev + 1) % 1); // only one button, stays 0
                 break;
             case 'Enter':
+            case ' ':
             case 'Escape':
                 event.preventDefault();
                 onBack();
@@ -63,16 +64,12 @@ const Info: React.FC<InfoProps> = ({ onBack }) => {
                         <h2>CONTROLS</h2>
                         <div className="controls-list">
                             <div className="control-item">
-                                <span className="key">↑↓←→</span>
+                                <span className="key">JOYSTICK</span>
                                 <span className="description">Move ship</span>
                             </div>
                             <div className="control-item">
-                                <span className="key">SPACE/ENTER</span>
-                                <span className="description">Shoot</span>
-                            </div>
-                            <div className="control-item">
-                                <span className="key">ESC</span>
-                                <span className="description">Pause/Back</span>
+                                <span className="key">BOTTOM BUTTON</span>
+                                <span className="description">Back to Lobby</span>
                             </div>
                         </div>
                     </div>

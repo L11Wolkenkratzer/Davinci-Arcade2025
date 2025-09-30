@@ -6,12 +6,234 @@ interface LoginProps {
   setCurrentPlayer: React.Dispatch<React.SetStateAction<Player>>;
 }
 
+interface KeyboardPopupProps {
+  onComplete: (username: string) => void;
+  badgeId: string;
+}
+
+const KeyboardPopup: React.FC<KeyboardPopupProps> = ({ onComplete, badgeId }) => {
+    const [username, setUsername] = useState('');
+    const [selectedRow, setSelectedRow] = useState(0);
+    const [selectedCol, setSelectedCol] = useState(0);
+
+    const keyboard = [
+        ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'],
+        ['K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'],
+        ['U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3'],
+        ['4', '5', '6', '7', '8', '9', 'SPACE', 'DELETE', '', 'OK']
+    ];
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            e.preventDefault();
+            
+            switch (e.key) {
+                case 'ArrowUp':
+                    setSelectedRow(prev => {
+                        const newRow = prev > 0 ? prev - 1 : keyboard.length - 1;
+                        // Überprüfe ob die Spalte in der neuen Zeile existiert
+                        if (selectedCol >= keyboard[newRow].length || keyboard[newRow][selectedCol] === '') {
+                            setSelectedCol(keyboard[newRow].length - 1);
+                        }
+                        return newRow;
+                    });
+                    break;
+                case 'ArrowDown':
+                    setSelectedRow(prev => {
+                        const newRow = (prev + 1) % keyboard.length;
+                        // Überprüfe ob die Spalte in der neuen Zeile existiert
+                        if (selectedCol >= keyboard[newRow].length || keyboard[newRow][selectedCol] === '') {
+                            setSelectedCol(keyboard[newRow].length - 1);
+                        }
+                        return newRow;
+                    });
+                    break;
+                case 'ArrowLeft':
+                    setSelectedCol(prev => {
+                        let newCol = prev > 0 ? prev - 1 : keyboard[selectedRow].length - 1;
+                        // Überspringe leere Felder
+                        while (keyboard[selectedRow][newCol] === '' && newCol > 0) {
+                            newCol--;
+                        }
+                        return newCol;
+                    });
+                    break;
+                case 'ArrowRight':
+                    setSelectedCol(prev => {
+                        let newCol = (prev + 1) % keyboard[selectedRow].length;
+                        // Überspringe leere Felder
+                        while (keyboard[selectedRow][newCol] === '' && newCol < keyboard[selectedRow].length - 1) {
+                            newCol++;
+                        }
+                        return newCol;
+                    });
+                    break;
+                case 'Enter':
+                case ' ':
+                    handleKeySelect();
+                    break;
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [selectedRow, selectedCol, username]);
+
+    const handleKeySelect = () => {
+        const key = keyboard[selectedRow][selectedCol];
+        
+        if (key === 'OK') {
+            if (username.trim().length > 0) {
+                onComplete(username.trim());
+            }
+        } else if (key === 'DELETE') {
+            setUsername(prev => prev.slice(0, -1));
+        } else if (key === 'SPACE') {
+            setUsername(prev => prev + ' ');
+        } else if (key && key !== '') {
+            setUsername(prev => prev + key);
+        }
+    };
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.95)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+        }}>
+            <div style={{
+                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                borderRadius: '20px',
+                padding: '40px',
+                border: '3px solid var(--primary-cyan)',
+                boxShadow: '0 0 40px rgba(0, 255, 255, 0.3)',
+                maxWidth: '900px',
+                width: '90%'
+            }}>
+                <h2 className="arcade-title" style={{ fontSize: '1.5rem', marginBottom: '20px', textAlign: 'center', fontFamily: 'var(--font-family)' }}>
+                    Neuer Spieler
+                </h2>
+                
+                <p style={{ 
+                    color: 'var(--primary-cyan)', 
+                    fontSize: '12px', 
+                    marginBottom: '10px',
+                    textAlign: 'center',
+                    fontFamily: 'var(--font-family)'
+                }}>
+                    Badge: {badgeId}
+                </p>
+
+                <div style={{
+                    background: '#0a0a0a',
+                    border: '2px solid var(--primary-cyan)',
+                    borderRadius: '10px',
+                    padding: '20px',
+                    marginBottom: '30px',
+                    minHeight: '60px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}>
+                    <span style={{
+                        color: 'var(--primary-cyan)',
+                        fontSize: '20px',
+                        fontFamily: 'var(--font-family)',
+                        letterSpacing: '2px'
+                    }}>
+                        {username || 'Namen eingeben...'}
+                        <span style={{ 
+                            animation: 'blink 1s infinite',
+                            marginLeft: '5px'
+                        }}>|</span>
+                    </span>
+                </div>
+
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    marginBottom: '20px'
+                }}>
+                    {keyboard.map((row, rowIndex) => (
+                        <div key={rowIndex} style={{
+                            display: 'flex',
+                            gap: '10px',
+                            justifyContent: 'center'
+                        }}>
+                            {row.map((key, colIndex) => {
+                                if (key === '') return <div key={colIndex} style={{ width: '70px' }} />;
+                                
+                                const isSelected = selectedRow === rowIndex && selectedCol === colIndex;
+                                const isSpecial = ['SPACE', 'DELETE', 'OK'].includes(key);
+                                
+                                return (
+                                    <div
+                                        key={colIndex}
+                                        style={{
+                                            width: isSpecial ? '140px' : '70px',
+                                            height: '70px',
+                                            background: isSelected 
+                                                ? 'linear-gradient(135deg, #00ffff 0%, #0088ff 100%)'
+                                                : 'linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%)',
+                                            border: `3px solid ${isSelected ? '#00ffff' : 'var(--primary-cyan)'}`,
+                                            borderRadius: '10px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: isSelected ? '#000' : 'var(--primary-cyan)',
+                                            fontSize: key === 'OK' ? '16px' : isSpecial ? '10px' : '20px',
+                                            fontFamily: 'var(--font-family)',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            boxShadow: isSelected 
+                                                ? '0 0 20px rgba(0, 255, 255, 0.6)' 
+                                                : '0 0 10px rgba(0, 255, 255, 0.2)',
+                                            textShadow: isSelected ? 'none' : '0 0 10px rgba(0, 255, 255, 0.5)'
+                                        }}
+                                    >
+                                        {key === 'SPACE' ? 'SPACE' : key}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
+
+                <p style={{
+                    textAlign: 'center',
+                    color: '#888',
+                    fontSize: '10px',
+                    marginTop: '20px',
+                    fontFamily: 'var(--font-family)'
+                }}>
+                    Joystick: Navigation | oberer Button: OK
+                </p>
+            </div>
+
+            <style>{`
+                @keyframes blink {
+                    0%, 50% { opacity: 1; }
+                    51%, 100% { opacity: 0; }
+                }
+            `}</style>
+        </div>
+    );
+}
+
 const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
     console.log('Login component rendering');
     const [badgeInput, setBadgeInput] = useState('');
     const [isReadingBadge, setIsReadingBadge] = useState(false);
     const [showUsernameForm, setShowUsernameForm] = useState(false);
-    const [username, setUsername] = useState('');
     const [currentBadgeId, setCurrentBadgeId] = useState('');
     const [message, setMessage] = useState('Badge an das Lesegerät halten...');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -122,14 +344,7 @@ const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
         }
     };
 
-    const handleUsernameSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!username.trim()) {
-            alert('Bitte Benutzername eingeben');
-            return;
-        }
-
+    const handleUsernameComplete = async (enteredUsername: string) => {
         setIsProcessing(true);
         setMessage('Registriere Benutzer...');
 
@@ -139,7 +354,7 @@ const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     badgeId: currentBadgeId, 
-                    username: username.trim() 
+                    username: enteredUsername 
                 })
             });
 
@@ -165,145 +380,46 @@ const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
                 }, 1000);
             } else {
                 setMessage('Fehler bei der Registrierung. Bitte erneut versuchen.');
-                setIsProcessing(false);
+                setShowUsernameForm(false);
+                setCurrentBadgeId('');
+                resetBadgeReading();
             }
 
         } catch (error) {
             console.error('Registration error:', error);
             setMessage('Fehler bei der Registrierung. Bitte erneut versuchen.');
-            setIsProcessing(false);
+            setShowUsernameForm(false);
+            setCurrentBadgeId('');
+            resetBadgeReading();
         }
     };
 
-    const handleCancel = () => {
-        setShowUsernameForm(false);
-        setUsername('');
-        setCurrentBadgeId('');
-        resetBadgeReading();
-    };
-
-    const focusableElements = [
-        showUsernameForm ? 'input' : null,
-        showUsernameForm ? 'submit' : null,
-        showUsernameForm ? 'cancel' : null
-    ].filter(Boolean);
-    const [focusedIndex, setFocusedIndex] = useState(0);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const submitRef = useRef<HTMLButtonElement>(null);
-    const cancelRef = useRef<HTMLButtonElement>(null);
-
-    useEffect(() => {
-        if (!showUsernameForm) return;
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (!showUsernameForm) return;
-            switch (e.key) {
-                case 'ArrowRight':
-                case 'ArrowDown':
-                    e.preventDefault();
-                    setFocusedIndex(prev => (prev + 1) % focusableElements.length);
-                    break;
-                case 'ArrowLeft':
-                case 'ArrowUp':
-                    e.preventDefault();
-                    setFocusedIndex(prev => (prev - 1 + focusableElements.length) % focusableElements.length);
-                    break;
-                case 'Enter':
-                    e.preventDefault();
-                    if (focusableElements[focusedIndex] === 'input') {
-                        inputRef.current?.focus();
-                    } else if (focusableElements[focusedIndex] === 'submit') {
-                        submitRef.current?.click();
-                    } else if (focusableElements[focusedIndex] === 'cancel') {
-                        cancelRef.current?.click();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showUsernameForm, focusedIndex, focusableElements.length]);
-
-    useEffect(() => {
-        if (!showUsernameForm) return;
-        if (focusableElements[focusedIndex] === 'input') {
-            inputRef.current?.focus();
-        }
-    }, [focusedIndex, showUsernameForm]);
     return (
-        <div className="arcade-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            <h1 className="arcade-title" style={{ fontSize: '2.5rem', marginBottom: '2rem' }}>Arcade Login</h1>
-            {!showUsernameForm ? (
+        <>
+            <div className="arcade-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <h1 className="arcade-title" style={{ fontSize: '2.5rem', marginBottom: '2rem' }}>Arcade Login</h1>
                 <div style={{ textAlign: 'center' }}>
                     <p className="simple-text" style={{ marginBottom: '2rem' }}>{message}</p>
-                    {isReadingBadge && !isProcessing && (
+                    {isReadingBadge && !isProcessing && !showUsernameForm && (
                         <p style={{ color: '#666', fontSize: '18px', marginBottom: '1rem' }}>
                             Eingabe: {badgeInput}
                         </p>
                     )}
-                    {isProcessing && (
+                    {isProcessing && !showUsernameForm && (
                         <p style={{ color: '#007bff', fontSize: '18px', marginBottom: '1rem' }}>
                             Verarbeitung läuft...
                         </p>
                     )}
                 </div>
-            ) : (
-                <form onSubmit={handleUsernameSubmit} style={{ textAlign: 'center' }}>
-                    <p className="simple-text" style={{ marginBottom: '1.5rem' }}>{message}</p>
-                    <p style={{ fontSize: '18px', color: '#666', marginBottom: '1.5rem' }}>
-                        Badge ID: {currentBadgeId}
-                    </p>
-                    <div style={{ margin: '20px 0' }}>
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Benutzername eingeben"
-                            className={`user-text${focusableElements[focusedIndex]==='input' ? ' keyboard-selected' : ''}`}
-                            style={{
-                                padding: '10px',
-                                fontSize: '20px',
-                                width: '300px',
-                                textAlign: 'center',
-                                marginBottom: '10px',
-                                borderRadius: '8px',
-                                border: '2px solid var(--primary-cyan)',
-                                background: '#111',
-                                color: 'var(--primary-cyan)'
-                            }}
-                            autoFocus
-                            disabled={isProcessing}
-                            ref={inputRef}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '1.5rem' }}>
-                        <button 
-                            type="submit"
-                            disabled={isProcessing}
-                            className={`edit-user-button${focusableElements[focusedIndex]==='submit' ? ' keyboard-selected' : ''}`}
-                            style={{
-                                backgroundColor: isProcessing ? '#ccc' : undefined,
-                                minWidth: 180
-                            }}
-                            ref={submitRef}
-                        >
-                            {isProcessing ? 'Registriere...' : 'Registrieren'}
-                        </button>
-                        <button 
-                            type="button"
-                            onClick={handleCancel}
-                            disabled={isProcessing}
-                            className={`logout-button${focusableElements[focusedIndex]==='cancel' ? ' keyboard-selected' : ''}`}
-                            style={{ minWidth: 180 }}
-                            ref={cancelRef}
-                        >
-                            Abbrechen
-                        </button>
-                    </div>
-                </form>
+            </div>
+            
+            {showUsernameForm && (
+                <KeyboardPopup 
+                    onComplete={handleUsernameComplete}
+                    badgeId={currentBadgeId}
+                />
             )}
-        </div>
+        </>
     );
 }
 

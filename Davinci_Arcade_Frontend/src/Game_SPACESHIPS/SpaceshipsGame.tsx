@@ -86,16 +86,18 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
     };
   }, [currentScreen]);
 
+
+  // Globaler ESC/SPACE-Handler
   const handleKeyPress = useCallback(
-      (event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-          if (currentScreen === 'game') {
-            setCurrentScreen('lobby');
-          } else if (currentScreen !== 'lobby') {
-            setCurrentScreen('lobby');
-          } else {
-            navigate('/');
-          }
+    (event: KeyboardEvent) => {
+      if (event.key === 'Escape' || event.key === ' ') {
+        if (currentScreen === 'game') {
+          setCurrentScreen('lobby');
+        } else if (currentScreen !== 'lobby') {
+          setCurrentScreen('lobby');
+        } else {
+          navigate('/');
+
         }
       },
       [currentScreen, navigate]

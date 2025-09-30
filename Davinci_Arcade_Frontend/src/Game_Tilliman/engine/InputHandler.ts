@@ -13,10 +13,7 @@ export class InputHandler {
     private keyBindings = {
         ArrowLeft: 'left',
         ArrowRight: 'right',
-        ' ': 'dash', // Space für Dash
-        Space: 'dash',
         Enter: 'jump', // Enter für Springen
-        // Shift, P und andere entfernen
     };
     
     constructor() {
@@ -48,9 +45,8 @@ export class InputHandler {
         this.state.left = this.keys['ArrowLeft'] || false;
         this.state.right = this.keys['ArrowRight'] || false;
         this.state.jump = this.keys['Enter'] || false;
-        this.state.dash = this.keys[' '] || this.keys['Space'] || false;
-        // Pause wird nicht mehr unterstützt
-        this.state.pause = false;
+        this.state.dash = false; // Dash entfernt
+        this.state.pause = false; // Pause nicht mehr unterstützt
     }
     
     public getState(): InputState {

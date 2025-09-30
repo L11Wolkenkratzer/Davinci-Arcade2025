@@ -59,48 +59,35 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
         setGameState('gameOver');
         setDeaths(deaths + 1);
         
-        // Save game stats to backend - simplified
-        if (currentPlayer) {
-            try {
-                const playTime = (Date.now() - startTime) / 1000;
-                
-                console.log('💀 Game Over - saving stats for:', currentPlayer.badgeId);
-                
-                const result = await tilliApi.completeLevel({
-                    level: currentLevel,
-                    score: score,
-                    gearsCollected: collectedGears,
-                    enemiesDefeated: enemiesDefeated,
-                    deaths: deaths + 1,
-                    playTime: playTime,
-                    completionTime: playTime,
-                    completed: false // Game over = not completed
-                });
-                
-                console.log('✅ Game over data saved successfully');
-            } catch (error) {
-                console.error('❌ Failed to save game stats:', error);
-                // Show user-friendly message
-                alert('Spielstand konnte nicht gespeichert werden. Bitte versuche es erneut.');
-            }
-        } else {
-
-            console.bewarn('⚠️ No currentPlayer - game over without saving');
-
-        }
+        // SENIOR DEV FIX: Game Over = NO backend call!
+        // We should NOT call level-complete endpoint on failure
+        // Only track stats locally - level completion is ONLY for success
+        
+        const playTime = (Date.now() - startTime) / 1000;
+        
+        console.log('💀 GAME OVER - Level FAILED');
+        console.log('   Player:', currentPlayer?.badgeId || 'Guest');
+        console.log('   Level:', currentLevel, '- Score:', score);
+        console.log('   Deaths:', deaths + 1, '- PlayTime:', playTime.toFixed(2), 's');
+        console.log('   ⚠️  NO BACKEND CALL - Game Over does not complete level');
+        console.log('   ℹ️  Stats tracked locally only');
+        
+        // Optional: Track stats locally for analytics (if needed later)
+        // For now, just log it - no backend persistence on failure
     };
     
     const handleLevelComplete = async () => {
         setGameState('levelComplete');
         
-        // Save level completion to backend - simplified
+        // Save level completion to backend - CRITICAL: completed: true for successful completion
         if (currentPlayer) {
             try {
                 const completionTime = (Date.now() - startTime) / 1000;
                 
-                console.log(`🎉 Level ${currentLevel} completed!`);
-                console.log(`Score: ${score}, Gears: ${collectedGears}, Enemies: ${enemiesDefeated}, Deaths: ${deaths}`);
-                console.log(`Current Player: ${currentPlayer.badgeId}`);
+                console.log(`🎉 LEVEL COMPLETED - Level ${currentLevel} erfolgreich abgeschlossen!`);
+                console.log(`   Player: ${currentPlayer.badgeId}`);
+                console.log(`   Score: ${score}, Gears: ${collectedGears}, Enemies: ${enemiesDefeated}, Deaths: ${deaths}`);
+                console.log(`   ✅ completed: true (Level unlock + Leaderboard)`);
                 
                 const result = await tilliApi.completeLevel({
                     level: currentLevel,
@@ -110,10 +97,10 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                     deaths: deaths,
                     playTime: completionTime,
                     completionTime: completionTime,
-                    completed: true // Level actually completed
+                    completed: true // CRITICAL: Level successfully completed
                 });
                 
-                console.log(`✅ Level completed and saved successfully!`);
+                console.log(`✅ Level completion saved - Next level unlocked!`);
                 
                 // Show success message with earned coins
                 if (result.coinsEarned > 0) {
@@ -275,6 +262,13 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
 
     }, [currentPlayer, currentLevel]); // Depend on stable currentLevel
 
+    // Reset selection when entering game over state
+    useEffect(() => {
+        if (gameState === 'gameOver') {
+            setGameOverSelectedOption(0);
+        }
+    }, [gameState]);
+
     // Keyboard navigation for Game Over screen
     useEffect(() => {
         if (gameState !== 'gameOver') return;
@@ -294,24 +288,25 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                 case 'Enter':
                 case ' ': // Space
                     event.preventDefault();
-                    if (gameOverSelectedOption === 0) {
-                        restartGame();
-                    } else {
-                        handleReturnToHome();
-                    }
+                    // Use functional update to avoid stale closure
+                    setGameOverSelectedOption(current => {
+                        if (current === 0) {
+                            restartGame();
+                        } else {
+                            handleReturnToHome();
+                        }
+                        return current;
+                    });
                     break;
             }
         };
 
         window.addEventListener('keydown', handleGameOverKeyPress);
 
-        // Reset selection when entering game over state
-        setGameOverSelectedOption(0);
-
         return () => {
             window.removeEventListener('keydown', handleGameOverKeyPress);
         };
-    }, [gameState, gameOverSelectedOption]);
+    }, [gameState]); // FIXED: Removed gameOverSelectedOption from dependencies
 
 
     // Space-Hold für Hauptmenü (2 Sekunden) - nur während des Spiels
@@ -332,10 +327,10 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                         const progress = Math.min((elapsed / 2000) * 100, 100); // 2000ms = 2 Sekunden
                         setSpaceHoldProgress(progress);
                         
-                        // Nach 2 Sekunden -> Hauptmenü
+                        // Nach 2 Sekunden -> Tilliman Lobby
                         if (elapsed >= 2000) {
-                            console.log('🚀 Space Hold complete - navigating to main menu');
-                            navigate('/');
+                            console.log('🚀 Space Hold complete - navigating to Tilliman lobby');
+                            navigate('/tillimanhome');
                         }
                     }
                 }, 50);
@@ -395,11 +390,22 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
 
     const restartGame = () => {
         if (gameRef.current) {
-            gameRef.current.restart();
-            setGameState('playing');
+            // SENIOR DEV FIX: Restart on SAME level where player died, not level 1
+            console.log(`🔄 Restarting Level ${currentLevel} (not level 1!)`);
+            
+            // Reset React state
             setScore(0);
             setLives(3);
             setCollectedGears(0);
+            setEnemiesDefeated(0);
+            setStartTime(Date.now());
+            setGameState('playing');
+            
+            // CRITICAL: Reload the CURRENT level, not defaulting to level 1
+            gameRef.current.getLevelManager().loadLevel(currentLevel);
+            gameRef.current.start();
+            
+            console.log(`✅ Level ${currentLevel} restarted successfully`);
         }
     };
 
@@ -440,11 +446,9 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                             <div className="controls-info">
                                 <h3>Steuerung:</h3>
                                 <ul>
-                                    <li>← → - Bewegung</li>
-                                    <li>Leertaste - Springen</li>
-                                    <li>Shift - Dash</li>
-                                    <li>P - Pause</li>
-                                    <li style={{ color: '#FFD700', fontWeight: 'bold' }}>Space halten (2s) - Hauptmenü</li>
+                                    <li>Joystick - Bewegung</li>
+                                    <li>Oberer Button - Springen</li>
+                                    <li style={{ color: '#FFD700', fontWeight: 'bold' }}>Unterer Button halten (2s) - Zur Lobby</li>
                                 </ul>
                             </div>
                             <button onClick={startGame} className="game-button" style={{ fontFamily: 'Press Start 2P, cursive' }}>
@@ -480,7 +484,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center', marginTop: '30px' }}>
                                 <p style={{ fontSize: '12px', color: '#0ff', marginBottom: '10px' }}>
-                                    ← → Auswählen • Enter Bestätigen
+                                    Joystick Auswählen • Oberer Button Bestätigen
                                 </p>
                                 
                                 <button
@@ -564,7 +568,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                     minWidth: '300px'
                 }}>
                     <div style={{ marginBottom: '15px', fontSize: '12px' }}>
-                        Space halten für Hauptmenü
+                        Unterer Button halten für Lobby
                     </div>
                     
                     {/* Progress Bar */}

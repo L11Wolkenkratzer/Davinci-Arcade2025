@@ -209,15 +209,19 @@ class TilliApiService {
       
       console.log('Level completion result:', result);
       
-      // Also submit to Score collection for leaderboards (if level was completed)
-      if (validatedData.completed !== false) {
+      // Also submit to Score collection for leaderboards (ONLY if level was actually completed)
+      // CRITICAL: Only submit scores for successful completions, not for game overs
+      if (validatedData.completed === true) {
         try {
+          console.log('✅ Level completed successfully - submitting to leaderboard');
           const player = await this.fetchApi(`/players/badge/${badgeId}`);
           await this.submitScore(player._id, validatedData);
         } catch (scoreError) {
           console.warn('Score record submission failed:', scoreError);
           // Don't fail the whole operation
         }
+      } else {
+        console.log('⚠️ Level not completed (Game Over) - skipping leaderboard submission');
       }
       
       return {
@@ -236,6 +240,10 @@ class TilliApiService {
 
   // Validate level completion data
   private validateLevelData(data: LevelCompletionData): LevelCompletionData {
+    // CRITICAL: completed must be EXPLICITLY true to mark level as completed
+    // Default to false for safety - only complete if explicitly confirmed
+    const isCompleted = data.completed === true;
+    
     return {
       level: Math.max(1, Math.min(10, Number(data.level) || 1)),
       score: Math.max(0, Number(data.score) || 0),
@@ -244,7 +252,7 @@ class TilliApiService {
       deaths: Math.max(0, Number(data.deaths) || 0),
       playTime: Math.max(0, Number(data.playTime) || 0),
       completionTime: Math.max(0, Number(data.completionTime) || 0),
-      completed: data.completed !== false // Default to true unless explicitly false
+      completed: isCompleted
     };
   }
 
@@ -265,9 +273,17 @@ class TilliApiService {
   // Get leaderboard (using Score collection)
   async getLeaderboard(): Promise<LeaderboardEntry[]> {
     try {
+      console.log('📊 Fetching leaderboard from:', `/scores/game/${this.GAME_NAME_SCORE}?limit=10`);
       const scores = await this.fetchApi<any[]>(`/scores/game/${this.GAME_NAME_SCORE}?limit=10`);
       
-      return scores.map((score, index) => ({
+      console.log('📈 Raw scores received:', scores);
+      
+      if (!scores || !Array.isArray(scores)) {
+        console.warn('⚠️ Invalid scores data:', scores);
+        return [];
+      }
+      
+      const leaderboard = scores.map((score, index) => ({
         rank: index + 1,
         name: score.playerId?.name || 'Unbekannt',
         badgeId: score.playerId?.badgeId || 'unknown',
@@ -277,8 +293,11 @@ class TilliApiService {
         gamesPlayed: 1,
         lastPlayed: score.createdAt || new Date().toISOString()
       }));
+      
+      console.log('✅ Leaderboard processed:', leaderboard.length, 'entries');
+      return leaderboard;
     } catch (error) {
-      console.warn('Leaderboard laden fehlgeschlagen:', error);
+      console.error('❌ Leaderboard laden fehlgeschlagen:', error);
       return [];
     }
   }

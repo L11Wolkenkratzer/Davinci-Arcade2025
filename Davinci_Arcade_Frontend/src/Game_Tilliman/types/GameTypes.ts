@@ -13,7 +13,7 @@ export interface Rectangle {
 }
 
 // Player States
-export type PlayerState = 'idle' | 'jump' | 'fall' | 'dash' | 'hit';
+export type PlayerState = 'idle' | 'jump' | 'fall' | 'hit';
 
 // Entity Types
 export type EntityType = 
@@ -165,9 +165,6 @@ export const PHYSICS = {
     GRAVITY: 1200,
     PLAYER_SPEED: 250,
     JUMP_VELOCITY: -600,
-    DASH_SPEED: 500,
-    DASH_DURATION: 0.15,
-    DASH_COOLDOWN: 0.8,
     MAX_FALL_SPEED: 500,
     FRICTION: 0.85
 }; 

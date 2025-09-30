@@ -480,6 +480,13 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
   // Keyboard controls
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      // Leertaste: Zurück ins Menü (von überall im Spiel)
+      if (gameState === 'playing' && e.key === ' ') {
+        e.preventDefault();
+        backToMenu();
+        return;
+      }
+
       // Menü: ENTER = Aktion ausführen
       if (gameState === 'menu') {
         if (e.key === 'Enter') {
@@ -816,6 +823,18 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
       ctx.closePath();
       ctx.fill();
     });
+
+    // Draw exit hint
+    const boardX = (canvas.width - MAP_WIDTH * CELL_SIZE * scale) / 2;
+    const boardY = (canvas.height - MAP_HEIGHT * CELL_SIZE * scale) / 2;
+    ctx.font = `${14 * scale}px 'Press Start 2P', monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#60a5fa';
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = '#60a5fa';
+    ctx.fillText('Hold bottom Button To Exit', canvas.width / 2, boardY + MAP_HEIGHT * CELL_SIZE * scale + 30 * scale);
+    ctx.shadowBlur = 0;
   }, [gameState, pacmanPos, dots, ghosts, canvasDims]);
 
   // ✅ LEADERBOARD SCREEN

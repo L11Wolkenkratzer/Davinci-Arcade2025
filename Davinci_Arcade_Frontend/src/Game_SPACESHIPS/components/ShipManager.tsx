@@ -53,6 +53,7 @@ const ShipManager: React.FC<ShipManagerProps> = ({
                     onEquipShip(ownedShips[selectedIndex].id);
                 }
                 break;
+            case ' ':
             case 'Escape':
                 event.preventDefault();
                 onBack();

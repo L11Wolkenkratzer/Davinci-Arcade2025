@@ -7,6 +7,7 @@ interface HighscoreProps {
 }
 
 const Highscore: React.FC<HighscoreProps> = ({ highscores, onBack }) => {
+
     // ✅ STATE FÜR SCROLL-NAVIGATION
     const [selectedIndex, setSelectedIndex] = useState(-1); // -1 = Back Button selected
     const listRef = useRef<HTMLDivElement>(null);
@@ -20,6 +21,7 @@ const Highscore: React.FC<HighscoreProps> = ({ highscores, onBack }) => {
                 block: 'nearest',
                 inline: 'nearest'
             });
+
         }
     };
 
