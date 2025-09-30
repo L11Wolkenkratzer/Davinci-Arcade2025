@@ -99,7 +99,7 @@ const SpaceshipGame: React.FC<SpaceshipGameProps> = ({ currentPlayer }) => {
           navigate('/');
 
         }
-      },
+      }
       [currentScreen, navigate]
   );
 
