@@ -142,6 +142,9 @@ export interface GameOptions {
     onLevelComplete: () => void;
     onReturnToHome?: () => void;
     
+    // Sound callbacks
+    onCollectGear?: () => void;
+    
     // Profile system
     playerProfile?: {
         badgeId: string;

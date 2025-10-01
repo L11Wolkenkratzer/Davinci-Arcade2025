@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAudio } from '../SettingsContext.tsx';
 import { Game } from './engine/Game';
 import { tilliApi } from './api/tilliApi';
 import './Tilliman.css';
@@ -47,6 +48,11 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
     const [spaceHoldActive, setSpaceHoldActive] = useState(false);
     const spaceHoldStartTime = useRef<number | null>(null);
     const spaceHoldInterval = useRef<NodeJS.Timeout | null>(null);
+
+    // Audio (wie bei SpaceShips - Musik läuft in allen Screens außer Gameplay)
+    const { volume } = useAudio();
+    const bgMusicRef = useRef<HTMLAudioElement | null>(null);
+    const soundsRef = useRef<{ [key: string]: HTMLAudioElement }>({});
 
 
 
@@ -102,10 +108,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
                 
                 console.log(`✅ Level completion saved - Next level unlocked!`);
                 
-                // Show success message with earned coins
-                if (result.coinsEarned > 0) {
-                    alert(`Level abgeschlossen! +${result.coinsEarned} Münzen erhalten!`);
-                }
+            
                 
                 // SENIOR DEV FIX: Auto-advance to next level instead of returning to lobby
                 setTimeout(() => {
@@ -226,6 +229,13 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
             onGameOver: handleGameOver,
             onLevelComplete: handleLevelComplete,
             onReturnToHome: handleReturnToHome,
+            onCollectGear: () => {
+                // 🔊 Play collect sound (wie stoneBreak bei SpaceShips)
+                if (soundsRef.current.collect) {
+                    soundsRef.current.collect.currentTime = 0;
+                    soundsRef.current.collect.play().catch(err => console.log('Sound play blocked:', err));
+                }
+            },
             playerProfile: {
                 badgeId: currentPlayer.badgeId,
                 name: currentPlayer.name,
@@ -261,6 +271,60 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
         };
 
     }, [currentPlayer, currentLevel]); // Depend on stable currentLevel
+
+    // Hintergrundmusik-Initialisierung (wie bei SpaceShips)
+    useEffect(() => {
+        if (!bgMusicRef.current) {
+            bgMusicRef.current = new window.Audio('/Sounds/TilliBackgroundMusic.mp3');
+            bgMusicRef.current.loop = true;
+            bgMusicRef.current.volume = (volume / 100) * 0.4;
+            bgMusicRef.current.addEventListener('canplaythrough', () => {
+                console.log('🎵 Tilliman background music loaded');
+            });
+            bgMusicRef.current.addEventListener('error', (e) => {
+                console.error('❌ Error loading Tilliman background music:', e);
+            });
+        }
+    }, [volume]);
+
+    // Volume Anpassung
+    useEffect(() => {
+        if (bgMusicRef.current) {
+            bgMusicRef.current.volume = (volume / 100) * 0.4;
+        }
+    }, [volume]);
+
+    // Musik-Steuerung - läuft IMMER (Lobby UND Gameplay)
+    useEffect(() => {
+        if (!bgMusicRef.current) return;
+
+        // Musik läuft in ALLEN Game States
+        bgMusicRef.current.play().catch((error) => {
+            console.log('🔇 Background music autoplay blocked:', error);
+        });
+
+        return () => {
+            if (bgMusicRef.current) {
+                bgMusicRef.current.pause();
+                bgMusicRef.current.currentTime = 0;
+            }
+        };
+    }, [gameState]);
+
+    // Gameplay-Sound-Effekte initialisieren (Navigation-Sound für Zahnrad)
+    useEffect(() => {
+        const collectSound = new window.Audio('/Sounds/Pacman/pacman_button switch.mp3');
+        collectSound.volume = (volume / 100) * 0.3;
+        soundsRef.current = { collect: collectSound };
+        console.log('🔊 Tilliman gameplay sounds initialized');
+    }, []);
+
+    // Volume Anpassung für Sound-Effekte
+    useEffect(() => {
+        if (soundsRef.current.collect) {
+            soundsRef.current.collect.volume = (volume / 100) * 0.3;
+        }
+    }, [volume]);
 
     // Reset selection when entering game over state
     useEffect(() => {
