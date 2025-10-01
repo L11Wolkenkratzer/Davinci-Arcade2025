@@ -184,7 +184,7 @@ const Carousel: React.FC<CarouselProps> = memo(({
           {games[selectedGameIndex].title}
         </h2>
         <div className="game-description">
-          Drücke oberen Button zum Spielen
+          Drücke unteren Button zum Bestätigen
         </div>
       </div>
     </div>

@@ -215,7 +215,7 @@ const KeyboardPopup: React.FC<KeyboardPopupProps> = ({ onComplete, badgeId }) =>
                     marginTop: '20px',
                     fontFamily: 'var(--font-family)'
                 }}>
-                    Joystick: Navigation | oberer Button: OK
+                    Joystick: Navigation |  unterer Button: OK
                 </p>
             </div>
 
