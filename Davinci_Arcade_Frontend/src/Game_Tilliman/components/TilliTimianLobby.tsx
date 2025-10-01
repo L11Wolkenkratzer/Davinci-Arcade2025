@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAudio } from '../../SettingsContext.tsx';
 import { tilliApi } from '../api/tilliApi';
 import type { TilliProfile, LeaderboardEntry } from '../api/tilliApi';
 import './TilliTimianLobby.css';
@@ -44,6 +45,7 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { volume } = useAudio();
   
   // Profile System
   const [profile, setProfile] = useState<TilliProfile | null>(null);
@@ -67,6 +69,12 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
   const [message, setMessage] = useState<string>('');
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  
+  // Sound-Referenzen für Menü-Sounds (wie bei SpaceShips)
+  const soundsRef = React.useRef<{ [key: string]: HTMLAudioElement | undefined }>({});
+  
+  // Lobby-Hintergrundmusik (läuft auch hier)
+  const bgMusicRef = React.useRef<HTMLAudioElement | null>(null);
 
   // Load leaderboard data
   const loadLeaderboard = async () => {
@@ -92,6 +100,70 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       setLeaderboardLoading(false);
     }
   };
+
+  // Lobby-Hintergrundmusik-Initialisierung
+  useEffect(() => {
+    if (!bgMusicRef.current) {
+      bgMusicRef.current = new window.Audio('/Sounds/TilliBackgroundMusic.mp3');
+      bgMusicRef.current.loop = true;
+      bgMusicRef.current.volume = (volume / 100) * 0.4;
+      bgMusicRef.current.addEventListener('canplaythrough', () => {
+        console.log('🎵 Tilliman lobby music loaded');
+      });
+      bgMusicRef.current.addEventListener('error', (e) => {
+        console.error('❌ Error loading Tilliman lobby music:', e);
+      });
+    }
+  }, []);
+
+  // Lobby-Musik abspielen
+  useEffect(() => {
+    if (bgMusicRef.current) {
+      bgMusicRef.current.play().catch((error) => {
+        console.log('🔇 Lobby music autoplay blocked:', error);
+      });
+    }
+
+    return () => {
+      if (bgMusicRef.current) {
+        bgMusicRef.current.pause();
+        bgMusicRef.current.currentTime = 0;
+      }
+    };
+  }, []);
+
+  // Audio-Initialisierung (wie bei SpaceShips)
+  useEffect(() => {
+    let menuNavigate: HTMLAudioElement | undefined;
+    let menuSelect: HTMLAudioElement | undefined;
+    try {
+      menuNavigate = new Audio('/Sounds/Pacman/pacman_button switch.mp3');
+      menuSelect = new Audio('/Sounds/Pacman/pacman_button click.mp3');
+      menuNavigate.volume = (volume / 100) * 0.3;
+      menuSelect.volume = (volume / 100) * 0.4;
+      soundsRef.current = { menuNavigate, menuSelect };
+    } catch (error) {
+      console.error('❌ Error loading menu sounds:', error);
+    }
+
+    return () => {
+      menuNavigate?.pause();
+      menuSelect?.pause();
+    };
+  }, [volume]);
+
+  // Volume Anpassung
+  useEffect(() => {
+    if (bgMusicRef.current) {
+      bgMusicRef.current.volume = (volume / 100) * 0.4;
+    }
+    if (soundsRef.current.menuNavigate) {
+      soundsRef.current.menuNavigate.volume = (volume / 100) * 0.3;
+    }
+    if (soundsRef.current.menuSelect) {
+      soundsRef.current.menuSelect.volume = (volume / 100) * 0.4;
+    }
+  }, [volume]);
 
   // Sync currentPlayer with localStorage for playerManager compatibility
   useEffect(() => {
@@ -230,6 +302,11 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       console.log('Space pressed in lobby - no action');
       return; // Exit early
     } else if (e.key === 'Enter') {
+      // 🔊 Selection Sound (nur bei Enter, wie bei SpaceShips)
+      if (soundsRef.current.menuSelect) {
+        soundsRef.current.menuSelect.currentTime = 0;
+        soundsRef.current.menuSelect.play().catch(() => {});
+      }
       console.log('Enter pressed, currentSelection:', currentSelection);
       switch (currentSelection) {
         case 0: navigate('/'); break;
@@ -287,6 +364,11 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       } else if (e.key === 'ArrowDown') {
         setLevelMapFocus('exit');
       } else if (e.key === 'Enter') {
+        // 🔊 Selection Sound (nur bei Enter, wie bei SpaceShips)
+        if (soundsRef.current.menuSelect) {
+          soundsRef.current.menuSelect.currentTime = 0;
+          soundsRef.current.menuSelect.play().catch(() => {});
+        }
         // Check if level is unlocked before selecting
         const selectedLevelNumber = mapSelection + 1;
         const isUnlocked = profile?.unlockedLevels.includes(selectedLevelNumber) || selectedLevelNumber === 1;
@@ -311,6 +393,11 @@ const TilliTimianLobby: React.FC<TilliTimianLobbyProps> = ({
       if (e.key === 'ArrowUp') {
         setLevelMapFocus('level');
       } else if (e.key === 'Enter') {
+        // 🔊 Selection Sound (nur bei Enter, wie bei SpaceShips)
+        if (soundsRef.current.menuSelect) {
+          soundsRef.current.menuSelect.currentTime = 0;
+          soundsRef.current.menuSelect.play().catch(() => {});
+        }
         setShowLevelMap(false);
       } else if (e.key === 'Escape') {
         setShowLevelMap(false);

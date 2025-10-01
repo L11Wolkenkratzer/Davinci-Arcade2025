@@ -88,9 +88,11 @@ const spaceshipApi = {
     },
 
     async submitScore(playerId: string, score: number, level: number, duration: number) {
-        // ... bleibt unverändert
         try {
-            const response = await apiCall('/api/scores', {
+            // ✅ WICHTIG: /api/highscores/submit verwendet, die BEIDES macht:
+            // 1. Score Collection Entry
+            // 2. Player.gameHighscores Update
+            const response = await apiCall('/api/highscores/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

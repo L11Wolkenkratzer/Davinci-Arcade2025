@@ -322,6 +322,11 @@ export class Game {
         this.collectedGears++;
         this.options.onGearsCollected(this.collectedGears);
         this.addScore(100);
+        
+        // 🔊 Play collect sound
+        if (this.options.onCollectGear) {
+            this.options.onCollectGear();
+        }
     }
     
     public damagePlayer(damage: number) {
