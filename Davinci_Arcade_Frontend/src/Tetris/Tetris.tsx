@@ -443,7 +443,7 @@ const Tetris: React.FC<{ currentPlayer?: Player }> = ({ currentPlayer }) => {
     ctx.shadowColor = "#00DDFF";
     ctx.shadowBlur = 8;
     ctx.fillStyle = "#00DDFF";
-    ctx.fillText("Hold bottom Button To Exit", canvas.width / 2, boardY + BOARD_HEIGHT * BLOCK_SIZE + 45);
+    ctx.fillText("Hold upper Button To Exit", canvas.width / 2, boardY + BOARD_HEIGHT * BLOCK_SIZE + 45);
     ctx.shadowBlur = 0;
   };
 

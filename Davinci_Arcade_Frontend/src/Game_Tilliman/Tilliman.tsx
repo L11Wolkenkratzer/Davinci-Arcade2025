@@ -548,7 +548,7 @@ export const Tilliman: React.FC<TillimanProps> = ({ currentPlayer }) => {
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center', marginTop: '30px' }}>
                                 <p style={{ fontSize: '12px', color: '#0ff', marginBottom: '10px' }}>
-                                    Joystick Auswählen • Oberer Button Bestätigen
+                                    Joystick Auswählen • unterer Button Bestätigen
                                 </p>
                                 
                                 <button

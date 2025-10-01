@@ -676,7 +676,7 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     ctx.shadowColor = '#60a5fa';
     ctx.shadowBlur = 8;
     ctx.fillStyle = '#60a5fa';
-    ctx.fillText('Hold Space To Exit', canvas.width / 2, boardY + MAP_HEIGHT * CELL_SIZE * scale + 30 * scale);
+    ctx.fillText('Hold upper Button To Exit', canvas.width / 2, boardY + MAP_HEIGHT * CELL_SIZE * scale + 30 * scale);
     ctx.shadowBlur = 0;
   }, [gameState, pacmanPos, dots, ghosts, canvasDims]);
 
