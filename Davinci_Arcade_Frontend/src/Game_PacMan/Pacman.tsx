@@ -1,11 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSettings } from "../SettingsContext";
 import './PacmanGame.css';
-import pacmanApi from './pacmanApi';
-import PacmanHighscore from './PacmanHighscore'; // ✅ KORRIGIERTER PFAD
-import type { Player, PacmanHighscoreEntry, PacmanPlayerStats } from './pacmanTypes';
+import type { Player } from './pacmanTypes';
 
-// Rest des Codes bleibt EXAKT gleich...
 type Direction = 'up' | 'down' | 'left' | 'right';
 
 interface Position {
@@ -13,7 +10,7 @@ interface Position {
   y: number;
 }
 
-type GameState = 'menu' | 'playing' | 'won' | 'leaderboard';
+type GameState = 'menu' | 'playing';
 
 const levelMap = `
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
@@ -69,33 +66,16 @@ interface PacmanGameProps {
 }
 
 const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
-  // SettingsContext für Lautstärke und Mute
   const { volume, isMuted } = useSettings();
-  // Debug Logs
-  const renderCount = useRef(0);
-  renderCount.current += 1;
-  console.log(
-      `%c[PACMAN] Render #${renderCount.current}`,
-      "color:white;background:#e91e63;padding:2px 4px;border-radius:2px;"
-  );
 
-  // Sound-Refs
   const lobbyMusicRef = useRef<HTMLAudioElement | null>(null);
   const gameOverSoundRef = useRef<HTMLAudioElement | null>(null);
   const coinSoundRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // NEUE REFS FÜR TELEPORT-FIX
   const teleportCooldown = useRef(0);
   const lastTeleportPosition = useRef<Position | null>(null);
 
-  // Backend States
-  const [highscores, setHighscores] = useState<PacmanHighscoreEntry[]>([]);
-  const [playerStats, setPlayerStats] = useState<PacmanPlayerStats | null>(null);
-  const [showNewHighscore, setShowNewHighscore] = useState(false);
-  const [gameStartTime, setGameStartTime] = useState<number>(0);
-
-  // Responsive Canvas: Berechne dynamisch die Größe
   const [canvasDims, setCanvasDims] = useState({ width: MAP_WIDTH * CELL_SIZE, height: MAP_HEIGHT * CELL_SIZE });
 
   useEffect(() => {
@@ -127,12 +107,10 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
   const ghostMoveCounter = useRef(0);
   const ghostSpawnTimeouts = useRef<NodeJS.Timeout[]>([]);
 
-  // Refs für aktuelle Werte (für die Movement-Logik)
   const currentPacmanPos = useRef(pacmanPos);
   const currentGhosts = useRef(ghosts);
   const currentGameOver = useRef(gameOver);
 
-  // Refs synchron halten
   useEffect(() => {
     currentPacmanPos.current = pacmanPos;
   }, [pacmanPos]);
@@ -145,47 +123,7 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     currentGameOver.current = gameOver;
   }, [gameOver]);
 
-  console.log("[PACMAN] gameState:", gameState);
-  console.log("[PACMAN] level:", level);
-  console.log("[PACMAN] gameOver:", gameOver);
-  console.log("[PACMAN] won:", won);
-
-  // ✅ BACKEND FUNCTIONS
-  const loadPlayerStats = async () => {
-    if (!currentPlayer) return;
-
-    try {
-      const stats = await pacmanApi.getPlayerStats(currentPlayer._id);
-      setPlayerStats(stats);
-    } catch (error) {
-      console.error('Load pacman player stats failed:', error);
-    }
-  };
-
-  const loadHighscores = async () => {
-    try {
-      const data = await pacmanApi.getHighscores(10);
-      setHighscores(data);
-    } catch (error) {
-      console.error('Error loading pacman highscores:', error);
-      setHighscores([]);
-    }
-  };
-
-  // Load data on mount
-  useEffect(() => {
-    if (currentPlayer) {
-      loadPlayerStats();
-    }
-  }, [currentPlayer]);
-
-  useEffect(() => {
-    if (gameState === 'leaderboard') {
-      loadHighscores();
-    }
-  }, [gameState]);
-
-  // Initialisiere Sounds nur einmal
+  // Initialisiere Sounds
   useEffect(() => {
     if (!lobbyMusicRef.current) {
       lobbyMusicRef.current = new Audio('/Sounds/Pacman/pacman lobby music.mp3');
@@ -205,12 +143,11 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
       lobbyMusicRef.current && (lobbyMusicRef.current.currentTime = 0);
     };
   }, [volume]);
-  // Lautstärke dynamisch anpassen
+
   if (lobbyMusicRef.current) lobbyMusicRef.current.volume = volume / 100;
   if (gameOverSoundRef.current) gameOverSoundRef.current.volume = volume / 100;
   if (coinSoundRef.current) coinSoundRef.current.volume = volume / 100;
 
-  // Musik je nach State steuern
   useEffect(() => {
     if (isMuted) {
       lobbyMusicRef.current?.pause();
@@ -229,28 +166,22 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
   }, [gameState, isMuted]);
 
   const startGame = () => {
-    console.log("[PACMAN] Starting game...");
     setGameState('playing');
     setLevel(1);
     setScore(0);
     setGameOver(false);
     setWon(false);
     setMenuIndex(0);
-    setGameStartTime(Date.now());
-    setShowNewHighscore(false);
-    // Reset ghosts and dots
     setGhosts([]);
     setDots([]);
     setPacmanPos({ x: 1, y: 1 });
     setDirection(null);
     ghostMoveCounter.current = 0;
-    // Reset teleport state
     teleportCooldown.current = 0;
     lastTeleportPosition.current = null;
   };
 
   const backToMenu = () => {
-    console.log("[PACMAN] Back to menu...");
     setGameState('menu');
     setMenuIndex(0);
     if (moveInterval.current) {
@@ -260,23 +191,16 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     ghostSpawnTimeouts.current.forEach(t => clearTimeout(t));
     ghostSpawnTimeouts.current = [];
     ghostMoveCounter.current = 0;
-    // Reset teleport state
     teleportCooldown.current = 0;
     lastTeleportPosition.current = null;
   };
 
-  const handleLeaderboard = () => {
-    setGameState('leaderboard');
-    setMenuIndex(1);
-  };
-
-  // Menu navigation with arrows
+  // Menu navigation
   useEffect(() => {
     if (gameState !== 'menu') return;
     const handle = (e: KeyboardEvent) => {
       const menuItems = [
         () => startGame(),
-        () => handleLeaderboard(), // ✅ AKTIVIERT
         () => window.location.href = '/'
       ];
       if (["ArrowDown", "ArrowUp"].includes(e.key)) {
@@ -301,9 +225,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
   useEffect(() => {
     if (gameState !== 'playing') return;
 
-    console.log(`[PACMAN] Setting up level ${level}`);
-
-    // Clear existing intervals and timeouts
     if (moveInterval.current) {
       clearInterval(moveInterval.current);
       moveInterval.current = null;
@@ -311,17 +232,14 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     ghostSpawnTimeouts.current.forEach(t => clearTimeout(t));
     ghostSpawnTimeouts.current = [];
 
-    // Reset game state
     setGameOver(false);
     setWon(false);
     setPacmanPos({ x: 1, y: 1 });
     setDirection(null);
     ghostMoveCounter.current = 0;
-    // Reset teleport state für neues Level
     teleportCooldown.current = 0;
     lastTeleportPosition.current = null;
 
-    // Reset dots and ghosts for new level or game
     const allDots: { pos: Position; big: boolean }[] = [];
     const mapRows = levelMap.trim().split(';');
     for (let y = 0; y < MAP_HEIGHT; y++) {
@@ -339,7 +257,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     }
     setDots(allDots);
 
-    // Setup ghosts
     const uniqueStartPositions = Array.from(
         new Set(GHOST_ROOMS.map(p => `${p.x},${p.y}`))
     ).map(key => {
@@ -423,7 +340,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     return [];
   };
 
-  // VERBESSERTE TELEPORT-LOGIK
   const getNextPositionPacman = (pos: Position, dir: Direction | null): Position => {
     if (!dir) return pos;
 
@@ -436,36 +352,28 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
 
     const next = { x: pos.x + delta[dir].x, y: pos.y + delta[dir].y };
 
-    // Wand-Kollision
     if (WALLS.some(w => w.x === next.x && w.y === next.y)) return pos;
 
-    // Teleport-Cooldown verringern
     if (teleportCooldown.current > 0) {
       teleportCooldown.current--;
     }
 
-    // Portal-Logik mit Anti-Bounce-Back-Mechanismus
     const enteringPortal = PORTALS.find(p => p.x === next.x && p.y === next.y);
     if (enteringPortal && teleportCooldown.current === 0) {
       const exit = PORTALS.find(p => p.x !== enteringPortal.x || p.y !== enteringPortal.y);
       if (exit) {
-        // Prüfen ob wir nicht gerade von diesem Exit-Portal kommen (Bounce-Back verhindern)
         const wasAtExit = lastTeleportPosition.current &&
             lastTeleportPosition.current.x === exit.x &&
             lastTeleportPosition.current.y === exit.y;
 
         if (!wasAtExit) {
-          console.log(`[PACMAN] Teleporting from (${enteringPortal.x},${enteringPortal.y}) to (${exit.x},${exit.y})`);
-          teleportCooldown.current = 3; // 3 Frames Cooldown (verhindert sofortigen Rückteleport)
+          teleportCooldown.current = 3;
           lastTeleportPosition.current = { x: exit.x, y: exit.y };
           return exit;
-        } else {
-          console.log(`[PACMAN] Bounce-back prevented from (${exit.x},${exit.y})`);
         }
       }
     }
 
-    // Normale Bewegung - Position für Bounce-Back-Check aktualisieren
     if (teleportCooldown.current === 0) {
       lastTeleportPosition.current = null;
     }
@@ -477,22 +385,18 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
   }
 
-  // Keyboard controls
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      // Leertaste: Zurück ins Menü (von überall im Spiel)
       if (gameState === 'playing' && e.key === ' ') {
         e.preventDefault();
         backToMenu();
         return;
       }
 
-      // Menü: ENTER = Aktion ausführen
       if (gameState === 'menu') {
         if (e.key === 'Enter') {
           const menuItems = [
             () => startGame(),
-            () => handleLeaderboard(),
             () => window.location.href = '/'
           ];
           if (menuItems[menuIndex]) menuItems[menuIndex]!();
@@ -500,7 +404,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
         return;
       }
 
-      // Game Over: ENTER = zurück ins Menü
       if (gameState === 'playing' && gameOver) {
         if (e.key === 'Enter') {
           backToMenu();
@@ -508,7 +411,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
         return;
       }
 
-      // Level Complete/Gewonnen: ENTER = nächstes Level oder zurück ins Menü
       if (gameState === 'playing' && won) {
         if (e.key === 'Enter') {
           if (level < 3) {
@@ -520,7 +422,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
         return;
       }
 
-      // Normale Steuerung
       if (gameState === 'playing' && !gameOver && !won) {
         if (e.key === 'ArrowUp') setDirection('up');
         else if (e.key === 'ArrowDown') setDirection('down');
@@ -533,33 +434,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [gameState, gameOver, won, level, menuIndex]);
 
-  // ✅ SCORE SUBMISSION BEI GAME OVER
-  const submitGameResult = async (finalScore: number, finalLevel: number) => {
-    if (!currentPlayer) return;
-
-    try {
-      const gameDuration = Math.floor((Date.now() - gameStartTime) / 1000);
-
-      await pacmanApi.submitScore(
-          currentPlayer._id,
-          finalScore,
-          finalLevel,
-          gameDuration
-      );
-
-      // Check for new highscore
-      if (playerStats && finalScore > playerStats.pacmanHighscore) {
-        setShowNewHighscore(true);
-        setTimeout(() => setShowNewHighscore(false), 5000);
-      }
-
-      // Stats neu laden
-      await loadPlayerStats();
-    } catch (error) {
-      console.error('Error submitting Pacman score:', error);
-    }
-  };
-
   // Game loop
   useEffect(() => {
     if (gameState !== 'playing' || gameOver || won) {
@@ -567,24 +441,15 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
         clearInterval(moveInterval.current);
         moveInterval.current = null;
       }
-      // Game Over Sound und Score submission
       if (gameOver && gameOverSoundRef.current && !isMuted) {
         gameOverSoundRef.current.currentTime = 0;
         gameOverSoundRef.current.play().catch(() => {});
-
-        // ✅ Score bei Game Over submittieren
-        if (currentPlayer && score > 0) {
-          submitGameResult(score, level);
-        }
       }
       return;
     }
 
-    console.log("[PACMAN] Starting game loop");
-
     if (moveInterval.current) clearInterval(moveInterval.current);
     moveInterval.current = setInterval(() => {
-      // Prüfe ob das Spiel bereits beendet wurde
       if (currentGameOver.current) {
         return;
       }
@@ -592,42 +457,33 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
       let newPacmanPos = currentPacmanPos.current;
       let gameEnded = false;
 
-      // Pacman bewegt sich
       setPacmanPos(oldPos => {
         const nextPos = getNextPositionPacman(oldPos, direction);
         newPacmanPos = nextPos;
         currentPacmanPos.current = nextPos;
 
-        // Punkte einsammeln
         setDots(dotsOld => {
           const foundIndex = dotsOld.findIndex(d => d.pos.x === nextPos.x && d.pos.y === nextPos.y);
           if (foundIndex !== -1) {
             const dot = dotsOld[foundIndex];
             setScore(scoreOld => scoreOld + (dot.big ? 50 : 10));
-            // Sound für gelbe Punkte (big dot)
             if (dot.big && coinSoundRef.current && !isMuted) {
               coinSoundRef.current.currentTime = 0;
               coinSoundRef.current.play().catch(() => {});
             }
             if (dot.big) {
-              // Big dot - Geister 15 Sekunden scared
               setGhosts(gsOld =>
                   gsOld.map(g => ({
                     ...g,
                     scared: true,
                     scaredTimer: 15,
                   }))
-              )
-              ;
+              );
             }
             const newDots = [...dotsOld];
             newDots.splice(foundIndex, 1);
             if (newDots.length === 0) {
               setWon(true);
-              // ✅ Score bei Level Complete auch submittieren
-              if (currentPlayer) {
-                submitGameResult(score + (dot.big ? 50 : 10), level);
-              }
             }
             return newDots;
           }
@@ -637,7 +493,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
         return nextPos;
       });
 
-      // Ghosts bewegen sich alle 2 Zyklen (langsamer als Pacman)
       ghostMoveCounter.current++;
       if (ghostMoveCounter.current % 2 === 0) {
         setGhosts(oldGhosts => {
@@ -647,7 +502,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
           let ghostEaten = false;
 
           for (const g of oldGhosts) {
-            // Respawn-Phase: Ghost bleibt sichtbar (weiß), aber bewegt sich nicht und ist nicht scary
             if (g.respawnTimer > 0) {
               const updatedGhost = {
                 ...g,
@@ -661,7 +515,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
               continue;
             }
 
-            // Kollision Pacman mit essbarem Geist (scared, respawnTimer==0)
             if (
                 g.x === newPacmanPos.x &&
                 g.y === newPacmanPos.y &&
@@ -675,12 +528,11 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
                 y: g.startPos.y,
                 scared: false,
                 scaredTimer: 0,
-                respawnTimer: 20, // 3 Sekunden bei 150ms Intervall
+                respawnTimer: 20,
               });
               continue;
             }
 
-            // Normale Ghost-Logik
             let updatedGhost = { ...g };
             if (g.scared && g.scaredTimer > 0) {
               updatedGhost.scaredTimer--;
@@ -713,7 +565,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
             setScore(s => s + 200);
           }
 
-          // Normale (nicht-scared) Ghost-Kollision mit der NEUEN Pacman Position
           for (const ghost of newGhosts) {
             if (
                 ghost.x === newPacmanPos.x &&
@@ -721,7 +572,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
                 !ghost.scared &&
                 ghost.respawnTimer === 0
             ) {
-              console.log("[PACMAN] Game Over! Collision detected");
               setGameOver(true);
               currentGameOver.current = true;
               gameEnded = true;
@@ -745,7 +595,7 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
         moveInterval.current = null;
       }
     };
-  }, [direction, gameState, gameOver, won, currentPlayer, score, level, playerStats]);
+  }, [direction, gameState, gameOver, won, level]);
 
   // Canvas rendering
   useEffect(() => {
@@ -759,11 +609,9 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas
     ctx.fillStyle = '#181818';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw walls
     ctx.fillStyle = '#1e3a8a';
     ctx.strokeStyle = '#60a5fa';
     ctx.lineWidth = 2 * scale;
@@ -772,13 +620,11 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
       ctx.strokeRect(wall.x * CELL_SIZE * scale, wall.y * CELL_SIZE * scale, CELL_SIZE * scale, CELL_SIZE * scale);
     });
 
-    // Draw portals (damit man sie sehen kann)
     ctx.fillStyle = '#9333ea';
     PORTALS.forEach(portal => {
       ctx.fillRect(portal.x * CELL_SIZE * scale, portal.y * CELL_SIZE * scale, CELL_SIZE * scale, CELL_SIZE * scale);
     });
 
-    // Draw dots
     dots.forEach(dot => {
       const size = dot.big ? CELL_SIZE * 0.6 * scale : CELL_SIZE * 0.3 * scale;
       ctx.fillStyle = dot.big ? '#ffe066' : '#fff';
@@ -793,7 +639,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
       ctx.fill();
     });
 
-    // Draw Pacman
     ctx.fillStyle = '#ffe066';
     ctx.beginPath();
     ctx.arc(
@@ -805,7 +650,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     );
     ctx.fill();
 
-    // Draw ghosts
     ghosts.forEach(g => {
       if (g.respawnTimer > 0) {
         ctx.fillStyle = '#f3f3f3';
@@ -824,7 +668,6 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
       ctx.fill();
     });
 
-    // Draw exit hint
     const boardX = (canvas.width - MAP_WIDTH * CELL_SIZE * scale) / 2;
     const boardY = (canvas.height - MAP_HEIGHT * CELL_SIZE * scale) / 2;
     ctx.font = `${14 * scale}px 'Press Start 2P', monospace`;
@@ -837,29 +680,13 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
     ctx.shadowBlur = 0;
   }, [gameState, pacmanPos, dots, ghosts, canvasDims]);
 
-  // ✅ LEADERBOARD SCREEN
-  if (gameState === 'leaderboard') {
-    return <PacmanHighscore highscores={highscores} onBack={backToMenu} />;
-  }
-
   if (gameState === 'menu') {
     return (
         <div className="pacman-panel">
-          {/* ✅ NEW HIGHSCORE NOTIFICATION */}
-          {showNewHighscore && (
-              <div className="pacman-notification">
-                <div className="pacman-notification-content">
-                  NEW HIGHSCORE!
-                </div>
-              </div>
-          )}
-
           <h1 className="pacman-title">PACMAN</h1>
-          {/* ✅ PLAYER STATS ANZEIGE */}
-          {currentPlayer && playerStats && (
+          {currentPlayer && (
               <div className="pacman-stats">
                 <div>Player: {currentPlayer.name}</div>
-                <div>Best: {playerStats.pacmanHighscore} | Games: {playerStats.pacmanGamesPlayed}</div>
               </div>
           )}
           <div className="pacman-menu">
@@ -871,14 +698,7 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
               START GAME
             </button>
             <button
-                className={`pacman-btn${menuIndex === 1 ? ' selected' : ''}`} // ✅ AKTIVIERT
-                onClick={handleLeaderboard}
-                tabIndex={0}
-            >
-              LEADERBOARD
-            </button>
-            <button
-                className={`pacman-btn${menuIndex === 2 ? ' selected' : ''}`}
+                className={`pacman-btn${menuIndex === 1 ? ' selected' : ''}`}
                 onClick={() => window.location.href = '/'}
                 tabIndex={0}
             >
@@ -921,7 +741,7 @@ const PacMan: React.FC<PacmanGameProps> = ({ currentPlayer }) => {
                   </>
               ) : (
                   <>
-                    <div className="pacman-win" style={{ color: '#22c55e', fontSize: 32, fontWeight: 'bold', marginBottom: 16 }}>Gewonnen!</div>
+                    <div className="pacman-win" style={{ color: '#22c55e', fontSize: 32, fontWeight: 'bold', marginBottom: 16 }}>You Won!</div>
                     <button className="pacman-btn" onClick={backToMenu} tabIndex={0} style={{ fontSize: 20, padding: '10px 32px', borderRadius: 12 }}>
                       Back to Menu
                     </button>
