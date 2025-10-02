@@ -256,7 +256,7 @@ const Login: React.FC<LoginProps> = ({ setCurrentPlayer }) => {
                     // Set new timeout für 1.5 Sekunden
                     inputTimeoutRef.current = setTimeout(() => {
                         processBadgeId(newInput);
-                    }, 500);
+                    }, 1000);
                     
                     return newInput;
                 });
